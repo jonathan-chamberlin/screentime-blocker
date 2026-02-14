@@ -251,11 +251,11 @@
                 <label>What counts as productive?</label>
                 <div class="radio-group">
                     <label>
-                        <input type="radio" name="productiveMode" value="whitelist" checked>
+                        <input type="radio" name="productiveMode" value="whitelist">
                         <span>Only sites listed below</span>
                     </label>
                     <label>
-                        <input type="radio" name="productiveMode" value="all-except-blocked">
+                        <input type="radio" name="productiveMode" value="all-except-blocked" checked>
                         <span>Everything except blocked sites</span>
                     </label>
                 </div>
@@ -267,6 +267,27 @@
             <div class="save-button-container">
                 <button id="saveProductiveSites">Save</button>
                 <span class="save-confirmation" id="productiveSitesConfirmation">Saved!</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Strict Mode</h2>
+            <div class="form-group">
+                <label>Session commitment level</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="strictMode" value="off" checked>
+                        <span>Normal (can quit early with penalty)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="strictMode" value="on">
+                        <span>Strict (cannot end session early at all)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="save-button-container">
+                <button id="saveStrictMode">Save</button>
+                <span class="save-confirmation" id="strictModeConfirmation">Saved!</span>
             </div>
         </div>
 

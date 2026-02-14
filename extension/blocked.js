@@ -1,22 +1,47 @@
-// Query background for session state to decide what to show
-chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
-  if (!status) {
-    // Fallback: show default shame
-    showShameScreen();
-    return;
-  }
+// Check if redirected here due to reward expiry
+const urlParams = new URLSearchParams(window.location.search);
+const reason = urlParams.get('reason');
 
-  if (status.rewardPaused) {
-    // Reward is paused — gentle message, no shame increment
-    showRewardPausedScreen(status);
-  } else if (status.sessionActive && status.unusedRewardMinutes > 0) {
-    // Work session active with earned rewards — show burn button instead of shame
-    showRewardBurnScreen(status);
-  } else {
-    // Active work session or just blocked — show shame
-    showShameScreen();
-  }
-});
+if (reason === 'reward-expired') {
+  showRewardExpiredScreen();
+} else {
+  // Query background for session state to decide what to show
+  chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
+    if (!status) {
+      showShameScreen();
+      return;
+    }
+
+    if (status.rewardPaused) {
+      showRewardPausedScreen(status);
+    } else if (status.sessionActive && status.unusedRewardMinutes > 0) {
+      showRewardBurnScreen(status);
+    } else {
+      showShameScreen();
+    }
+  });
+}
+
+function showRewardExpiredScreen() {
+  const container = document.querySelector('.container');
+  document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+
+  container.innerHTML = `
+    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Reward Time's Up!</h1>
+    <p class="subtitle fade-in" style="color: rgba(255,255,255,0.7); margin-top: 16px;">
+      Break's over. Time to get back to work.
+    </p>
+    <div class="fade-in" style="margin-top: 40px;">
+      <button class="btn-burn-reward" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f;" id="btn-got-it">Got It</button>
+    </div>
+  `;
+
+  document.getElementById('btn-got-it').addEventListener('click', () => {
+    chrome.tabs.getCurrent((tab) => {
+      if (tab) chrome.tabs.remove(tab.id);
+    });
+  });
+}
 
 function showRewardBurnScreen(status) {
   const container = document.querySelector('.container');
@@ -113,7 +138,7 @@ function showShameScreen() {
       {
         title: "Your plants are judging you.",
         subtitle: "Even they have more discipline. They literally just sit there.",
-        gifUrl: "https://media.giphy.com/media/l2JehQ2GitHGdVG9Y/giphy.gif",
+        gifUrl: "https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #4a266a 0%, #2d1b69 100%)',
         animClass: 'fade-in'
       }
@@ -157,18 +182,25 @@ function showShameScreen() {
         animClass: 'fade-in flash'
       },
       {
-        title: "THIS IS WHO QUIT",
-        subtitle: "Your future self is watching. They're not impressed.",
-        gifUrl: "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif",
+        title: "ELMO HAS SEEN WHAT YOU'VE DONE",
+        subtitle: "He will never be the same. Look at him. LOOK.",
+        gifUrl: "https://media.giphy.com/media/Lopx9eUi34rbq/giphy.gif",
+        bgGradient: 'linear-gradient(135deg, #cc0000 0%, #4a0000 100%)',
+        animClass: 'fade-in flash'
+      },
+      {
+        title: "YOUR PRODUCTIVITY: A LIVE REENACTMENT",
+        subtitle: "Directed by you. Starring your wasted potential.",
+        gifUrl: "https://media.giphy.com/media/yr7n0u3qzO9nG/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #5c0000 0%, #2a0000 100%)',
         animClass: 'fade-in flash'
       },
       {
-        title: "WHAT ARE YOU EVEN DOING WITH YOUR LIFE?",
-        subtitle: "The void stares back. The void is disappointed.",
-        gifUrl: "https://media.giphy.com/media/l2JehQ2GitHGdVG9Y/giphy.gif",
-        bgGradient: 'linear-gradient(135deg, #17202a 0%, #0a0a0a 100%)',
-        animClass: 'fade-in'
+        title: "LITERAL DUMPSTER FIRE ACHIEVED",
+        subtitle: "Your work session has been formally classified as a dumpster fire.",
+        gifUrl: "https://media.giphy.com/media/NTur7XlVDUdqM/giphy.gif",
+        bgGradient: 'linear-gradient(135deg, #6e2c00 0%, #3c1800 100%)',
+        animClass: 'fade-in flash'
       },
       {
         title: "CONGRATULATIONS, YOU PLAYED YOURSELF",
@@ -178,17 +210,31 @@ function showShameScreen() {
         animClass: 'fade-in flash'
       },
       {
-        title: "YOUR RESUME JUST CRIED",
-        subtitle: "LinkedIn is removing your profile as we speak.",
-        gifUrl: "https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif",
-        bgGradient: 'linear-gradient(135deg, #6e2c00 0%, #3c1800 100%)',
-        animClass: 'fade-in'
+        title: "AN ASTEROID JUST HIT YOUR FOCUS",
+        subtitle: "Extinction-level procrastination event detected.",
+        gifUrl: "https://media.giphy.com/media/YQPVI7u1Cue1W/giphy.gif",
+        bgGradient: 'linear-gradient(135deg, #17202a 0%, #0a0a0a 100%)',
+        animClass: 'fade-in flash'
       },
       {
-        title: "EVEN YOUR WIFI IS ASHAMED",
-        subtitle: "It's considering disconnecting itself out of principle.",
-        gifUrl: "https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif",
+        title: "TWO PLANETS COLLIDED",
+        subtitle: "And they still got more done than you today.",
+        gifUrl: "https://media.giphy.com/media/ydMNTWYVjSEFi/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #4a235a 0%, #1a0a2e 100%)',
+        animClass: 'fade-in flash'
+      },
+      {
+        title: "DRAMATIC CHIPMUNK JUDGES YOU",
+        subtitle: "He turned around. He saw your screen time. He will never recover.",
+        gifUrl: "https://media.giphy.com/media/kKdgdeuO2M08M/giphy.gif",
+        bgGradient: 'linear-gradient(135deg, #1b2631 0%, #0b0f14 100%)',
+        animClass: 'fade-in flash'
+      },
+      {
+        title: "YOUR WORKFLOW STRUCTURAL INTEGRITY: ZERO",
+        subtitle: "Controlled demolition would have been more graceful than this.",
+        gifUrl: "https://media.giphy.com/media/nGDij7nz84qFQL3xtU/giphy.gif",
+        bgGradient: 'linear-gradient(135deg, #7b241c 0%, #641e16 100%)',
         animClass: 'fade-in flash'
       },
       {

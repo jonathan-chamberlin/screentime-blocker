@@ -118,6 +118,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderUI(status);
   }
 
+  // Cache strict mode setting
+  let strictMode = false;
+  chrome.storage.local.get(['strictMode'], (result) => {
+    strictMode = result.strictMode === 'on';
+  });
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.strictMode) {
+      strictMode = changes.strictMode.newValue === 'on';
+    }
+  });
+
+  // Show end button — visible but disabled in strict mode until threshold met
+  function showEndButton(status) {
+    btnEnd.style.display = 'block';
+    if (strictMode && (status.rewardGrantCount || 0) === 0) {
+      btnEnd.disabled = true;
+      btnEnd.title = 'Complete your work threshold to unlock';
+    } else {
+      btnEnd.disabled = false;
+      btnEnd.title = '';
+    }
+  }
+
   // Render the full UI from a status snapshot
   function renderUI(status) {
     // Update stats
@@ -125,8 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     rewardBalance.textContent = status.unusedRewardMinutes || 0;
     streakTitle.textContent = getStreakTitle(status.todayMinutes || 0);
 
-    // Disable ratio inputs during active session/reward
-    const locked = status.sessionActive || status.rewardActive || status.rewardPaused;
+    // Disable ratio inputs during active session/reward (not when only reward-paused)
+    const locked = status.sessionActive || status.rewardActive;
     workInput.disabled = locked;
     rewardInput.disabled = locked;
 
@@ -153,9 +176,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       timerDisplay.textContent = formatTime(remaining);
 
       btnPause.style.display = 'block';
-      // If session is also active, show end button too
       if (status.sessionActive) {
-        btnEnd.style.display = 'block';
+        showEndButton(status);
       }
     } else if (status.rewardPaused) {
       timerSection.className = 'timer-section paused';
@@ -164,7 +186,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       timerLabel.textContent = `reward paused \u2014 ${remainMin} min saved`;
       btnResume.style.display = 'block';
       if (status.sessionActive) {
-        btnEnd.style.display = 'block';
+        showEndButton(status);
+      } else {
+        // No active session — let user start one while reward stays banked
+        btnStart.textContent = 'Start New Session';
+        btnStart.style.display = 'block';
       }
     } else if (status.sessionActive) {
       // Active work session
@@ -184,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         timerLabel.textContent = 'paused \u2014 switch to a productive tab';
       }
 
-      btnEnd.style.display = 'block';
+      showEndButton(status);
 
       // Show burn button if there are unused reward minutes
       if ((status.unusedRewardMinutes || 0) > 0) {
@@ -195,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       timerSection.className = 'timer-section';
       timerDisplay.textContent = '00:00';
       timerLabel.textContent = 'ready when you are';
+      btnStart.textContent = 'Lock In';
       btnStart.style.display = 'block';
       if ((status.unusedRewardMinutes || 0) > 0) {
         btnReward.style.display = 'block';

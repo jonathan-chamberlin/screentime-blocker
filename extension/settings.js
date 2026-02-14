@@ -3,8 +3,9 @@ const DEFAULT_SETTINGS = {
     rewardMinutes: 10,
     rewardSites: ['youtube.com', 'instagram.com', 'pinterest.com', 'reddit.com', 'tiktok.com'],
     allowedPaths: [],
-    productiveMode: 'whitelist',
+    productiveMode: 'all-except-blocked',
     productiveSites: ['docs.google.com', 'notion.so', 'github.com'],
+    strictMode: 'off',
     penaltyType: 'Charity',
     penaltyTarget: '',
     penaltyAmount: 5,
@@ -43,6 +44,11 @@ function loadSettings() {
             if (radio.value === penaltyType) {
                 radio.checked = true;
             }
+        });
+
+        const strictMode = result.strictMode || DEFAULT_SETTINGS.strictMode;
+        document.querySelectorAll('input[name="strictMode"]').forEach(radio => {
+            if (radio.value === strictMode) radio.checked = true;
         });
 
         document.getElementById('penaltyTarget').value = result.penaltyTarget || DEFAULT_SETTINGS.penaltyTarget;
@@ -119,20 +125,23 @@ function lockSiteSections(locked) {
     document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
         radio.disabled = locked;
     });
+    document.querySelectorAll('input[name="strictMode"]').forEach(radio => {
+        radio.disabled = locked;
+    });
 
     // Disable/enable save buttons
     document.getElementById('saveRewardSites').disabled = locked;
     document.getElementById('saveProductiveSites').disabled = locked;
+    document.getElementById('saveStrictMode').disabled = locked;
 
     // Add/remove locked class to section elements
     const sections = document.querySelectorAll('.section');
-    if (locked) {
-        sections[0].classList.add('section-locked'); // Reward Sites section
-        sections[1].classList.add('section-locked'); // Productive Sites section
-    } else {
-        sections[0].classList.remove('section-locked');
-        sections[1].classList.remove('section-locked');
-    }
+    const lockIndices = [0, 1, 2]; // Reward Sites, Productive Sites, Strict Mode
+    lockIndices.forEach(i => {
+        if (sections[i]) {
+            sections[i].classList.toggle('section-locked', locked);
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -151,6 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Toggle productive sites list visibility when mode changes
     document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => toggleProductiveSitesList(e.target.value));
+    });
+    document.getElementById('saveStrictMode').addEventListener('click', () => {
+        const strictMode = document.querySelector('input[name="strictMode"]:checked').value;
+        chrome.storage.local.set({ strictMode }, () => {
+            showConfirmation('strictModeConfirmation');
+        });
     });
     document.getElementById('savePenalty').addEventListener('click', savePenalty);
     document.getElementById('savePayment').addEventListener('click', savePayment);

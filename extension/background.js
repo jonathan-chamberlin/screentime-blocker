@@ -268,6 +268,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleStartSession() {
+  // If reward is paused, bank the remaining seconds back as minutes
+  if (state.rewardPaused && state.rewardRemainingSeconds > 0) {
+    const bankedMinutes = Math.ceil(state.rewardRemainingSeconds / 60);
+    const current = await new Promise(r =>
+      chrome.storage.local.get(['unusedRewardMinutes'], r)
+    );
+    chrome.storage.local.set({
+      unusedRewardMinutes: (current.unusedRewardMinutes || 0) + bankedMinutes,
+    });
+  }
+
   state.sessionId = crypto.randomUUID();
   state.sessionActive = true;
   state.sessionStartTime = Date.now();
@@ -290,6 +301,12 @@ async function handleStartSession() {
 }
 
 async function handleEndSession(confirmed) {
+  // Strict mode: block ending session until at least one threshold is met
+  const settings = await new Promise(r => chrome.storage.local.get(['strictMode'], r));
+  if (settings.strictMode === 'on' && state.rewardGrantCount === 0) {
+    return { success: false, reason: 'Strict mode: complete your work threshold first.' };
+  }
+
   if (!confirmed) {
     return {
       needsConfirmation: true,
@@ -315,13 +332,26 @@ async function handleEndSession(confirmed) {
     blocked_attempts: state.blockedAttempts,
   });
 
-  // Also end reward if active
+  // Bank any active or paused reward time back to unusedRewardMinutes
+  let bankedMinutes = 0;
   if (state.rewardActive) {
+    // Flush burned time
+    if (state.isOnRewardSite && state.lastRewardTick) {
+      state.rewardBurnedSeconds += Math.floor((Date.now() - state.lastRewardTick) / 1000);
+    }
+    const remainingSec = Math.max(0, state.rewardTotalSeconds - state.rewardBurnedSeconds);
+    bankedMinutes = Math.ceil(remainingSec / 60);
     state.rewardActive = false;
     state.rewardTotalSeconds = 0;
     state.rewardBurnedSeconds = 0;
     state.isOnRewardSite = false;
     state.lastRewardTick = null;
+  } else if (state.rewardPaused && state.rewardRemainingSeconds > 0) {
+    bankedMinutes = Math.ceil(state.rewardRemainingSeconds / 60);
+  }
+  if (bankedMinutes > 0) {
+    const cur = await new Promise(r => chrome.storage.local.get(['unusedRewardMinutes'], r));
+    chrome.storage.local.set({ unusedRewardMinutes: (cur.unusedRewardMinutes || 0) + bankedMinutes });
   }
 
   state.sessionActive = false;
@@ -374,7 +404,7 @@ async function handleUseReward() {
         return;
       }
 
-      const useMinutes = Math.min(available, state.rewardMinutes);
+      const useMinutes = available;
       state.rewardActive = true;
       state.rewardTotalSeconds = useMinutes * 60;
       state.rewardBurnedSeconds = 0;
@@ -419,9 +449,9 @@ async function handlePauseReward() {
   state.rewardBurnedSeconds = 0;
   saveState();
 
-  // Re-block if session is active, otherwise just block
+  // Re-block sites and redirect open reward tabs back to blocked page
   await blockSites();
-  await closeBlockedTabs();
+  await redirectBlockedTabs('reward-paused');
 
   return { success: true, remainingSeconds: remaining };
 }
@@ -464,6 +494,24 @@ async function closeBlockedTabs() {
   }
 }
 
+async function redirectBlockedTabs(reason) {
+  try {
+    const result = await new Promise(r => chrome.storage.local.get(['rewardSites', 'allowedPaths'], r));
+    const sites = result.rewardSites || ['youtube.com'];
+    const allowedPaths = result.allowedPaths || [];
+    const tabs = await chrome.tabs.query({});
+    const suffix = reason ? `?reason=${reason}` : '';
+    const blockedUrl = chrome.runtime.getURL('blocked.html') + suffix;
+    for (const tab of tabs) {
+      if (tab.url && urlMatchesSites(tab.url, sites) && !urlMatchesAllowedPaths(tab.url, allowedPaths)) {
+        chrome.tabs.update(tab.id, { url: blockedUrl });
+      }
+    }
+  } catch (err) {
+    console.log('[FocusContract] Error redirecting blocked tabs:', err.message);
+  }
+}
+
 // Alarm handler
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'checkSession') {
@@ -494,7 +542,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
       if (state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
         // Reward expired
-        await closeBlockedTabs();
         state.rewardActive = false;
         state.rewardTotalSeconds = 0;
         state.rewardBurnedSeconds = 0;
@@ -502,9 +549,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         state.lastRewardTick = null;
         saveState();
 
-        if (state.sessionActive) {
-          await blockSites();
-        }
+        // Always re-block sites on reward expiry
+        await blockSites();
+        // Redirect blocked-site tabs to "reward expired" screen
+        await redirectBlockedTabs('reward-expired');
         chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
       }
     }

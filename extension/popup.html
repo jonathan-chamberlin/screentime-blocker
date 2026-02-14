@@ -237,7 +237,14 @@
       color: white;
       box-shadow: 0 4px 15px rgba(255,71,87,0.25);
     }
-    .btn-end:hover { box-shadow: 0 6px 20px rgba(255,71,87,0.35); }
+    .btn-end:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(255,71,87,0.35); }
+    .btn-end:disabled {
+      background: linear-gradient(135deg, #555, #444);
+      color: #888;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
     .btn-reward {
       background: linear-gradient(135deg, #ffaa00, #ff8800);
       color: #1a1000;
