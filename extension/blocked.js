@@ -6,16 +6,14 @@ chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
     return;
   }
 
-  if (status.sessionCompleted && !status.rewardActive && !status.rewardPaused) {
-    // Work done, reward available — show burn button instead of shame
-    showRewardBurnScreen(status);
-  } else if (status.rewardPaused) {
+  if (status.rewardPaused) {
     // Reward is paused — gentle message, no shame increment
     showRewardPausedScreen(status);
-  } else if (status.sessionActive || (!status.rewardActive && !status.sessionCompleted)) {
-    // Active work session or just blocked — show shame
-    showShameScreen();
+  } else if (status.sessionActive && status.unusedRewardMinutes > 0) {
+    // Work session active with earned rewards — show burn button instead of shame
+    showRewardBurnScreen(status);
   } else {
+    // Active work session or just blocked — show shame
     showShameScreen();
   }
 });
@@ -126,28 +124,28 @@ function showShameScreen() {
         subtitle: "You promised yourself. You PROMISED.",
         gifUrl: "https://media.giphy.com/media/6nWhy3ulBL7GSCvKw6/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #c0392b 0%, #922b21 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       },
       {
         title: "DROP AND GIVE ME 50 MINUTES!",
         subtitle: "Did I say you could take a break, recruit?!",
         gifUrl: "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #1a5276 0%, #154360 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       },
       {
         title: "THE CROWD WATCHES IN HORROR",
         subtitle: "Everyone can see your browser history.",
         gifUrl: "https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #7b241c 0%, #641e16 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       },
       {
         title: "YOUR PRODUCTIVITY, LITERALLY",
         subtitle: "This is your potential going up in flames.",
         gifUrl: "https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #b7950b 0%, #7d6608 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       }
     ],
     4: [
@@ -156,56 +154,56 @@ function showShameScreen() {
         subtitle: "All shame levels activated. There is no recovery.",
         gifUrl: "https://media.giphy.com/media/HhTXt43pk1I1W/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #8b0000 0%, #4a0000 100%)',
-        animClass: 'shake flash'
+        animClass: 'fade-in flash'
       },
       {
         title: "THIS IS WHO QUIT",
         subtitle: "Your future self is watching. They're not impressed.",
         gifUrl: "https://media.giphy.com/media/3o7TKF1fSIs1R19B8k/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #5c0000 0%, #2a0000 100%)',
-        animClass: 'shake flash'
+        animClass: 'fade-in flash'
       },
       {
         title: "WHAT ARE YOU EVEN DOING WITH YOUR LIFE?",
         subtitle: "The void stares back. The void is disappointed.",
         gifUrl: "https://media.giphy.com/media/l2JehQ2GitHGdVG9Y/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #17202a 0%, #0a0a0a 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       },
       {
         title: "CONGRATULATIONS, YOU PLAYED YOURSELF",
         subtitle: "Every click was a choice. Every choice was wrong.",
         gifUrl: "https://media.giphy.com/media/6nWhy3ulBL7GSCvKw6/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #78281f 0%, #4a0e0e 100%)',
-        animClass: 'shake flash'
+        animClass: 'fade-in flash'
       },
       {
         title: "YOUR RESUME JUST CRIED",
         subtitle: "LinkedIn is removing your profile as we speak.",
         gifUrl: "https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #6e2c00 0%, #3c1800 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       },
       {
         title: "EVEN YOUR WIFI IS ASHAMED",
         subtitle: "It's considering disconnecting itself out of principle.",
         gifUrl: "https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #4a235a 0%, #1a0a2e 100%)',
-        animClass: 'shake flash'
+        animClass: 'fade-in flash'
       },
       {
         title: "ROCK BOTTOM HAS A BASEMENT",
         subtitle: "And you just found the elevator.",
         gifUrl: "https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #1b2631 0%, #0b0f14 100%)',
-        animClass: 'shake'
+        animClass: 'fade-in'
       },
       {
         title: "ABSOLUTE MAXIMUM SHAME ACHIEVED",
         subtitle: "There is nothing left. Only disappointment. Forever.",
         gifUrl: "https://media.giphy.com/media/HhTXt43pk1I1W/giphy.gif",
         bgGradient: 'linear-gradient(135deg, #8b0000 0%, #000000 100%)',
-        animClass: 'shake flash'
+        animClass: 'fade-in flash'
       }
     ]
   };

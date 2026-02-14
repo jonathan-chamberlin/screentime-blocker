@@ -7,13 +7,18 @@ let state = {
   sessionId: null,
   sessionStartTime: null,
   rewardActive: false,
-  rewardEndTime: null,
   blockedAttempts: 0,
   // Productive tab tracking
   productiveSeconds: 0,
   lastProductiveTick: null,
   isOnProductiveSite: false,
-  sessionCompleted: false,
+  // Continuous session: track how many reward batches granted
+  rewardGrantCount: 0,
+  // Reward tab tracking (countdown only when on reward site)
+  rewardTotalSeconds: 0,
+  rewardBurnedSeconds: 0,
+  isOnRewardSite: false,
+  lastRewardTick: null,
   // Reward pause/resume
   rewardPaused: false,
   rewardRemainingSeconds: 0,
@@ -26,27 +31,23 @@ let state = {
 chrome.storage.local.get(['focusState'], (result) => {
   if (result.focusState) {
     state = { ...state, ...result.focusState };
-    // If session was active, check if it's still valid
     if (state.sessionActive && state.sessionStartTime) {
       blockSites();
       checkCurrentTab();
+      chrome.alarms.create('checkSession', { periodInMinutes: 0.25 });
     }
-    // If session completed (waiting for reward burn), keep sites blocked
-    if (state.sessionCompleted) {
-      blockSites();
+    if (state.rewardActive) {
+      // During reward, sites should be unblocked
+      unblockSites();
+      checkCurrentTab();
+      chrome.alarms.create('checkSession', { periodInMinutes: 0.25 });
     }
-    // If reward was active, check if it expired
-    if (state.rewardActive && state.rewardEndTime) {
-      if (Date.now() >= state.rewardEndTime) {
-        state.rewardActive = false;
-        state.rewardEndTime = null;
-        blockSites();
-        saveState();
-      }
-    }
-    // If reward is paused, keep sites blocked
     if (state.rewardPaused) {
       blockSites();
+    }
+    // If neither session nor reward is active but not paused, ensure sites are unblocked
+    if (!state.sessionActive && !state.rewardActive && !state.rewardPaused) {
+      unblockSites();
     }
   }
 });
@@ -55,9 +56,8 @@ function saveState() {
   chrome.storage.local.set({ focusState: state });
 }
 
-// --- Tab monitoring for productive site tracking ---
+// --- Tab monitoring ---
 
-// Check if a URL matches any site in a list (domain matching)
 function urlMatchesSites(url, sites) {
   if (!url || !sites || sites.length === 0) return false;
   try {
@@ -71,7 +71,6 @@ function urlMatchesSites(url, sites) {
   }
 }
 
-// Check if a URL matches any allowed path (domain + path prefix matching)
 function urlMatchesAllowedPaths(url, allowedPaths) {
   if (!url || !allowedPaths || allowedPaths.length === 0) return false;
   try {
@@ -87,39 +86,42 @@ function urlMatchesAllowedPaths(url, allowedPaths) {
   }
 }
 
-// Check the current active tab and update productive state
 async function checkCurrentTab() {
-  if (!state.sessionActive) return;
+  if (!state.sessionActive && !state.rewardActive) return;
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     if (!tab || !tab.url) {
-      updateProductiveState(false);
+      if (state.sessionActive) updateProductiveState(false);
+      if (state.rewardActive) updateRewardState(false);
       return;
     }
 
     const result = await new Promise(r =>
       chrome.storage.local.get(['productiveSites', 'productiveMode', 'rewardSites', 'allowedPaths'], r)
     );
-    const mode = result.productiveMode || 'whitelist';
+    const blockedSites = result.rewardSites || ['youtube.com'];
     const allowedPaths = result.allowedPaths || [];
 
-    // Allowed paths are always productive (user explicitly whitelisted these pages)
-    if (urlMatchesAllowedPaths(tab.url, allowedPaths)) {
-      updateProductiveState(true);
-      return;
+    // Productive tracking (only during active session)
+    if (state.sessionActive) {
+      const mode = result.productiveMode || 'whitelist';
+
+      if (urlMatchesAllowedPaths(tab.url, allowedPaths)) {
+        updateProductiveState(true);
+      } else if (mode === 'all-except-blocked') {
+        updateProductiveState(!urlMatchesSites(tab.url, blockedSites));
+      } else {
+        const productiveSites = result.productiveSites || ['docs.google.com', 'notion.so', 'github.com'];
+        updateProductiveState(urlMatchesSites(tab.url, productiveSites));
+      }
     }
 
-    let isProductive;
-    if (mode === 'all-except-blocked') {
-      const blockedSites = result.rewardSites || ['youtube.com'];
-      isProductive = !urlMatchesSites(tab.url, blockedSites);
-    } else {
-      const productiveSites = result.productiveSites || ['docs.google.com', 'notion.so', 'github.com'];
-      isProductive = urlMatchesSites(tab.url, productiveSites);
+    // Reward site tracking (only during active reward)
+    if (state.rewardActive) {
+      const isOnReward = urlMatchesSites(tab.url, blockedSites) && !urlMatchesAllowedPaths(tab.url, allowedPaths);
+      updateRewardState(isOnReward);
     }
-
-    updateProductiveState(isProductive);
   } catch (err) {
     console.log('[FocusContract] Tab check error:', err.message);
   }
@@ -127,29 +129,36 @@ async function checkCurrentTab() {
 
 function updateProductiveState(isProductive) {
   const now = Date.now();
-
-  // If we were on a productive site, accumulate the time since last tick
   if (state.isOnProductiveSite && state.lastProductiveTick) {
     const elapsed = Math.floor((now - state.lastProductiveTick) / 1000);
     state.productiveSeconds += Math.max(0, elapsed);
   }
-
   state.isOnProductiveSite = isProductive;
   state.lastProductiveTick = now;
   saveState();
 }
 
-// Tab activated (user switched tabs)
+function updateRewardState(isOnReward) {
+  const now = Date.now();
+  if (state.isOnRewardSite && state.lastRewardTick) {
+    const elapsed = Math.floor((now - state.lastRewardTick) / 1000);
+    state.rewardBurnedSeconds += Math.max(0, elapsed);
+  }
+  state.isOnRewardSite = isOnReward;
+  state.lastRewardTick = now;
+  saveState();
+}
+
+// Tab activated
 chrome.tabs.onActivated.addListener(() => {
-  if (state.sessionActive) {
+  if (state.sessionActive || state.rewardActive) {
     checkCurrentTab();
   }
 });
 
-// Tab URL changed (navigation within active tab)
+// Tab URL changed
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.url && state.sessionActive) {
-    // Only check if this is the active tab
+  if (changeInfo.url && (state.sessionActive || state.rewardActive)) {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
       if (tabs[0] && tabs[0].id === tabId) {
         checkCurrentTab();
@@ -160,10 +169,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 // Window focus changed
 chrome.windows.onFocusChanged.addListener((windowId) => {
-  if (state.sessionActive) {
+  if (state.sessionActive || state.rewardActive) {
     if (windowId === chrome.windows.WINDOW_ID_NONE) {
-      // Browser lost focus — not productive
-      updateProductiveState(false);
+      if (state.sessionActive) updateProductiveState(false);
+      if (state.rewardActive) updateRewardState(false);
     } else {
       checkCurrentTab();
     }
@@ -181,10 +190,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleEndSession(message.confirmed).then(sendResponse);
     return true;
   }
-  if (message.action === 'completeSession') {
-    handleCompleteSession().then(sendResponse);
-    return true;
-  }
   if (message.action === 'useReward') {
     handleUseReward().then(sendResponse);
     return true;
@@ -199,27 +204,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === 'getStatus') {
     chrome.storage.local.get(['todayMinutes', 'unusedRewardMinutes'], (result) => {
-      // Snapshot productive seconds (include current tick if on productive site)
+      // Snapshot productive seconds
       let currentProductiveSeconds = state.productiveSeconds;
       if (state.isOnProductiveSite && state.lastProductiveTick && state.sessionActive) {
         currentProductiveSeconds += Math.floor((Date.now() - state.lastProductiveTick) / 1000);
+      }
+
+      // Snapshot reward remaining
+      let rewardRemainingSeconds = 0;
+      if (state.rewardActive) {
+        let burned = state.rewardBurnedSeconds;
+        if (state.isOnRewardSite && state.lastRewardTick) {
+          burned += Math.floor((Date.now() - state.lastRewardTick) / 1000);
+        }
+        rewardRemainingSeconds = Math.max(0, state.rewardTotalSeconds - burned);
+      } else if (state.rewardPaused) {
+        rewardRemainingSeconds = state.rewardRemainingSeconds;
       }
 
       sendResponse({
         sessionActive: state.sessionActive,
         sessionId: state.sessionId,
         sessionStartTime: state.sessionStartTime,
-        rewardEndTime: state.rewardEndTime,
         workMinutes: state.workMinutes,
         rewardMinutes: state.rewardMinutes,
         rewardActive: state.rewardActive,
         todayMinutes: result.todayMinutes || 0,
         unusedRewardMinutes: result.unusedRewardMinutes || 0,
         productiveSeconds: currentProductiveSeconds,
-        sessionCompleted: state.sessionCompleted,
+        rewardGrantCount: state.rewardGrantCount,
         rewardPaused: state.rewardPaused,
-        rewardRemainingSeconds: state.rewardRemainingSeconds,
+        rewardRemainingSeconds,
         isOnProductiveSite: state.isOnProductiveSite,
+        isOnRewardSite: state.isOnRewardSite,
       });
     });
     return true;
@@ -257,16 +274,16 @@ async function handleStartSession() {
   state.productiveSeconds = 0;
   state.lastProductiveTick = Date.now();
   state.isOnProductiveSite = false;
-  state.sessionCompleted = false;
+  state.rewardGrantCount = 0;
   state.rewardPaused = false;
   state.rewardRemainingSeconds = 0;
+  state.blockedAttempts = 0;
   saveState();
 
   await blockSites();
   await checkCurrentTab();
 
   notifyBackend('start', { session_id: state.sessionId });
-
   chrome.alarms.create('checkSession', { periodInMinutes: 0.25 });
 
   return { success: true, sessionId: state.sessionId };
@@ -276,8 +293,13 @@ async function handleEndSession(confirmed) {
   if (!confirmed) {
     return {
       needsConfirmation: true,
-      elapsedMinutes: Math.floor((Date.now() - state.sessionStartTime) / 60000),
+      elapsedMinutes: Math.floor(state.productiveSeconds / 60),
     };
+  }
+
+  // Flush productive time
+  if (state.isOnProductiveSite && state.lastProductiveTick) {
+    state.productiveSeconds += Math.floor((Date.now() - state.lastProductiveTick) / 1000);
   }
 
   const minutesCompleted = Math.floor(state.productiveSeconds / 60);
@@ -293,6 +315,15 @@ async function handleEndSession(confirmed) {
     blocked_attempts: state.blockedAttempts,
   });
 
+  // Also end reward if active
+  if (state.rewardActive) {
+    state.rewardActive = false;
+    state.rewardTotalSeconds = 0;
+    state.rewardBurnedSeconds = 0;
+    state.isOnRewardSite = false;
+    state.lastRewardTick = null;
+  }
+
   state.sessionActive = false;
   state.sessionId = null;
   state.sessionStartTime = null;
@@ -300,7 +331,9 @@ async function handleEndSession(confirmed) {
   state.productiveSeconds = 0;
   state.lastProductiveTick = null;
   state.isOnProductiveSite = false;
-  state.sessionCompleted = false;
+  state.rewardGrantCount = 0;
+  state.rewardPaused = false;
+  state.rewardRemainingSeconds = 0;
   saveState();
 
   await unblockSites();
@@ -310,43 +343,26 @@ async function handleEndSession(confirmed) {
   return { success: true, endedEarly: true, minutesCompleted };
 }
 
-async function handleCompleteSession() {
-  // Flush any remaining productive time
-  if (state.isOnProductiveSite && state.lastProductiveTick) {
-    state.productiveSeconds += Math.floor((Date.now() - state.lastProductiveTick) / 1000);
-    state.lastProductiveTick = Date.now();
-  }
+// Grant reward when threshold is crossed (session continues)
+function checkAndGrantReward() {
+  const nextThreshold = state.workMinutes * 60 * (state.rewardGrantCount + 1);
+  if (state.productiveSeconds >= nextThreshold) {
+    state.rewardGrantCount++;
+    saveState();
 
-  const minutesCompleted = state.workMinutes;
-
-  // Grant reward minutes
-  chrome.storage.local.get(['todayMinutes', 'unusedRewardMinutes'], (result) => {
-    chrome.storage.local.set({
-      todayMinutes: (result.todayMinutes || 0) + minutesCompleted,
-      unusedRewardMinutes: (result.unusedRewardMinutes || 0) + state.rewardMinutes,
+    // Grant reward minutes
+    chrome.storage.local.get(['todayMinutes', 'unusedRewardMinutes'], (result) => {
+      chrome.storage.local.set({
+        todayMinutes: (result.todayMinutes || 0) + state.workMinutes,
+        unusedRewardMinutes: (result.unusedRewardMinutes || 0) + state.rewardMinutes,
+      });
     });
-  });
 
-  notifyBackend('end', {
-    session_id: state.sessionId,
-    minutes_completed: minutesCompleted,
-    ended_early: false,
-    blocked_attempts: state.blockedAttempts,
-  });
-
-  // Mark session completed — sites stay blocked until user burns reward
-  state.sessionActive = false;
-  state.sessionCompleted = true;
-  state.productiveSeconds = 0;
-  state.lastProductiveTick = null;
-  state.isOnProductiveSite = false;
-  saveState();
-
-  chrome.alarms.clear('checkSession');
-  chrome.storage.local.set({ shameLevel: 0 });
-
-  // Keep sites blocked — user must click "Burn Reward" to unblock
-  return { success: true, endedEarly: false, minutesCompleted, rewardEarned: state.rewardMinutes };
+    // Notify popup for confetti
+    chrome.runtime.sendMessage({ action: 'rewardEarned', grantCount: state.rewardGrantCount }).catch(() => {});
+    return true;
+  }
+  return false;
 }
 
 async function handleUseReward() {
@@ -360,20 +376,23 @@ async function handleUseReward() {
 
       const useMinutes = Math.min(available, state.rewardMinutes);
       state.rewardActive = true;
-      state.rewardEndTime = Date.now() + (useMinutes * 60000);
-      state.sessionCompleted = false;
+      state.rewardTotalSeconds = useMinutes * 60;
+      state.rewardBurnedSeconds = 0;
+      state.isOnRewardSite = false;
+      state.lastRewardTick = Date.now();
       state.rewardPaused = false;
       state.rewardRemainingSeconds = 0;
-      state.blockedAttempts = 0;
-      state.sessionId = null;
-      state.sessionStartTime = null;
       saveState();
 
       chrome.storage.local.set({ unusedRewardMinutes: available - useMinutes });
 
       await unblockSites();
 
-      chrome.alarms.create('rewardExpired', { delayInMinutes: useMinutes });
+      // Ensure tick alarm is running
+      chrome.alarms.create('checkSession', { periodInMinutes: 0.25 });
+
+      // Check current tab to start reward tracking
+      await checkCurrentTab();
 
       resolve({ success: true, rewardMinutes: useMinutes });
     });
@@ -381,21 +400,27 @@ async function handleUseReward() {
 }
 
 async function handlePauseReward() {
-  if (!state.rewardActive || !state.rewardEndTime) {
+  if (!state.rewardActive) {
     return { success: false, reason: 'No active reward to pause' };
   }
 
-  const remaining = Math.max(0, Math.floor((state.rewardEndTime - Date.now()) / 1000));
+  // Flush burned time
+  if (state.isOnRewardSite && state.lastRewardTick) {
+    state.rewardBurnedSeconds += Math.floor((Date.now() - state.lastRewardTick) / 1000);
+  }
+
+  const remaining = Math.max(0, state.rewardTotalSeconds - state.rewardBurnedSeconds);
   state.rewardRemainingSeconds = remaining;
   state.rewardPaused = true;
   state.rewardActive = false;
-  state.rewardEndTime = null;
+  state.isOnRewardSite = false;
+  state.lastRewardTick = null;
+  state.rewardTotalSeconds = 0;
+  state.rewardBurnedSeconds = 0;
   saveState();
 
-  chrome.alarms.clear('rewardExpired');
+  // Re-block if session is active, otherwise just block
   await blockSites();
-
-  // Close all tabs on blocked domains (no shame increment)
   await closeBlockedTabs();
 
   return { success: true, remainingSeconds: remaining };
@@ -406,21 +431,22 @@ async function handleResumeReward() {
     return { success: false, reason: 'No paused reward to resume' };
   }
 
-  const remainingMinutes = state.rewardRemainingSeconds / 60;
-  state.rewardEndTime = Date.now() + (state.rewardRemainingSeconds * 1000);
   state.rewardActive = true;
+  state.rewardTotalSeconds = state.rewardRemainingSeconds;
+  state.rewardBurnedSeconds = 0;
+  state.isOnRewardSite = false;
+  state.lastRewardTick = Date.now();
   state.rewardPaused = false;
   state.rewardRemainingSeconds = 0;
   saveState();
 
   await unblockSites();
+  chrome.alarms.create('checkSession', { periodInMinutes: 0.25 });
+  await checkCurrentTab();
 
-  chrome.alarms.create('rewardExpired', { delayInMinutes: remainingMinutes });
-
-  return { success: true, remainingMinutes };
+  return { success: true };
 }
 
-// Close all tabs whose URL matches blocked sites
 async function closeBlockedTabs() {
   try {
     const result = await new Promise(r => chrome.storage.local.get(['rewardSites', 'allowedPaths'], r));
@@ -441,8 +467,9 @@ async function closeBlockedTabs() {
 // Alarm handler
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'checkSession') {
-    if (state.sessionActive && state.sessionStartTime) {
-      // Flush productive time if currently on productive site
+    // Check session threshold
+    if (state.sessionActive) {
+      // Flush productive time
       if (state.isOnProductiveSite && state.lastProductiveTick) {
         const now = Date.now();
         const elapsed = Math.floor((now - state.lastProductiveTick) / 1000);
@@ -450,28 +477,42 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         state.lastProductiveTick = now;
         saveState();
       }
-
-      // Also re-check current tab in case something changed
       await checkCurrentTab();
+      checkAndGrantReward();
+    }
 
-      if (state.productiveSeconds >= state.workMinutes * 60) {
-        await handleCompleteSession();
-        chrome.runtime.sendMessage({ action: 'sessionCompleted' }).catch(() => {});
+    // Check reward expiry
+    if (state.rewardActive) {
+      // Flush reward burned time
+      if (state.isOnRewardSite && state.lastRewardTick) {
+        const now = Date.now();
+        const elapsed = Math.floor((now - state.lastRewardTick) / 1000);
+        state.rewardBurnedSeconds += Math.max(0, elapsed);
+        state.lastRewardTick = now;
+        saveState();
+      }
+
+      if (state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
+        // Reward expired
+        await closeBlockedTabs();
+        state.rewardActive = false;
+        state.rewardTotalSeconds = 0;
+        state.rewardBurnedSeconds = 0;
+        state.isOnRewardSite = false;
+        state.lastRewardTick = null;
+        saveState();
+
+        if (state.sessionActive) {
+          await blockSites();
+        }
+        chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
       }
     }
-  }
 
-  if (alarm.name === 'rewardExpired') {
-    // Close all tabs on blocked sites
-    await closeBlockedTabs();
-
-    state.rewardActive = false;
-    state.rewardEndTime = null;
-    state.rewardPaused = false;
-    state.rewardRemainingSeconds = 0;
-    saveState();
-    await blockSites();
-    chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
+    // Clear alarm if nothing needs ticking
+    if (!state.sessionActive && !state.rewardActive) {
+      chrome.alarms.clear('checkSession');
+    }
   }
 });
 
@@ -483,7 +524,6 @@ async function blockSites() {
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
   const removeIds = existingRules.map(r => r.id);
 
-  // Block rules at priority 1 (domain-level)
   const blockRules = sites
     .map(s => s.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, ''))
     .filter(s => s.length > 0)
@@ -494,7 +534,6 @@ async function blockSites() {
       condition: { requestDomains: [site], resourceTypes: ['main_frame'] },
     }));
 
-  // Allow rules at priority 2 (path-level exceptions override domain blocks)
   const allowRules = allowedPaths
     .map(p => p.trim().replace(/^(https?:\/\/)?(www\.)?/, ''))
     .filter(p => p.length > 0)
@@ -511,7 +550,6 @@ async function blockSites() {
     removeRuleIds: removeIds,
     addRules,
   });
-  console.log(`[FocusContract] Blocked ${addRules.length} sites:`, sites);
 }
 
 async function unblockSites() {

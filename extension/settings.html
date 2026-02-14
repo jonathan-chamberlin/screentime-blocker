@@ -193,6 +193,25 @@
             opacity: 1;
         }
 
+        .section-locked {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .section-locked::after {
+            content: 'Locked during work session';
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 11px;
+            color: #ff4757;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            pointer-events: none;
+        }
+
         .input-row {
             display: flex;
             gap: 15px;

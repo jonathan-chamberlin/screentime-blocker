@@ -27,8 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalCancel = document.getElementById('modal-cancel');
   const modalConfirm = document.getElementById('modal-confirm');
 
-  let timerInterval = null;
+  let statusPollInterval = null;
   let currentStatus = null;
+  let lastFetchTime = 0;
 
   // Load saved ratio values into inputs
   chrome.storage.local.get(['workMinutes', 'rewardMinutes'], (result) => {
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     rewardInput.value = result.rewardMinutes || 10;
   });
 
-  // Save ratio on change (auto-save, no button needed)
+  // Save ratio on change
   function saveRatio() {
     const workMinutes = parseInt(workInput.value, 10) || 50;
     const rewardMinutes = parseInt(rewardInput.value, 10) || 10;
@@ -48,8 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Format seconds into MM:SS
   function formatTime(totalSeconds) {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 
@@ -95,22 +97,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Fetch status from background and update UI
-  async function refreshStatus() {
-    const status = await getStatus();
-    currentStatus = status;
+  // Unified 1-second loop: fetch status + render UI
+  function startPolling() {
+    stopPolling();
+    poll(); // immediate first tick
+    statusPollInterval = setInterval(poll, 1000);
+  }
 
+  function stopPolling() {
+    if (statusPollInterval) {
+      clearInterval(statusPollInterval);
+      statusPollInterval = null;
+    }
+  }
+
+  async function poll() {
+    const status = await getStatus();
+    lastFetchTime = Date.now();
+    currentStatus = status;
+    renderUI(status);
+  }
+
+  // Render the full UI from a status snapshot
+  function renderUI(status) {
     // Update stats
     todayMinutes.textContent = status.todayMinutes || 0;
     rewardBalance.textContent = status.unusedRewardMinutes || 0;
-
-    // Update streak title
     streakTitle.textContent = getStreakTitle(status.todayMinutes || 0);
 
     // Disable ratio inputs during active session/reward
-    const sessionOrRewardActive = status.sessionActive || status.rewardActive || status.sessionCompleted || status.rewardPaused;
-    workInput.disabled = sessionOrRewardActive;
-    rewardInput.disabled = sessionOrRewardActive;
+    const locked = status.sessionActive || status.rewardActive || status.rewardPaused;
+    workInput.disabled = locked;
+    rewardInput.disabled = locked;
 
     // Hide all action buttons first
     btnStart.style.display = 'none';
@@ -119,44 +137,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnPause.style.display = 'none';
     btnResume.style.display = 'none';
 
+    // Determine primary UI state
+    // Priority: rewardActive > rewardPaused > sessionActive > idle
     if (status.rewardActive) {
       // Reward is actively burning
-      timerSection.className = 'timer-section reward';
-      timerLabel.textContent = 'burning reward time';
+      const remaining = status.rewardRemainingSeconds || 0;
+
+      if (status.isOnRewardSite) {
+        timerSection.className = 'timer-section reward';
+        timerLabel.textContent = 'burning reward time';
+      } else {
+        timerSection.className = 'timer-section paused';
+        timerLabel.textContent = 'paused \u2014 switch to a reward site';
+      }
+      timerDisplay.textContent = formatTime(remaining);
+
       btnPause.style.display = 'block';
+      // If session is also active, show end button too
+      if (status.sessionActive) {
+        btnEnd.style.display = 'block';
+      }
     } else if (status.rewardPaused) {
-      // Reward is paused
       timerSection.className = 'timer-section paused';
       const remainMin = Math.ceil((status.rewardRemainingSeconds || 0) / 60);
       timerDisplay.textContent = formatTime(status.rewardRemainingSeconds || 0);
       timerLabel.textContent = `reward paused \u2014 ${remainMin} min saved`;
       btnResume.style.display = 'block';
-    } else if (status.sessionCompleted) {
-      // Work done, waiting for user to burn reward
-      timerSection.className = 'timer-section completed';
-      timerDisplay.textContent = formatTime(status.workMinutes * 60);
-      timerLabel.textContent = 'session complete!';
-      btnReward.style.display = 'block';
+      if (status.sessionActive) {
+        btnEnd.style.display = 'block';
+      }
     } else if (status.sessionActive) {
       // Active work session
+      const productiveSec = status.productiveSeconds || 0;
+      timerDisplay.textContent = formatTime(productiveSec);
+
+      const goalSec = (status.workMinutes || 50) * 60;
+      const nextThreshold = goalSec * ((status.rewardGrantCount || 0) + 1);
+      const remainingSec = Math.max(0, nextThreshold - productiveSec);
+      const remainingMin = Math.ceil(remainingSec / 60);
+
       if (status.isOnProductiveSite) {
         timerSection.className = 'timer-section active';
-        timerLabel.textContent = 'locked in';
+        timerLabel.textContent = `${remainingMin} min to next reward`;
       } else {
         timerSection.className = 'timer-section paused';
         timerLabel.textContent = 'paused \u2014 switch to a productive tab';
       }
+
       btnEnd.style.display = 'block';
+
+      // Show burn button if there are unused reward minutes
+      if ((status.unusedRewardMinutes || 0) > 0) {
+        btnReward.style.display = 'block';
+      }
     } else {
       // Idle
       timerSection.className = 'timer-section';
       timerDisplay.textContent = '00:00';
       timerLabel.textContent = 'ready when you are';
       btnStart.style.display = 'block';
-      btnReward.style.display = (status.unusedRewardMinutes > 0) ? 'block' : 'none';
+      if ((status.unusedRewardMinutes || 0) > 0) {
+        btnReward.style.display = 'block';
+      }
     }
 
-    // Auth status
+    // Auth status (async, fire and forget)
+    updateAuthUI();
+  }
+
+  async function updateAuthUI() {
     const token = await Auth.getToken();
     if (token) {
       authDot.className = 'auth-dot connected';
@@ -171,86 +220,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Tick the timer display locally every second
-  function tickTimer() {
-    if (!currentStatus) return;
-
-    if (currentStatus.sessionActive) {
-      // Use productive seconds from background, not wall-clock
-      const productiveSec = currentStatus.productiveSeconds || 0;
-      // If currently on productive site, add local elapsed since last status fetch
-      let displaySec = productiveSec;
-      if (currentStatus.isOnProductiveSite && currentStatus._fetchedAt) {
-        displaySec += Math.floor((Date.now() - currentStatus._fetchedAt) / 1000);
-      }
-      const goalSec = (currentStatus.workMinutes || 50) * 60;
-      const remainingSec = Math.max(0, goalSec - displaySec);
-      timerDisplay.textContent = formatTime(displaySec);
-      timerLabel.textContent = currentStatus.isOnProductiveSite
-        ? `${Math.ceil(remainingSec / 60)} min left`
-        : 'paused \u2014 switch to a productive tab';
-
-      // Update timer section style based on productive state
-      timerSection.className = currentStatus.isOnProductiveSite
-        ? 'timer-section active'
-        : 'timer-section paused';
-    } else if (currentStatus.rewardActive && currentStatus.rewardEndTime) {
-      const remainingSec = Math.max(0, Math.floor((currentStatus.rewardEndTime - Date.now()) / 1000));
-      timerDisplay.textContent = formatTime(remainingSec);
-      timerLabel.textContent = 'reward time left';
-      if (remainingSec <= 0) {
-        stopTimerUpdates();
-        refreshStatus();
-      }
-    }
-  }
-
-  function startTimerUpdates() {
-    stopTimerUpdates();
-    timerInterval = setInterval(tickTimer, 1000);
-  }
-
-  function stopTimerUpdates() {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-  }
-
-  // Periodically re-fetch status to keep productive state in sync
-  let statusInterval = null;
-  function startStatusPolling() {
-    stopStatusPolling();
-    statusInterval = setInterval(async () => {
-      const status = await getStatus();
-      status._fetchedAt = Date.now();
-      currentStatus = status;
-    }, 3000);
-  }
-  function stopStatusPolling() {
-    if (statusInterval) {
-      clearInterval(statusInterval);
-      statusInterval = null;
-    }
-  }
-
   // Button handlers
-  btnStart.addEventListener('click', async () => {
+  btnStart.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'startSession' }, (response) => {
       if (response && response.success) {
-        refreshStatus();
-        startTimerUpdates();
-        startStatusPolling();
+        poll();
+        startPolling();
       }
     });
   });
 
-  btnEnd.addEventListener('click', async () => {
+  btnEnd.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'endSession', confirmed: false }, (response) => {
       if (response && response.needsConfirmation) {
-        const elapsed = currentStatus.productiveSeconds
-          ? Math.floor(currentStatus.productiveSeconds / 60)
-          : 0;
+        const elapsed = currentStatus ? Math.floor((currentStatus.productiveSeconds || 0) / 60) : 0;
         modalMinutes.textContent = elapsed;
         chrome.storage.local.get(['penaltyAmount', 'penaltyTarget', 'penaltyType'], (config) => {
           const amount = config.penaltyAmount || 5;
@@ -272,9 +255,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     penaltyModal.classList.remove('visible');
     chrome.runtime.sendMessage({ action: 'endSession', confirmed: true }, (response) => {
       if (response && response.success) {
-        stopTimerUpdates();
-        stopStatusPolling();
-        refreshStatus();
+        stopPolling();
+        poll();
       }
     });
   });
@@ -282,8 +264,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnReward.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'useReward' }, (response) => {
       if (response && response.success) {
-        refreshStatus();
-        startTimerUpdates();
+        poll();
+        startPolling();
       }
     });
   });
@@ -291,8 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnPause.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'pauseReward' }, (response) => {
       if (response && response.success) {
-        stopTimerUpdates();
-        refreshStatus();
+        poll();
       }
     });
   });
@@ -300,8 +281,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnResume.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'resumeReward' }, (response) => {
       if (response && response.success) {
-        refreshStatus();
-        startTimerUpdates();
+        poll();
+        startPolling();
       }
     });
   });
@@ -319,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Login failed: ' + err.message);
       }
     }
-    refreshStatus();
+    poll();
   });
 
   async function syncUserProfile(token) {
@@ -362,26 +343,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen for messages from background
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === 'sessionCompleted') {
+    if (message.action === 'rewardEarned') {
       showConfetti();
-      stopTimerUpdates();
-      stopStatusPolling();
-      refreshStatus();
+      poll(); // refresh UI to show updated reward balance
     } else if (message.action === 'rewardExpired') {
-      stopTimerUpdates();
-      refreshStatus();
+      poll();
     }
   });
 
   // Initialize
-  await refreshStatus();
-  const status = await getStatus();
-  status._fetchedAt = Date.now();
-  currentStatus = status;
-  if (status.sessionActive || status.rewardActive) {
-    startTimerUpdates();
-  }
-  if (status.sessionActive) {
-    startStatusPolling();
+  await poll();
+  if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive || currentStatus.rewardPaused)) {
+    startPolling();
   }
 });

@@ -109,8 +109,41 @@ function savePayment() {
     });
 }
 
+function lockSiteSections(locked) {
+    // Disable/enable textareas
+    document.getElementById('rewardSites').disabled = locked;
+    document.getElementById('allowedPaths').disabled = locked;
+    document.getElementById('productiveSites').disabled = locked;
+
+    // Disable/enable radio buttons
+    document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
+        radio.disabled = locked;
+    });
+
+    // Disable/enable save buttons
+    document.getElementById('saveRewardSites').disabled = locked;
+    document.getElementById('saveProductiveSites').disabled = locked;
+
+    // Add/remove locked class to section elements
+    const sections = document.querySelectorAll('.section');
+    if (locked) {
+        sections[0].classList.add('section-locked'); // Reward Sites section
+        sections[1].classList.add('section-locked'); // Productive Sites section
+    } else {
+        sections[0].classList.remove('section-locked');
+        sections[1].classList.remove('section-locked');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
+
+    // Check session status and lock sections if session is active
+    chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
+        if (status && status.sessionActive) {
+            lockSiteSections(true);
+        }
+    });
 
     document.getElementById('saveRewardSites').addEventListener('click', saveRewardSites);
     document.getElementById('saveProductiveSites').addEventListener('click', saveProductiveSites);
