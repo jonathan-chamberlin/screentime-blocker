@@ -53,11 +53,12 @@
 - **Status**: not-started
 
 ## Phase 5: polish-demo
-- **Goal**: Polish UI and validate full demo flow end-to-end
+- **Goal**: Polish UI, implement Shame Mode for goofiness, and validate full demo flow end-to-end
 - **Success Criteria**:
   - Zero console errors
   - Full demo sequence works (install → login → start → block → complete → reward → stats → early-end → penalty)
   - UI is clean and professional
+  - **Shame Mode** implemented on blocked page (see goofiness.md): escalating guilt trips — disappointed grandma → crying puppy → webcam snapshot with "THIS IS WHO QUIT" in Impact font. Each visit to a blocked site during a session escalates the drama level.
 - **Requirements**: REQ-016, REQ-017
 - **Dependencies**: Phase 4
 - **Status**: not-started

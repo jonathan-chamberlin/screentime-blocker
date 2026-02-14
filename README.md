@@ -1,15 +1,4 @@
-# screentime-blocker
-
-Perfect. Below is a **clean, implementation-ready spec** you can paste directly into Claude Code.
-
-It is structured, scoped tightly for hackathon execution, and optimized for:
-
-* 🏆 Best use of Auth0
-* 🏆 Best use of Snowflake
-
-No overengineering. No stretch features. Just a clean, winnable build.
-
----
+Began coding 2/14/26 11:15am
 
 # 📄 HACKATHON SPEC — COMMITMENT CONTRACT CHROME EXTENSION
 

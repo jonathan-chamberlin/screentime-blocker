@@ -1,0 +1,4 @@
+node_modules/
+.env
+extension/config.js
+.planning/CREDENTIALS.md

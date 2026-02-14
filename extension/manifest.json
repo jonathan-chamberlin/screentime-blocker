@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "FocusContract",
+  "version": "1.0.0",
+  "description": "Commitment contract focus timer",
+  "permissions": ["declarativeNetRequest", "storage", "identity"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [{
+    "resources": ["blocked.html"],
+    "matches": ["<all_urls>"]
+  }]
+}

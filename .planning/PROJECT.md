@@ -14,6 +14,18 @@ Students and knowledge workers who want to enforce focus time by blocking distra
 - **APIs**: Chrome declarativeNetRequest, chrome.storage.local
 - **Other**: JWT validation middleware
 
+## Testing & Debugging Tooling
+- **Browser automation**: Use the `agent-browser` skill (from northeastern_university_folder) for testing and debugging the Chrome extension
+  - Load the extension into a real browser: `agent-browser --extension ./extension --headed open <url>`
+  - Can also set via env var: `AGENT_BROWSER_EXTENSIONS="./extension"`
+  - Use `agent-browser snapshot -i` to inspect DOM state after extension modifies it
+  - Use `agent-browser screenshot` to visually verify UI and blocking behavior
+  - Test blocked-page redirect: start a session, then `agent-browser open https://youtube.com` and verify redirect to blocked.html
+  - Access extension popup as a page: `agent-browser open chrome-extension://<id>/popup.html`
+  - Monitor network requests with `agent-browser network requests` to verify backend calls
+  - Check extension storage with `agent-browser eval "chrome.storage.local.get(null, r => console.log(JSON.stringify(r)))"`
+  - **Limitations**: Can't directly interact with the toolbar popup bubble — open popup.html as a full page instead. Background service worker debugging is indirect (verify effects, not the worker itself).
+
 ## Constraints
 - Hackathon timeline — speed is critical
 - Manifest V3 only (no Manifest V2)
