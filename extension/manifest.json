@@ -3,7 +3,7 @@
   "name": "FocusContract",
   "version": "1.0.0",
   "description": "Commitment contract focus timer",
-  "permissions": ["declarativeNetRequest", "storage", "identity"],
+  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html"
