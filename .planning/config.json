@@ -1,0 +1,14 @@
+{
+  "project_name": "FocusContract",
+  "created": "2026-02-14",
+  "workflow": {
+    "parallel_research": true,
+    "plan_checking": true,
+    "auto_verify": true,
+    "atomic_commits": true
+  },
+  "git": {
+    "commit_prefix": "feat",
+    "branch_strategy": "single"
+  }
+}
