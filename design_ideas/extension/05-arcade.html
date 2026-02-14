@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Arcade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      font-family: 'Space Grotesk', sans-serif;
+      background: #0c0c1e;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    /* pixel grid bg */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 16px 16px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* everything sits above grid */
+    body > * { position: relative; z-index: 1; }
+
+    /* ---- marquee header ---- */
+    .marquee {
+      background: linear-gradient(180deg, #1a0a2e 0%, #0c0c1e 100%);
+      padding: 14px 16px 10px;
+      text-align: center;
+      border-bottom: 3px solid #ff2d75;
+      position: relative;
+    }
+    .marquee::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 0;
+      height: 3px;
+      background: repeating-linear-gradient(90deg, #ff2d75 0, #ff2d75 8px, #0c0c1e 8px, #0c0c1e 16px);
+    }
+    .marquee-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #ff2d75;
+      text-shadow: 0 0 10px rgba(255,45,117,0.5), 2px 2px 0 #3a0a1e;
+      letter-spacing: 1px;
+    }
+    .marquee-sub {
+      font-size: 10px;
+      color: #666;
+      margin-top: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .coin-counter {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: #ffd700;
+    }
+    .coin {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #ffe566, #ffa500);
+      border: 1.5px solid #cc8800;
+      display: inline-block;
+    }
+    .icon-btns {
+      display: flex;
+      gap: 4px;
+    }
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #333;
+      background: #1a1a2e;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      image-rendering: pixelated;
+    }
+    .icon-btn:hover {
+      border-color: #ff2d75;
+      color: #ff2d75;
+    }
+
+    /* ---- ratio as "game settings" ---- */
+    .game-settings {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 2px solid #1a1a2e;
+    }
+    .setting-slot {
+      flex: 1;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #12122a;
+    }
+    .setting-slot + .setting-slot {
+      border-left: 2px solid #1a1a2e;
+    }
+    .setting-slot label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: #888;
+      text-transform: uppercase;
+    }
+    .setting-slot input {
+      width: 38px;
+      padding: 3px;
+      border: 2px solid #333;
+      background: #0c0c1e;
+      color: #00ffaa;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      text-align: center;
+    }
+    .setting-slot input:focus {
+      outline: none;
+      border-color: #00ffaa;
+      box-shadow: 0 0 6px rgba(0,255,170,0.3);
+    }
+    .setting-slot span { font-size: 10px; color: #555; }
+
+    /* ---- timer: the main "screen" ---- */
+    .game-screen {
+      margin: 12px 14px;
+      padding: 24px 16px;
+      border: 3px solid #222;
+      border-radius: 4px;
+      background: #08081a;
+      text-align: center;
+      position: relative;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 0 15px rgba(255,45,117,0.05);
+    }
+    /* corner dots */
+    .game-screen::before, .game-screen::after {
+      content: '';
+      position: absolute;
+      width: 6px; height: 6px;
+      background: #222;
+    }
+    .game-screen::before { top: 6px; left: 6px; }
+    .game-screen::after { top: 6px; right: 6px; }
+
+    .timer-time {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 36px;
+      color: #333;
+      line-height: 1;
+      letter-spacing: 4px;
+    }
+    .timer-sub {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: #444;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* hp bar */
+    .hp-bar-wrap {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hp-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: #888;
+    }
+    .hp-bar {
+      flex: 1;
+      height: 10px;
+      background: #1a1a2e;
+      border: 2px solid #333;
+      position: relative;
+      overflow: hidden;
+    }
+    .hp-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #ff2d75, #ff6b9d);
+      transition: width 0.3s;
+    }
+    .hp-fill.active {
+      width: 65%;
+      background: linear-gradient(90deg, #00ff88, #00cc6a);
+      animation: hp-pulse 2s ease-in-out infinite;
+    }
+    @keyframes hp-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* active screen state */
+    .game-screen.active {
+      border-color: #00ff88;
+      box-shadow: inset 0 0 30px rgba(0,255,136,0.05), 0 0 15px rgba(0,255,136,0.1);
+    }
+    .game-screen.active .timer-time {
+      color: #00ff88;
+      text-shadow: 0 0 10px rgba(0,255,136,0.4);
+    }
+    .game-screen.active .timer-sub { color: #00ff88; }
+
+    /* reward screen state */
+    .game-screen.reward {
+      border-color: #ffd700;
+      box-shadow: inset 0 0 30px rgba(255,215,0,0.05), 0 0 15px rgba(255,215,0,0.1);
+    }
+    .game-screen.reward .timer-time {
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255,215,0,0.4);
+    }
+
+    /* ---- stats as score display ---- */
+    .score-row {
+      display: flex;
+      gap: 8px;
+      padding: 0 14px;
+    }
+    .score-box {
+      flex: 1;
+      padding: 10px;
+      background: #12122a;
+      border: 2px solid #222;
+      text-align: center;
+    }
+    .score-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 18px;
+      color: #00ffaa;
+    }
+    .score-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: #555;
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- streak / rank ---- */
+    .rank-banner {
+      text-align: center;
+      padding: 10px 14px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: #ff2d75;
+      letter-spacing: 1px;
+    }
+    .rank-banner .stars { color: #ffd700; }
+
+    /* ---- action buttons ---- */
+    .actions {
+      padding: 4px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid;
+      background: transparent;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.08s;
+      position: relative;
+    }
+    .btn:active { transform: translateY(2px); }
+
+    .btn-start {
+      background: #ff2d75;
+      border-color: #cc1155;
+      color: #fff;
+      box-shadow: 0 4px 0 #880033;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+    }
+    .btn-start:active {
+      box-shadow: 0 1px 0 #880033;
+    }
+    .btn-start:hover {
+      background: #ff4488;
+    }
+
+    .btn-end {
+      border-color: #661111;
+      color: #ff4444;
+      box-shadow: 0 4px 0 #330808;
+    }
+
+    .btn-reward {
+      background: #ffd700;
+      border-color: #ccaa00;
+      color: #1a1000;
+      box-shadow: 0 4px 0 #886600;
+    }
+
+    .btn-login {
+      border-color: #222;
+      color: #555;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      box-shadow: none;
+    }
+    .btn-login:hover { color: #888; border-color: #444; }
+
+    /* ---- footer ---- */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      border-top: 2px solid #1a1a2e;
+      font-size: 10px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #444;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      letter-spacing: 1px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      background: #222;
+    }
+    .dot.on {
+      background: #00ff88;
+      box-shadow: 0 0 4px rgba(0,255,136,0.6);
+    }
+    .footer-link {
+      background: none;
+      border: none;
+      color: #444;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .footer-link:hover { color: #888; }
+  </style>
+</head>
+<body>
+
+  <!-- MARQUEE HEADER -->
+  <div class="marquee">
+    <div class="marquee-title">FOCUS CONTRACT</div>
+    <div class="marquee-sub">Insert willpower to continue</div>
+    <div class="header-row">
+      <div class="coin-counter">
+        <span class="coin"></span> x 0
+      </div>
+      <div class="icon-btns">
+        <button class="icon-btn" title="Leaderboard">LB</button>
+        <button class="icon-btn" title="Settings">OPT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SETTINGS -->
+  <div class="game-settings">
+    <div class="setting-slot">
+      <label>Grind</label>
+      <input type="number" value="50">
+      <span>m</span>
+    </div>
+    <div class="setting-slot">
+      <label>Earn</label>
+      <input type="number" value="10">
+      <span>m</span>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN / TIMER -->
+  <div class="game-screen">
+    <div class="timer-time">00:00</div>
+    <div class="timer-sub">Press start</div>
+    <div class="hp-bar-wrap">
+      <span class="hp-label">HP</span>
+      <div class="hp-bar">
+        <div class="hp-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORES -->
+  <div class="score-row">
+    <div class="score-box">
+      <div class="score-val">0</div>
+      <div class="score-label">Today min</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val">0</div>
+      <div class="score-label">Reward</div>
+    </div>
+  </div>
+
+  <!-- RANK -->
+  <div class="rank-banner">
+    <span class="stars">* </span>Certified Couch Goblin<span class="stars"> *</span>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-start">Start Game</button>
+    <!-- <button class="btn btn-end">Rage Quit</button> -->
+    <!-- <button class="btn btn-reward">Use Power-Up</button> -->
+    <button class="btn btn-login">Sign in for leaderboard</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="status">
+      <span class="dot"></span>
+      <span>Offline</span>
+    </div>
+    <button class="footer-link">settings</button>
+  </div>
+
+</body>
+</html>

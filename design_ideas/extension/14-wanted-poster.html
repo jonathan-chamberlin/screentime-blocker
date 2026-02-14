@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Wanted Poster</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rye&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      font-family: 'Lora', Georgia, serif;
+      background: #3a2a1a;
+      color: #2a1a0a;
+    }
+
+    /* wood plank bg texture via gradient stripes */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(60,40,20,0.03) 0,
+          rgba(60,40,20,0.03) 2px,
+          transparent 2px,
+          transparent 20px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* poster paper */
+    .poster {
+      margin: 12px;
+      background: #f0dbb0;
+      border: 3px solid #8a6a3a;
+      padding: 0;
+      position: relative;
+      box-shadow: 4px 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* stain marks */
+    .poster::before {
+      content: '';
+      position: absolute;
+      top: 15%; right: 5%;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(160,120,60,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .poster::after {
+      content: '';
+      position: absolute;
+      bottom: 20%; left: 8%;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(140,100,40,0.1), transparent 70%);
+      pointer-events: none;
+    }
+
+    /* nail */
+    .nail {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle at 40% 35%, #aaa, #555);
+      border-radius: 50%;
+      border: 1px solid #444;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      z-index: 10;
+    }
+
+    /* ---- header ---- */
+    .wanted-header {
+      text-align: center;
+      padding: 20px 16px 6px;
+      border-bottom: 2px solid #c4a060;
+    }
+    .wanted-header h1 {
+      font-family: 'Rye', serif;
+      font-size: 36px;
+      color: #4a2a0a;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      line-height: 1;
+    }
+    .wanted-sub {
+      font-family: 'Rye', serif;
+      font-size: 11px;
+      color: #8a6a3a;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .nav-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 8px;
+      padding-bottom: 2px;
+    }
+    .nav-link {
+      font-size: 10px;
+      color: #8a6a3a;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Lora', serif;
+      font-style: italic;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .nav-link:hover { color: #4a2a0a; }
+
+    /* ---- mugshot area / timer ---- */
+    .mugshot {
+      margin: 12px 20px;
+      padding: 20px;
+      background: #e8ccaa;
+      border: 2px solid #c4a060;
+      text-align: center;
+      position: relative;
+    }
+    /* corner ornaments */
+    .corner-ornament {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-color: #8a6a3a;
+      border-style: solid;
+    }
+    .corner-ornament.tl { top: 4px; left: 4px; border-width: 2px 0 0 2px; }
+    .corner-ornament.tr { top: 4px; right: 4px; border-width: 2px 2px 0 0; }
+    .corner-ornament.bl { bottom: 4px; left: 4px; border-width: 0 0 2px 2px; }
+    .corner-ornament.br { bottom: 4px; right: 4px; border-width: 0 2px 2px 0; }
+
+    .suspect-label {
+      font-family: 'Rye', serif;
+      font-size: 10px;
+      color: #8a6a3a;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .timer-time {
+      font-family: 'Rye', serif;
+      font-size: 48px;
+      color: #4a2a0a;
+      line-height: 1;
+      letter-spacing: 3px;
+    }
+    .timer-sub {
+      font-size: 12px;
+      color: #8a6a3a;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* active */
+    .mugshot.active { border-color: #4a8a2a; background: #e0e8cc; }
+    .mugshot.active .timer-time { color: #2a6a0a; }
+    .mugshot.active .timer-sub { color: #4a8a2a; }
+
+    /* ---- reward amount ---- */
+    .bounty {
+      text-align: center;
+      padding: 8px 20px;
+    }
+    .bounty-label {
+      font-family: 'Rye', serif;
+      font-size: 13px;
+      color: #8a6a3a;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    /* ---- config ---- */
+    .config-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 20px;
+      font-size: 13px;
+    }
+    .config-area span { color: #6a4a2a; }
+    .config-area input {
+      width: 42px;
+      padding: 3px;
+      border: 2px solid #c4a060;
+      background: #f8ecd0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      color: #4a2a0a;
+    }
+    .config-area input:focus {
+      outline: none;
+      border-color: #8a6a3a;
+    }
+    .config-sep {
+      font-family: 'Rye', serif;
+      color: #c4a060;
+    }
+
+    /* ---- stats as charges ---- */
+    .charges {
+      padding: 8px 20px;
+      border-top: 1px solid #d4b480;
+      border-bottom: 1px solid #d4b480;
+      margin: 4px 20px;
+    }
+    .charge-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .charge-line .crime {
+      color: #6a4a2a;
+      font-style: italic;
+    }
+    .charge-line .evidence {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 700;
+      color: #4a2a0a;
+    }
+
+    /* ---- streak ---- */
+    .alias {
+      text-align: center;
+      padding: 8px 20px;
+      font-size: 12px;
+      font-style: italic;
+      color: #8a6a3a;
+    }
+    .alias strong {
+      font-family: 'Rye', serif;
+      font-style: normal;
+      color: #4a2a0a;
+      font-size: 13px;
+    }
+
+    /* ---- star badge (decorative) ---- */
+    .badge-area {
+      text-align: center;
+      padding: 4px 0;
+    }
+    .sheriff-star {
+      display: inline-block;
+      position: relative;
+      width: 30px;
+      height: 30px;
+    }
+    .sheriff-star::before, .sheriff-star::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 0; height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 22px solid #c4a060;
+    }
+    .sheriff-star::after {
+      transform: rotate(180deg);
+      top: 8px;
+    }
+
+    /* ---- actions ---- */
+    .actions {
+      padding: 8px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #8a6a3a;
+      font-family: 'Rye', serif;
+      font-size: 14px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.1s;
+      background: transparent;
+      color: #4a2a0a;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      background: #4a2a0a;
+      color: #f0dbb0;
+      border-color: #3a1a00;
+    }
+    .btn-start:hover { background: #5a3a1a; }
+
+    .btn-end {
+      border-color: #8a3a2a;
+      color: #8a3a2a;
+    }
+
+    .btn-reward {
+      background: #c4a060;
+      border-color: #8a6a3a;
+      color: #3a1a00;
+    }
+
+    .btn-login {
+      border-color: #c4a060;
+      color: #8a6a3a;
+      font-family: 'Lora', serif;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0;
+      font-style: italic;
+    }
+    .btn-login:hover { color: #4a2a0a; }
+
+    /* ---- footer ---- */
+    .poster-footer {
+      text-align: center;
+      padding: 8px 20px 14px;
+      border-top: 2px solid #c4a060;
+      font-size: 10px;
+      color: #8a6a3a;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="poster">
+    <div class="nail"></div>
+
+    <!-- HEADER -->
+    <div class="wanted-header">
+      <h1>WANTED</h1>
+      <div class="wanted-sub">Dead or Productive</div>
+      <div class="nav-row">
+        <button class="nav-link">Leaderboard</button>
+        <button class="nav-link">Settings</button>
+      </div>
+    </div>
+
+    <!-- MUGSHOT / TIMER -->
+    <div class="mugshot">
+      <div class="corner-ornament tl"></div>
+      <div class="corner-ornament tr"></div>
+      <div class="corner-ornament bl"></div>
+      <div class="corner-ornament br"></div>
+      <div class="suspect-label">Time Served</div>
+      <div class="timer-time">00:00</div>
+      <div class="timer-sub">Suspect has not yet reported for duty</div>
+    </div>
+
+    <!-- BOUNTY CONFIG -->
+    <div class="bounty">
+      <div class="bounty-label">Bounty Terms</div>
+    </div>
+    <div class="config-area">
+      <span>Grind</span>
+      <input type="number" value="50">
+      <span>min</span>
+      <span class="config-sep">&bull;</span>
+      <span>Earn</span>
+      <input type="number" value="10">
+      <span>min</span>
+    </div>
+
+    <!-- CHARGES / STATS -->
+    <div class="charges">
+      <div class="charge-line">
+        <span class="crime">Minutes focused today</span>
+        <span class="evidence">0</span>
+      </div>
+      <div class="charge-line">
+        <span class="crime">Reward minutes banked</span>
+        <span class="evidence">0</span>
+      </div>
+    </div>
+
+    <!-- ALIAS -->
+    <div class="alias">
+      Known alias: <strong>Certified Couch Goblin</strong>
+    </div>
+
+    <!-- BADGE -->
+    <div class="badge-area">
+      <div class="sheriff-star"></div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions">
+      <button class="btn btn-start">Lock In, Partner</button>
+      <!-- <button class="btn btn-end">Skip Town (coward)</button> -->
+      <!-- <button class="btn btn-reward">Collect Bounty</button> -->
+      <button class="btn btn-login">Sign in for leaderboard</button>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="poster-footer">
+      By order of the Productivity Sheriff<br>
+      Contact the marshal's office for inquiries
+    </div>
+
+  </div>
+
+</body>
+</html>

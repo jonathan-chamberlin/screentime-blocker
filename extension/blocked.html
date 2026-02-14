@@ -120,6 +120,19 @@
       animation: shake 0.6s ease-in-out infinite;
     }
 
+    /* Shame badge */
+    .shame-badge {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      padding: 6px 16px;
+      border: 2px solid;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
     /* Shame GIF styling */
     .shame-gif {
       max-width: 300px;
@@ -138,6 +151,58 @@
     }
     .flash {
       animation: flash 1s ease-in-out infinite;
+    }
+
+    /* Reward burn button on blocked page */
+    .reward-burn-container {
+      margin-top: 40px;
+      text-align: center;
+    }
+    .btn-burn-reward {
+      display: inline-block;
+      padding: 16px 40px;
+      font-size: 20px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffaa00, #ff8800);
+      color: #1a1000;
+      box-shadow: 0 6px 20px rgba(255,170,0,0.4);
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: system-ui, sans-serif;
+    }
+    .btn-burn-reward:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255,170,0,0.5);
+    }
+    .btn-burn-reward:active { transform: scale(0.97); }
+
+    /* Reward paused message */
+    .reward-paused-msg {
+      font-size: 24px;
+      color: rgba(255,255,255,0.8);
+      margin-top: 20px;
+    }
+
+    /* Session complete celebration */
+    .complete-bg {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    }
+    .complete-title {
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00ff88, #00cc6a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .complete-subtitle {
+      font-size: 22px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 30px;
     }
   </style>
 </head>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Wrestling</title>
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      font-family: 'Oswald', sans-serif;
+      background: #111;
+      color: #eee;
+      overflow: hidden;
+    }
+
+    /* ropes bg */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent 0, transparent 98px,
+          rgba(255,0,0,0.04) 98px, rgba(255,0,0,0.04) 100px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ---- header / entrance ramp ---- */
+    .header {
+      background: linear-gradient(180deg, #1a0000 0%, #0a0000 100%);
+      padding: 12px 16px;
+      border-bottom: 4px solid #cc0000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    /* pyro sparks */
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #cc0000, #ff4400, #ffcc00, #ff4400, #cc0000);
+      animation: pyro 2s linear infinite;
+    }
+    @keyframes pyro {
+      0% { background-position: 0 0; }
+      100% { background-position: 380px 0; }
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* championship belt icon */
+    .belt {
+      width: 28px;
+      height: 22px;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      border: 2px solid #8b6508;
+      border-radius: 4px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .belt::after {
+      content: 'FC';
+      font-family: 'Russo One', sans-serif;
+      font-size: 9px;
+      color: #3a2800;
+      font-weight: 700;
+    }
+    .brand h1 {
+      font-family: 'Russo One', sans-serif;
+      font-size: 17px;
+      color: #ffd700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3);
+    }
+    .header-btns {
+      display: flex;
+      gap: 4px;
+    }
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #cc0000;
+      background: rgba(204,0,0,0.15);
+      color: #cc0000;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover {
+      background: #cc0000;
+      color: #ffd700;
+    }
+
+    /* ---- VS / announcer ---- */
+    .announcer {
+      text-align: center;
+      padding: 8px 16px;
+      font-family: 'Russo One', sans-serif;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+    }
+    .announcer em {
+      color: #cc0000;
+      font-style: normal;
+      font-size: 13px;
+    }
+
+    /* ---- ratio as weight class ---- */
+    .weight-class {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: #0a0a0a;
+      border-bottom: 1px solid #222;
+    }
+    .corner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .corner-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #cc0000;
+    }
+    .corner-label.blue { color: #3366cc; }
+    .corner input {
+      width: 48px;
+      padding: 4px;
+      border: 2px solid #333;
+      background: #1a1a1a;
+      color: #ffd700;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .corner input:focus {
+      outline: none;
+      border-color: #ffd700;
+    }
+    .corner span { font-size: 10px; color: #555; }
+    .vs-badge {
+      font-family: 'Russo One', sans-serif;
+      font-size: 20px;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
+    }
+
+    /* ---- timer: the ring ---- */
+    .ring {
+      margin: 10px 16px;
+      padding: 24px 16px 20px;
+      background: #0a0a0a;
+      border: 3px solid #333;
+      position: relative;
+      text-align: center;
+    }
+    /* corner turnbuckles */
+    .ring::before, .ring::after {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      background: #cc0000;
+      border: 2px solid #880000;
+      border-radius: 2px;
+      top: -5px;
+    }
+    .ring::before { left: -5px; }
+    .ring::after { right: -5px; }
+    /* ropes */
+    .rope-top, .rope-bottom {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #333, #cc0000, #cc0000, #333);
+    }
+    .rope-top { top: 10px; }
+    .rope-bottom { bottom: 10px; }
+
+    .timer-time {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 52px;
+      font-weight: 700;
+      color: #333;
+      line-height: 1;
+      letter-spacing: 3px;
+    }
+    .timer-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #444;
+    }
+
+    /* round counter */
+    .round-tag {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffd700;
+      color: #1a0a00;
+      font-family: 'Russo One', sans-serif;
+      font-size: 9px;
+      padding: 2px 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* active ring */
+    .ring.active {
+      border-color: #cc0000;
+      box-shadow: 0 0 20px rgba(204,0,0,0.2);
+    }
+    .ring.active .timer-time {
+      color: #ff2200;
+      text-shadow: 0 0 15px rgba(255,34,0,0.4);
+    }
+    .ring.active .timer-sub { color: #cc0000; }
+
+    /* reward ring */
+    .ring.reward { border-color: #ffd700; }
+    .ring.reward .timer-time {
+      color: #ffd700;
+      text-shadow: 0 0 15px rgba(255,215,0,0.4);
+    }
+
+    /* ---- stats as tale-of-the-tape ---- */
+    .tale-tape {
+      display: flex;
+      padding: 0 16px;
+      gap: 2px;
+    }
+    .tape-card {
+      flex: 1;
+      padding: 10px;
+      background: #0d0d0d;
+      border: 1px solid #222;
+      text-align: center;
+    }
+    .tape-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffd700;
+    }
+    .tape-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555;
+    }
+
+    /* ---- streak title / belt name ---- */
+    .title-belt {
+      text-align: center;
+      padding: 8px 16px;
+      font-family: 'Russo One', sans-serif;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #555;
+    }
+    .title-belt span {
+      color: #cc0000;
+    }
+
+    /* ---- actions ---- */
+    .actions {
+      padding: 4px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid;
+      font-family: 'Russo One', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      transition: all 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      background: #cc0000;
+      border-color: #880000;
+      color: #ffd700;
+      box-shadow: 0 4px 0 #660000;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    .btn-start:active { box-shadow: 0 1px 0 #660000; }
+    .btn-start:hover { background: #dd1111; }
+
+    .btn-end {
+      background: transparent;
+      border-color: #444;
+      color: #888;
+      box-shadow: 0 4px 0 #222;
+    }
+
+    .btn-reward {
+      background: #ffd700;
+      border-color: #b8860b;
+      color: #3a2800;
+      box-shadow: 0 4px 0 #8b6508;
+    }
+
+    .btn-login {
+      background: transparent;
+      border-color: #222;
+      color: #444;
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      box-shadow: none;
+    }
+    .btn-login:hover { color: #888; border-color: #444; }
+
+    /* ---- footer ---- */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-top: 2px solid #222;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      background: #333;
+    }
+    .dot.on {
+      background: #cc0000;
+      box-shadow: 0 0 4px rgba(204,0,0,0.6);
+    }
+    .footer-link {
+      background: none;
+      border: none;
+      color: #444;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: 'Oswald', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .footer-link:hover { color: #cc0000; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="belt"></div>
+      <h1>FocusContract</h1>
+    </div>
+    <div class="header-btns">
+      <button class="icon-btn" title="Leaderboard">LB</button>
+      <button class="icon-btn" title="Settings">CFG</button>
+    </div>
+  </div>
+
+  <!-- ANNOUNCER -->
+  <div class="announcer">
+    <em>You</em> vs. <em>Procrastination</em>
+  </div>
+
+  <!-- WEIGHT CLASS / RATIO -->
+  <div class="weight-class">
+    <div class="corner">
+      <span class="corner-label">Grind</span>
+      <input type="number" value="50">
+      <span>min</span>
+    </div>
+    <span class="vs-badge">VS</span>
+    <div class="corner">
+      <span class="corner-label blue">Earn</span>
+      <input type="number" value="10">
+      <span>min</span>
+    </div>
+  </div>
+
+  <!-- RING / TIMER -->
+  <div class="ring">
+    <span class="round-tag">Round 1</span>
+    <div class="rope-top"></div>
+    <div class="timer-time">00:00</div>
+    <div class="timer-sub">Waiting for the bell</div>
+    <div class="rope-bottom"></div>
+  </div>
+
+  <!-- TALE OF THE TAPE -->
+  <div class="tale-tape">
+    <div class="tape-card">
+      <div class="tape-val">0</div>
+      <div class="tape-label">Today (min)</div>
+    </div>
+    <div class="tape-card">
+      <div class="tape-val">0</div>
+      <div class="tape-label">Reward (min)</div>
+    </div>
+  </div>
+
+  <!-- TITLE BELT -->
+  <div class="title-belt">
+    Current Title: <span>Certified Couch Goblin</span>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-start">Ring The Bell</button>
+    <!-- <button class="btn btn-end">Throw In The Towel</button> -->
+    <!-- <button class="btn btn-reward">Victory Lap</button> -->
+    <button class="btn btn-login">Sign in for leaderboard</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="status">
+      <span class="dot"></span>
+      <span>Offline</span>
+    </div>
+    <button class="footer-link">Settings</button>
+  </div>
+
+</body>
+</html>

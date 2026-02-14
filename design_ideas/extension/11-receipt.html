@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Receipt</title>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 340px;
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+      background: #f0ebe4;
+      color: #2a2a2a;
+      padding: 0;
+    }
+
+    /* receipt paper look */
+    .receipt {
+      background: #fdfcf8;
+      margin: 12px;
+      padding: 0;
+      border: 1px solid #e0dbd2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    /* torn top edge */
+    .receipt::before {
+      content: '';
+      position: absolute;
+      top: -6px; left: -1px; right: -1px;
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        #fdfcf8 0, #fdfcf8 4px,
+        transparent 4px, transparent 5px,
+        #fdfcf8 5px, #fdfcf8 10px
+      );
+      border-top: 1px solid #e0dbd2;
+    }
+
+    /* torn bottom edge */
+    .receipt::after {
+      content: '';
+      position: absolute;
+      bottom: -6px; left: -1px; right: -1px;
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        #fdfcf8 0, #fdfcf8 4px,
+        transparent 4px, transparent 5px,
+        #fdfcf8 5px, #fdfcf8 10px
+      );
+      border-bottom: 1px solid #e0dbd2;
+    }
+
+    /* ---- header ---- */
+    .r-header {
+      text-align: center;
+      padding: 16px 16px 10px;
+      border-bottom: 1px dashed #ccc;
+    }
+    .r-header h1 {
+      font-family: 'Special Elite', 'Courier New', monospace;
+      font-size: 20px;
+      color: #1a1a1a;
+      letter-spacing: 2px;
+    }
+    .r-header .tagline {
+      font-size: 10px;
+      color: #888;
+      margin-top: 2px;
+      letter-spacing: 1px;
+    }
+    .r-header .date {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 6px;
+    }
+    .r-header-nav {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .r-nav-link {
+      font-size: 10px;
+      color: #888;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'IBM Plex Mono', monospace;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .r-nav-link:hover { color: #333; }
+
+    /* ---- separator ---- */
+    .sep {
+      border: none;
+      border-top: 1px dashed #ccc;
+      margin: 0;
+    }
+
+    /* ---- config ---- */
+    .r-config {
+      padding: 10px 16px;
+    }
+    .config-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 3px 0;
+    }
+    .config-line .key { color: #666; }
+    .config-line input {
+      width: 40px;
+      padding: 1px 2px;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      background: transparent;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: right;
+      color: #1a1a1a;
+    }
+    .config-line input:focus {
+      outline: none;
+      border-bottom-color: #1a1a1a;
+    }
+    .config-line .val { font-weight: 700; color: #1a1a1a; }
+
+    /* ---- timer area ---- */
+    .r-timer {
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .r-timer-display {
+      font-size: 48px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1;
+      letter-spacing: 4px;
+    }
+    .r-timer-label {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* active */
+    .r-timer.active .r-timer-display { color: #1a1a1a; }
+    .r-timer.active .r-timer-label { color: #1a1a1a; }
+
+    /* ---- line items (stats) ---- */
+    .r-items {
+      padding: 10px 16px;
+    }
+    .item-header {
+      font-size: 10px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+    .item-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 4px 0;
+      border-bottom: 1px dotted #e0dbd2;
+    }
+    .item-line:last-child { border-bottom: none; }
+    .item-line .desc { color: #555; }
+    .item-line .amt {
+      font-weight: 700;
+      color: #1a1a1a;
+      text-align: right;
+    }
+
+    /* ---- totals ---- */
+    .r-totals {
+      padding: 10px 16px;
+    }
+    .total-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 4px 0;
+    }
+    .total-line .label { color: #1a1a1a; }
+    .total-line .total-amt {
+      font-size: 18px;
+      color: #1a1a1a;
+    }
+    .total-line.streak {
+      font-size: 11px;
+      font-weight: 500;
+      color: #888;
+    }
+    .total-line.streak .total-amt {
+      font-size: 11px;
+      color: #888;
+      font-weight: 500;
+      font-style: italic;
+    }
+
+    /* ---- barcode (decorative) ---- */
+    .barcode {
+      padding: 12px 16px 6px;
+      text-align: center;
+    }
+    .barcode-lines {
+      display: flex;
+      justify-content: center;
+      gap: 1px;
+      margin-bottom: 4px;
+    }
+    .bar {
+      height: 28px;
+      background: #1a1a1a;
+    }
+    .barcode-text {
+      font-size: 8px;
+      color: #aaa;
+      letter-spacing: 3px;
+    }
+
+    /* ---- action button ---- */
+    .r-actions {
+      padding: 8px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: 1px dashed;
+      background: transparent;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      border-color: #1a1a1a;
+      color: #1a1a1a;
+      background: #f0ebe4;
+    }
+    .btn-start:hover {
+      background: #1a1a1a;
+      color: #fdfcf8;
+    }
+
+    .btn-end {
+      border-color: #cc3333;
+      color: #cc3333;
+    }
+
+    .btn-reward {
+      border-color: #aa8800;
+      color: #aa8800;
+    }
+
+    .btn-login {
+      border-style: dotted;
+      border-color: #ccc;
+      color: #aaa;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .btn-login:hover { color: #666; border-color: #999; }
+
+    /* ---- footer ---- */
+    .r-footer {
+      text-align: center;
+      padding: 8px 16px 14px;
+      border-top: 1px dashed #ccc;
+      font-size: 10px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+    .r-footer .thanks {
+      font-family: 'Special Elite', monospace;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="receipt">
+
+    <!-- HEADER -->
+    <div class="r-header">
+      <h1>FOCUSCONTRACT</h1>
+      <div class="tagline">Your productivity receipt</div>
+      <div class="date">Feb 14, 2026 &mdash; 2:45 PM</div>
+      <div class="r-header-nav">
+        <button class="r-nav-link">leaderboard</button>
+        <button class="r-nav-link">settings</button>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- CONFIG -->
+    <div class="r-config">
+      <div class="config-line">
+        <span class="key">GRIND DURATION</span>
+        <span><input type="number" value="50"> min</span>
+      </div>
+      <div class="config-line">
+        <span class="key">REWARD EARNED</span>
+        <span><input type="number" value="10"> min</span>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- TIMER -->
+    <div class="r-timer">
+      <div class="r-timer-display">00:00</div>
+      <div class="r-timer-label">Ready when you are</div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- LINE ITEMS -->
+    <div class="r-items">
+      <div class="item-header">Today's Transactions</div>
+      <div class="item-line">
+        <span class="desc">Focus minutes earned</span>
+        <span class="amt">0 min</span>
+      </div>
+      <div class="item-line">
+        <span class="desc">Reward balance</span>
+        <span class="amt">0 min</span>
+      </div>
+      <div class="item-line">
+        <span class="desc">Sessions completed</span>
+        <span class="amt">0</span>
+      </div>
+      <div class="item-line">
+        <span class="desc">Quit penalties</span>
+        <span class="amt">$0.00</span>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- TOTALS -->
+    <div class="r-totals">
+      <div class="total-line">
+        <span class="label">TOTAL TODAY</span>
+        <span class="total-amt">0 min</span>
+      </div>
+      <div class="total-line streak">
+        <span class="label">STATUS</span>
+        <span class="total-amt">Certified Couch Goblin</span>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- BARCODE -->
+    <div class="barcode">
+      <div class="barcode-lines">
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:2px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:1px"></div>
+        <div class="bar" style="width:3px"></div>
+      </div>
+      <div class="barcode-text">FC 0214 2026 0000</div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="r-actions">
+      <button class="btn btn-start">[ Lock In ]</button>
+      <!-- <button class="btn btn-end">[ Quit Early ]</button> -->
+      <!-- <button class="btn btn-reward">[ Burn Reward ]</button> -->
+      <button class="btn btn-login">Sign in for leaderboard</button>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="r-footer">
+      <div class="thanks">Thank you for grinding!</div>
+      <span>Keep receipt for your records</span><br>
+      <span>No refunds on wasted time</span>
+    </div>
+
+  </div>
+
+</body>
+</html>

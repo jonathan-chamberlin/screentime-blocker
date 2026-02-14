@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - GeoCities</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+      background: #000080;
+      color: #ffff00;
+      cursor: default;
+    }
+
+    /* ---- starfield bg ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(1px 1px at 10% 20%, #fff, transparent),
+        radial-gradient(1px 1px at 30% 60%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 10%, #fff, transparent),
+        radial-gradient(1px 1px at 70% 80%, #fff, transparent),
+        radial-gradient(1px 1px at 90% 40%, #fff, transparent),
+        radial-gradient(1px 1px at 15% 75%, #fff, transparent),
+        radial-gradient(1px 1px at 85% 15%, #fff, transparent),
+        radial-gradient(1px 1px at 45% 90%, #fff, transparent),
+        radial-gradient(1px 1px at 60% 50%, #fff, transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ---- marquee ---- */
+    .marquee-bar {
+      background: #ff0000;
+      color: #ffff00;
+      padding: 4px 0;
+      font-size: 12px;
+      font-weight: bold;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .marquee-text {
+      display: inline-block;
+      animation: scroll-left 12s linear infinite;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* ---- header ---- */
+    .header {
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 3px ridge #c0c0c0;
+      background: #000080;
+    }
+    .header h1 {
+      font-size: 22px;
+      color: #00ff00;
+      text-shadow: 2px 2px #ff00ff;
+      animation: rainbow 4s linear infinite;
+    }
+    @keyframes rainbow {
+      0% { color: #ff0000; }
+      17% { color: #ff8800; }
+      33% { color: #ffff00; }
+      50% { color: #00ff00; }
+      67% { color: #0088ff; }
+      83% { color: #ff00ff; }
+      100% { color: #ff0000; }
+    }
+    .header .subtitle {
+      font-size: 10px;
+      color: #00ffff;
+      margin-top: 2px;
+    }
+    .visitor-counter {
+      margin-top: 6px;
+      font-size: 10px;
+      color: #c0c0c0;
+    }
+    .counter-box {
+      display: inline-flex;
+      gap: 1px;
+      margin-left: 4px;
+    }
+    .counter-digit {
+      background: #000;
+      color: #00ff00;
+      padding: 1px 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px inset #444;
+    }
+    .header-links {
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .header-links a {
+      font-size: 11px;
+      color: #00ffff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .header-links a:hover { color: #ffffff; }
+
+    /* ---- horizontal rule ---- */
+    .fancy-hr {
+      height: 4px;
+      border: none;
+      background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #ff00ff);
+    }
+
+    /* ---- config table ---- */
+    .config-table {
+      margin: 8px 14px;
+      border: 2px ridge #c0c0c0;
+      background: #000040;
+      padding: 8px;
+    }
+    .config-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .config-table td {
+      padding: 4px 6px;
+      font-size: 12px;
+      color: #ffff00;
+      border: 1px dotted #444;
+    }
+    .config-table input {
+      width: 44px;
+      padding: 2px;
+      border: 2px inset #c0c0c0;
+      background: #ffffff;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: #000080;
+    }
+    .config-table .label { color: #00ff00; font-weight: bold; }
+
+    /* ---- timer ---- */
+    .timer-area {
+      margin: 8px 14px;
+      padding: 16px;
+      border: 3px ridge #c0c0c0;
+      background: #000000;
+      text-align: center;
+    }
+    .timer-display {
+      font-family: 'Courier New', monospace;
+      font-size: 48px;
+      font-weight: bold;
+      color: #00ff00;
+      text-shadow: 0 0 8px #00ff00;
+      letter-spacing: 4px;
+    }
+    .timer-label {
+      font-size: 11px;
+      color: #c0c0c0;
+      margin-top: 4px;
+    }
+
+    /* animated construction gif replacement */
+    .construction {
+      text-align: center;
+      padding: 4px;
+      font-size: 10px;
+      color: #ff8800;
+      animation: blink-text 1s step-end infinite;
+    }
+    @keyframes blink-text {
+      50% { opacity: 0; }
+    }
+
+    /* ---- stats ---- */
+    .stats-area {
+      margin: 8px 14px;
+      display: flex;
+      gap: 6px;
+    }
+    .stat-box {
+      flex: 1;
+      padding: 8px;
+      border: 2px ridge #c0c0c0;
+      background: #200040;
+      text-align: center;
+    }
+    .stat-val {
+      font-family: 'Courier New', monospace;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff00ff;
+      text-shadow: 1px 1px #000;
+    }
+    .stat-label {
+      font-size: 9px;
+      color: #c0c0c0;
+      margin-top: 2px;
+    }
+
+    /* ---- streak / guestbook ---- */
+    .guestbook {
+      margin: 6px 14px;
+      padding: 6px 10px;
+      border: 2px ridge #c0c0c0;
+      background: #400000;
+      text-align: center;
+      font-size: 12px;
+      color: #ff8800;
+    }
+    .guestbook strong { color: #ffff00; }
+
+    /* ---- webring ---- */
+    .webring {
+      text-align: center;
+      padding: 6px;
+      font-size: 9px;
+      color: #808080;
+    }
+    .webring a { color: #00ffff; text-decoration: underline; cursor: pointer; }
+
+    /* ---- actions ---- */
+    .actions {
+      padding: 6px 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: 3px outset #c0c0c0;
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.05s;
+    }
+    .btn:active {
+      border-style: inset;
+    }
+
+    .btn-start {
+      background: #00aa00;
+      color: #ffffff;
+    }
+    .btn-start:hover { background: #00cc00; }
+
+    .btn-end {
+      background: #cc0000;
+      color: #ffffff;
+    }
+
+    .btn-reward {
+      background: #ccaa00;
+      color: #000000;
+    }
+
+    .btn-login {
+      background: #c0c0c0;
+      color: #000080;
+      font-size: 11px;
+      text-transform: none;
+    }
+    .btn-login:hover { background: #e0e0e0; }
+
+    /* ---- footer ---- */
+    .footer {
+      padding: 8px 14px;
+      border-top: 3px ridge #c0c0c0;
+      text-align: center;
+      font-size: 9px;
+      color: #808080;
+      line-height: 1.6;
+    }
+    .footer a { color: #00ffff; }
+    .email-me {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 8px;
+      background: #ffff00;
+      color: #000080;
+      font-weight: bold;
+      font-size: 10px;
+      border: 2px outset #c0c0c0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MARQUEE -->
+  <div class="marquee-bar">
+    <span class="marquee-text">*** WELCOME TO FOCUSCONTRACT *** YOUR #1 PRODUCTIVITY HOMEPAGE *** BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 *** NOW WITH 100% MORE FOCUS ***</span>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>~*~ FocusContract ~*~</h1>
+    <div class="subtitle">[ Your Personal Productivity Homepage ]</div>
+    <div class="visitor-counter">
+      You are visitor #
+      <span class="counter-box">
+        <span class="counter-digit">0</span>
+        <span class="counter-digit">0</span>
+        <span class="counter-digit">0</span>
+        <span class="counter-digit">4</span>
+        <span class="counter-digit">2</span>
+        <span class="counter-digit">0</span>
+      </span>
+    </div>
+    <div class="header-links">
+      <a>[ Home ]</a>
+      <a>[ Leaderboard ]</a>
+      <a>[ Settings ]</a>
+      <a>[ Guestbook ]</a>
+    </div>
+  </div>
+
+  <hr class="fancy-hr">
+
+  <!-- CONFIG -->
+  <div class="config-table">
+    <table>
+      <tr>
+        <td class="label">GRIND TIME:</td>
+        <td><input type="number" value="50"> min</td>
+        <td class="label">REWARD:</td>
+        <td><input type="number" value="10"> min</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-area">
+    <div class="timer-display">00:00</div>
+    <div class="timer-label">~ ready when u are ~</div>
+  </div>
+
+  <div class="construction">** UNDER CONSTRUCTION ** UNDER CONSTRUCTION **</div>
+
+  <!-- STATS -->
+  <div class="stats-area">
+    <div class="stat-box">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Today (min)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Reward (min)</div>
+    </div>
+  </div>
+
+  <!-- GUESTBOOK -->
+  <div class="guestbook">
+    Your rank: <strong>Certified Couch Goblin</strong>
+  </div>
+
+  <!-- WEBRING -->
+  <div class="webring">
+    [ <a>&lt;&lt; Prev</a> | <a>Productivity WebRing</a> | <a>Next &gt;&gt;</a> ]
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-start">!! LOCK IN !!</button>
+    <!-- <button class="btn btn-end">!! QUIT EARLY !!</button> -->
+    <!-- <button class="btn btn-reward">!! BURN REWARD !!</button> -->
+    <button class="btn btn-login">Sign In For Leaderboard</button>
+  </div>
+
+  <hr class="fancy-hr">
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Best viewed at 800x600 resolution<br>
+    Made with love and HTML 3.2<br>
+    Last updated: Feb 14, 2026<br>
+    <span class="email-me">EMAIL THE WEBMASTER</span>
+  </div>
+
+</body>
+</html>

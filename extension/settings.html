@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FocusContract Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,138 +15,174 @@
         }
 
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f5f5;
-            padding: 20px;
+            font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #0f0f1a;
+            padding: 40px 20px;
             line-height: 1.6;
+            color: #e0e0e0;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 30px;
         }
 
         .header {
-            text-align: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 40px 30px;
             margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .header h1 {
-            color: #1a73e8;
-            font-size: 28px;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
         }
 
         .header .close-link {
-            color: #666;
+            color: #888;
             text-decoration: none;
             font-size: 14px;
+            transition: color 0.2s;
         }
 
         .header .close-link:hover {
-            color: #1a73e8;
+            color: #f093fb;
         }
 
         .section {
-            background-color: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
             margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .section:hover {
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .section h2 {
-            color: #333;
-            font-size: 18px;
-            margin-bottom: 15px;
+            color: #e0e0e0;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
         .form-group label {
             display: block;
-            color: #555;
-            font-size: 14px;
-            margin-bottom: 5px;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 8px;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .form-group input[type="number"],
         .form-group input[type="text"],
         .form-group textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            padding: 12px 16px;
+            background-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 15px;
             font-family: inherit;
+            color: #e0e0e0;
+            transition: all 0.3s;
         }
 
         .form-group textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
+            line-height: 1.5;
         }
 
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #1a73e8;
+            border-color: #f093fb;
+            box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.15);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #555;
         }
 
         .radio-group {
             display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
+            gap: 24px;
+            margin-bottom: 18px;
         }
 
         .radio-group label {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             cursor: pointer;
+            color: #e0e0e0;
+            font-size: 15px;
+            text-transform: none;
+            letter-spacing: normal;
         }
 
         .radio-group input[type="radio"] {
             cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #f093fb;
         }
 
         .save-button-container {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 20px;
         }
 
         button {
-            background-color: #1a73e8;
-            color: white;
+            background-color: #00ff88;
+            color: #0f0f1a;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 28px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         button:hover {
-            background-color: #1557b0;
+            background-color: #00dd77;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
         }
 
         button:active {
-            background-color: #0d47a1;
+            transform: translateY(0);
         }
 
         .save-confirmation {
-            color: #0f9d58;
+            color: #00ff88;
             font-size: 14px;
             font-weight: 500;
             opacity: 0;
@@ -172,28 +211,14 @@
         </div>
 
         <div class="section">
-            <h2>Work / Reward Ratio</h2>
-            <div class="input-row">
-                <div class="form-group">
-                    <label for="workMinutes">Work Minutes</label>
-                    <input type="number" id="workMinutes" min="1" max="180" value="50">
-                </div>
-                <div class="form-group">
-                    <label for="rewardMinutes">Reward Minutes</label>
-                    <input type="number" id="rewardMinutes" min="1" max="60" value="10">
-                </div>
-            </div>
-            <div class="save-button-container">
-                <button id="saveRatio">Save</button>
-                <span class="save-confirmation" id="ratioConfirmation">Saved!</span>
-            </div>
-        </div>
-
-        <div class="section">
             <h2>Reward Sites</h2>
             <div class="form-group">
                 <label for="rewardSites">Sites to block during work (one per line)</label>
                 <textarea id="rewardSites" placeholder="youtube.com&#10;instagram.com&#10;reddit.com"></textarea>
+            </div>
+            <div class="form-group" style="margin-top: 18px;">
+                <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
+                <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
             </div>
             <div class="save-button-container">
                 <button id="saveRewardSites">Save</button>
@@ -204,6 +229,19 @@
         <div class="section">
             <h2>Productive Sites</h2>
             <div class="form-group">
+                <label>What counts as productive?</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="productiveMode" value="whitelist" checked>
+                        <span>Only sites listed below</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="productiveMode" value="all-except-blocked">
+                        <span>Everything except blocked sites</span>
+                    </label>
+                </div>
+            </div>
+            <div id="productiveSitesGroup" class="form-group">
                 <label for="productiveSites">Allowed during work (one per line)</label>
                 <textarea id="productiveSites" placeholder="docs.google.com&#10;notion.so&#10;github.com"></textarea>
             </div>

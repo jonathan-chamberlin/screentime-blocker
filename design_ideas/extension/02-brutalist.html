@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Brutalist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 370px;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f1f0ec;
+      color: #1a1a1a;
+    }
+
+    /* ---- header ---- */
+    .header {
+      padding: 14px 16px;
+      background: #1a1a1a;
+      color: #f1f0ec;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .header-right {
+      display: flex;
+      gap: 2px;
+    }
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #f1f0ec;
+      background: transparent;
+      color: #f1f0ec;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+    }
+    .icon-btn:hover {
+      background: #f1f0ec;
+      color: #1a1a1a;
+    }
+
+    /* ---- ratio ---- */
+    .ratio-strip {
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid #1a1a1a;
+    }
+    .ratio-cell {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 0;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: #e8e7e2;
+    }
+    .ratio-cell + .ratio-cell {
+      border-left: 2px solid #1a1a1a;
+    }
+    .ratio-cell input {
+      width: 40px;
+      padding: 2px;
+      border: 2px solid #1a1a1a;
+      background: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      color: #1a1a1a;
+    }
+    .ratio-cell input:focus {
+      outline: none;
+      background: #ffef3a;
+    }
+
+    /* ---- timer ---- */
+    .timer-block {
+      padding: 32px 16px 28px;
+      text-align: center;
+      position: relative;
+    }
+    .timer-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 64px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1;
+      letter-spacing: 4px;
+    }
+    .timer-label {
+      margin-top: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #888;
+    }
+
+    /* active */
+    .timer-block.active { background: #1a1a1a; }
+    .timer-block.active .timer-display { color: #ffef3a; }
+    .timer-block.active .timer-label { color: #999; }
+
+    /* reward */
+    .timer-block.reward { background: #ffef3a; }
+    .timer-block.reward .timer-display { color: #1a1a1a; }
+    .timer-block.reward .timer-label { color: #666; }
+
+    /* ---- stats ---- */
+    .stats-row {
+      display: flex;
+      border-top: 2px solid #1a1a1a;
+      border-bottom: 2px solid #1a1a1a;
+    }
+    .stat-box {
+      flex: 1;
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .stat-box + .stat-box {
+      border-left: 2px solid #1a1a1a;
+    }
+    .stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1;
+    }
+    .stat-desc {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* ---- streak ---- */
+    .streak-bar {
+      padding: 8px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      text-align: center;
+      background: #e8e7e2;
+      border-bottom: 2px solid #1a1a1a;
+    }
+
+    /* ---- actions ---- */
+    .actions {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #1a1a1a;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: transform 0.08s;
+    }
+    .btn:active { transform: translate(2px, 2px); }
+
+    .btn-start {
+      background: #1a1a1a;
+      color: #f1f0ec;
+      box-shadow: 4px 4px 0 #1a1a1a;
+      border-color: #1a1a1a;
+      position: relative;
+      /* offset shadow trick for brutalist depth */
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    }
+    .btn-start:active {
+      box-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+    }
+
+    .btn-end {
+      background: #ff3b30;
+      color: #fff;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    }
+
+    .btn-reward {
+      background: #ffef3a;
+      color: #1a1a1a;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    }
+
+    .btn-login {
+      background: #fff;
+      color: #888;
+      border-color: #ccc;
+      font-weight: 400;
+      box-shadow: none;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .btn-login:hover { border-color: #1a1a1a; color: #1a1a1a; }
+
+    .btn-leaderboard {
+      background: #fff;
+      color: #1a1a1a;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    }
+
+    /* ---- footer ---- */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-top: 2px solid #1a1a1a;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: #ccc;
+    }
+    .dot.on { background: #1a1a1a; }
+    .footer-link {
+      background: none;
+      border: none;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .footer-link:hover { color: #1a1a1a; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">Focus//Contract</div>
+    <div class="header-right">
+      <button class="icon-btn" title="Leaderboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      </button>
+      <button class="icon-btn" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- RATIO -->
+  <div class="ratio-strip">
+    <div class="ratio-cell">
+      Grind <input type="number" value="50"> min
+    </div>
+    <div class="ratio-cell">
+      Earn <input type="number" value="10"> min
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-block">
+    <div class="timer-display">00:00</div>
+    <div class="timer-label">Ready when you are</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num">0</div>
+      <div class="stat-desc">Today (min)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">0</div>
+      <div class="stat-desc">Reward (min)</div>
+    </div>
+  </div>
+
+  <!-- STREAK -->
+  <div class="streak-bar">Certified Couch Goblin</div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-start">Lock In</button>
+    <!-- <button class="btn btn-end">Quit Early (coward)</button> -->
+    <!-- <button class="btn btn-reward">Burn Reward Minutes</button> -->
+    <button class="btn btn-login">Sign In for Leaderboard</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="status">
+      <span class="dot"></span>
+      <span>Offline</span>
+    </div>
+    <button class="footer-link">Settings</button>
+  </div>
+
+</body>
+</html>

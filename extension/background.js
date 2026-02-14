@@ -9,6 +9,14 @@ let state = {
   rewardActive: false,
   rewardEndTime: null,
   blockedAttempts: 0,
+  // Productive tab tracking
+  productiveSeconds: 0,
+  lastProductiveTick: null,
+  isOnProductiveSite: false,
+  sessionCompleted: false,
+  // Reward pause/resume
+  rewardPaused: false,
+  rewardRemainingSeconds: 0,
   // Settings (defaults, will be overridden from storage)
   workMinutes: 50,
   rewardMinutes: 10,
@@ -21,6 +29,11 @@ chrome.storage.local.get(['focusState'], (result) => {
     // If session was active, check if it's still valid
     if (state.sessionActive && state.sessionStartTime) {
       blockSites();
+      checkCurrentTab();
+    }
+    // If session completed (waiting for reward burn), keep sites blocked
+    if (state.sessionCompleted) {
+      blockSites();
     }
     // If reward was active, check if it expired
     if (state.rewardActive && state.rewardEndTime) {
@@ -31,6 +44,10 @@ chrome.storage.local.get(['focusState'], (result) => {
         saveState();
       }
     }
+    // If reward is paused, keep sites blocked
+    if (state.rewardPaused) {
+      blockSites();
+    }
   }
 });
 
@@ -38,7 +55,123 @@ function saveState() {
   chrome.storage.local.set({ focusState: state });
 }
 
-// Listen for messages from popup
+// --- Tab monitoring for productive site tracking ---
+
+// Check if a URL matches any site in a list (domain matching)
+function urlMatchesSites(url, sites) {
+  if (!url || !sites || sites.length === 0) return false;
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
+    return sites.some(site => {
+      const cleanSite = site.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '');
+      return hostname === cleanSite || hostname.endsWith('.' + cleanSite);
+    });
+  } catch {
+    return false;
+  }
+}
+
+// Check if a URL matches any allowed path (domain + path prefix matching)
+function urlMatchesAllowedPaths(url, allowedPaths) {
+  if (!url || !allowedPaths || allowedPaths.length === 0) return false;
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.replace(/^www\./, '');
+    const fullPath = hostname + urlObj.pathname.toLowerCase();
+    return allowedPaths.some(path => {
+      const clean = path.trim().replace(/^(https?:\/\/)?(www\.)?/, '').toLowerCase();
+      return fullPath.startsWith(clean);
+    });
+  } catch {
+    return false;
+  }
+}
+
+// Check the current active tab and update productive state
+async function checkCurrentTab() {
+  if (!state.sessionActive) return;
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab || !tab.url) {
+      updateProductiveState(false);
+      return;
+    }
+
+    const result = await new Promise(r =>
+      chrome.storage.local.get(['productiveSites', 'productiveMode', 'rewardSites', 'allowedPaths'], r)
+    );
+    const mode = result.productiveMode || 'whitelist';
+    const allowedPaths = result.allowedPaths || [];
+
+    // Allowed paths are always productive (user explicitly whitelisted these pages)
+    if (urlMatchesAllowedPaths(tab.url, allowedPaths)) {
+      updateProductiveState(true);
+      return;
+    }
+
+    let isProductive;
+    if (mode === 'all-except-blocked') {
+      const blockedSites = result.rewardSites || ['youtube.com'];
+      isProductive = !urlMatchesSites(tab.url, blockedSites);
+    } else {
+      const productiveSites = result.productiveSites || ['docs.google.com', 'notion.so', 'github.com'];
+      isProductive = urlMatchesSites(tab.url, productiveSites);
+    }
+
+    updateProductiveState(isProductive);
+  } catch (err) {
+    console.log('[FocusContract] Tab check error:', err.message);
+  }
+}
+
+function updateProductiveState(isProductive) {
+  const now = Date.now();
+
+  // If we were on a productive site, accumulate the time since last tick
+  if (state.isOnProductiveSite && state.lastProductiveTick) {
+    const elapsed = Math.floor((now - state.lastProductiveTick) / 1000);
+    state.productiveSeconds += Math.max(0, elapsed);
+  }
+
+  state.isOnProductiveSite = isProductive;
+  state.lastProductiveTick = now;
+  saveState();
+}
+
+// Tab activated (user switched tabs)
+chrome.tabs.onActivated.addListener(() => {
+  if (state.sessionActive) {
+    checkCurrentTab();
+  }
+});
+
+// Tab URL changed (navigation within active tab)
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url && state.sessionActive) {
+    // Only check if this is the active tab
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].id === tabId) {
+        checkCurrentTab();
+      }
+    });
+  }
+});
+
+// Window focus changed
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  if (state.sessionActive) {
+    if (windowId === chrome.windows.WINDOW_ID_NONE) {
+      // Browser lost focus — not productive
+      updateProductiveState(false);
+    } else {
+      checkCurrentTab();
+    }
+  }
+});
+
+// --- Message handling ---
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'startSession') {
     handleStartSession().then(sendResponse);
@@ -56,8 +189,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleUseReward().then(sendResponse);
     return true;
   }
+  if (message.action === 'pauseReward') {
+    handlePauseReward().then(sendResponse);
+    return true;
+  }
+  if (message.action === 'resumeReward') {
+    handleResumeReward().then(sendResponse);
+    return true;
+  }
   if (message.action === 'getStatus') {
     chrome.storage.local.get(['todayMinutes', 'unusedRewardMinutes'], (result) => {
+      // Snapshot productive seconds (include current tick if on productive site)
+      let currentProductiveSeconds = state.productiveSeconds;
+      if (state.isOnProductiveSite && state.lastProductiveTick && state.sessionActive) {
+        currentProductiveSeconds += Math.floor((Date.now() - state.lastProductiveTick) / 1000);
+      }
+
       sendResponse({
         sessionActive: state.sessionActive,
         sessionId: state.sessionId,
@@ -68,9 +215,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         rewardActive: state.rewardActive,
         todayMinutes: result.todayMinutes || 0,
         unusedRewardMinutes: result.unusedRewardMinutes || 0,
+        productiveSeconds: currentProductiveSeconds,
+        sessionCompleted: state.sessionCompleted,
+        rewardPaused: state.rewardPaused,
+        rewardRemainingSeconds: state.rewardRemainingSeconds,
+        isOnProductiveSite: state.isOnProductiveSite,
       });
     });
-    return true; // async response
+    return true;
   }
   if (message.action === 'updateSettings') {
     state.workMinutes = message.workMinutes || state.workMinutes;
@@ -83,14 +235,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (state.sessionActive) {
       state.blockedAttempts++;
       saveState();
-      // Fire-and-forget POST to backend
       notifyBackend('blocked-attempt', { session_id: state.sessionId });
     }
     sendResponse({ success: true });
     return false;
   }
   if (message.action === 'updateRewardSites') {
-    // If session is active, re-apply blocking with new sites
     if (state.sessionActive) {
       blockSites().then(() => sendResponse({ success: true }));
       return true;
@@ -104,36 +254,38 @@ async function handleStartSession() {
   state.sessionId = crypto.randomUUID();
   state.sessionActive = true;
   state.sessionStartTime = Date.now();
+  state.productiveSeconds = 0;
+  state.lastProductiveTick = Date.now();
+  state.isOnProductiveSite = false;
+  state.sessionCompleted = false;
+  state.rewardPaused = false;
+  state.rewardRemainingSeconds = 0;
   saveState();
 
   await blockSites();
+  await checkCurrentTab();
 
-  // Notify backend (fire-and-forget)
   notifyBackend('start', { session_id: state.sessionId });
 
-  // Set alarm to check session completion
-  chrome.alarms.create('checkSession', { periodInMinutes: 0.25 }); // check every 15 sec
+  chrome.alarms.create('checkSession', { periodInMinutes: 0.25 });
 
   return { success: true, sessionId: state.sessionId };
 }
 
 async function handleEndSession(confirmed) {
   if (!confirmed) {
-    // Return penalty info so popup can show confirmation
     return {
       needsConfirmation: true,
       elapsedMinutes: Math.floor((Date.now() - state.sessionStartTime) / 60000),
     };
   }
 
-  const minutesCompleted = Math.floor((Date.now() - state.sessionStartTime) / 60000);
+  const minutesCompleted = Math.floor(state.productiveSeconds / 60);
 
-  // Update today's minutes
   chrome.storage.local.get(['todayMinutes'], (result) => {
     chrome.storage.local.set({ todayMinutes: (result.todayMinutes || 0) + minutesCompleted });
   });
 
-  // Notify backend
   notifyBackend('end', {
     session_id: state.sessionId,
     minutes_completed: minutesCompleted,
@@ -145,17 +297,26 @@ async function handleEndSession(confirmed) {
   state.sessionId = null;
   state.sessionStartTime = null;
   state.blockedAttempts = 0;
+  state.productiveSeconds = 0;
+  state.lastProductiveTick = null;
+  state.isOnProductiveSite = false;
+  state.sessionCompleted = false;
   saveState();
 
   await unblockSites();
   chrome.alarms.clear('checkSession');
-
   chrome.storage.local.set({ shameLevel: 0 });
 
   return { success: true, endedEarly: true, minutesCompleted };
 }
 
 async function handleCompleteSession() {
+  // Flush any remaining productive time
+  if (state.isOnProductiveSite && state.lastProductiveTick) {
+    state.productiveSeconds += Math.floor((Date.now() - state.lastProductiveTick) / 1000);
+    state.lastProductiveTick = Date.now();
+  }
+
   const minutesCompleted = state.workMinutes;
 
   // Grant reward minutes
@@ -166,7 +327,6 @@ async function handleCompleteSession() {
     });
   });
 
-  // Notify backend
   notifyBackend('end', {
     session_id: state.sessionId,
     minutes_completed: minutesCompleted,
@@ -174,17 +334,18 @@ async function handleCompleteSession() {
     blocked_attempts: state.blockedAttempts,
   });
 
+  // Mark session completed — sites stay blocked until user burns reward
   state.sessionActive = false;
-  state.sessionId = null;
-  state.sessionStartTime = null;
-  state.blockedAttempts = 0;
+  state.sessionCompleted = true;
+  state.productiveSeconds = 0;
+  state.lastProductiveTick = null;
+  state.isOnProductiveSite = false;
   saveState();
 
-  await unblockSites();
   chrome.alarms.clear('checkSession');
-
   chrome.storage.local.set({ shameLevel: 0 });
 
+  // Keep sites blocked — user must click "Burn Reward" to unblock
   return { success: true, endedEarly: false, minutesCompleted, rewardEarned: state.rewardMinutes };
 }
 
@@ -197,17 +358,21 @@ async function handleUseReward() {
         return;
       }
 
-      // Use all available reward minutes (or could be configurable)
       const useMinutes = Math.min(available, state.rewardMinutes);
       state.rewardActive = true;
       state.rewardEndTime = Date.now() + (useMinutes * 60000);
+      state.sessionCompleted = false;
+      state.rewardPaused = false;
+      state.rewardRemainingSeconds = 0;
+      state.blockedAttempts = 0;
+      state.sessionId = null;
+      state.sessionStartTime = null;
       saveState();
 
       chrome.storage.local.set({ unusedRewardMinutes: available - useMinutes });
 
       await unblockSites();
 
-      // Set alarm to re-block when reward expires
       chrome.alarms.create('rewardExpired', { delayInMinutes: useMinutes });
 
       resolve({ success: true, rewardMinutes: useMinutes });
@@ -215,23 +380,95 @@ async function handleUseReward() {
   });
 }
 
+async function handlePauseReward() {
+  if (!state.rewardActive || !state.rewardEndTime) {
+    return { success: false, reason: 'No active reward to pause' };
+  }
+
+  const remaining = Math.max(0, Math.floor((state.rewardEndTime - Date.now()) / 1000));
+  state.rewardRemainingSeconds = remaining;
+  state.rewardPaused = true;
+  state.rewardActive = false;
+  state.rewardEndTime = null;
+  saveState();
+
+  chrome.alarms.clear('rewardExpired');
+  await blockSites();
+
+  // Close all tabs on blocked domains (no shame increment)
+  await closeBlockedTabs();
+
+  return { success: true, remainingSeconds: remaining };
+}
+
+async function handleResumeReward() {
+  if (!state.rewardPaused || state.rewardRemainingSeconds <= 0) {
+    return { success: false, reason: 'No paused reward to resume' };
+  }
+
+  const remainingMinutes = state.rewardRemainingSeconds / 60;
+  state.rewardEndTime = Date.now() + (state.rewardRemainingSeconds * 1000);
+  state.rewardActive = true;
+  state.rewardPaused = false;
+  state.rewardRemainingSeconds = 0;
+  saveState();
+
+  await unblockSites();
+
+  chrome.alarms.create('rewardExpired', { delayInMinutes: remainingMinutes });
+
+  return { success: true, remainingMinutes };
+}
+
+// Close all tabs whose URL matches blocked sites
+async function closeBlockedTabs() {
+  try {
+    const result = await new Promise(r => chrome.storage.local.get(['rewardSites', 'allowedPaths'], r));
+    const sites = result.rewardSites || ['youtube.com'];
+    const allowedPaths = result.allowedPaths || [];
+    const tabs = await chrome.tabs.query({});
+    const tabsToClose = tabs.filter(tab =>
+      tab.url && urlMatchesSites(tab.url, sites) && !urlMatchesAllowedPaths(tab.url, allowedPaths)
+    );
+    if (tabsToClose.length > 0) {
+      await chrome.tabs.remove(tabsToClose.map(t => t.id));
+    }
+  } catch (err) {
+    console.log('[FocusContract] Error closing blocked tabs:', err.message);
+  }
+}
+
 // Alarm handler
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'checkSession') {
     if (state.sessionActive && state.sessionStartTime) {
-      const elapsed = (Date.now() - state.sessionStartTime) / 60000;
-      if (elapsed >= state.workMinutes) {
-        // Session complete! Auto-complete it
+      // Flush productive time if currently on productive site
+      if (state.isOnProductiveSite && state.lastProductiveTick) {
+        const now = Date.now();
+        const elapsed = Math.floor((now - state.lastProductiveTick) / 1000);
+        state.productiveSeconds += Math.max(0, elapsed);
+        state.lastProductiveTick = now;
+        saveState();
+      }
+
+      // Also re-check current tab in case something changed
+      await checkCurrentTab();
+
+      if (state.productiveSeconds >= state.workMinutes * 60) {
         await handleCompleteSession();
-        // Notify any open popup
         chrome.runtime.sendMessage({ action: 'sessionCompleted' }).catch(() => {});
       }
     }
   }
 
   if (alarm.name === 'rewardExpired') {
+    // Close all tabs on blocked sites
+    await closeBlockedTabs();
+
     state.rewardActive = false;
     state.rewardEndTime = null;
+    state.rewardPaused = false;
+    state.rewardRemainingSeconds = 0;
     saveState();
     await blockSites();
     chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
@@ -239,16 +476,15 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 async function blockSites() {
-  // Get reward sites from storage, default to common sites
-  const result = await new Promise(r => chrome.storage.local.get(['rewardSites'], r));
+  const result = await new Promise(r => chrome.storage.local.get(['rewardSites', 'allowedPaths'], r));
   const sites = result.rewardSites || ['youtube.com'];
+  const allowedPaths = result.allowedPaths || [];
 
-  // Get existing rule IDs to remove
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
   const removeIds = existingRules.map(r => r.id);
 
-  // Build new rules for each site using requestDomains for reliable matching
-  const addRules = sites
+  // Block rules at priority 1 (domain-level)
+  const blockRules = sites
     .map(s => s.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, ''))
     .filter(s => s.length > 0)
     .map((site, i) => ({
@@ -258,7 +494,19 @@ async function blockSites() {
       condition: { requestDomains: [site], resourceTypes: ['main_frame'] },
     }));
 
-  // Atomic update: remove old and add new in single call
+  // Allow rules at priority 2 (path-level exceptions override domain blocks)
+  const allowRules = allowedPaths
+    .map(p => p.trim().replace(/^(https?:\/\/)?(www\.)?/, ''))
+    .filter(p => p.length > 0)
+    .map((path, i) => ({
+      id: 1000 + i,
+      priority: 2,
+      action: { type: 'allow' },
+      condition: { urlFilter: `||${path}`, resourceTypes: ['main_frame'] },
+    }));
+
+  const addRules = [...blockRules, ...allowRules];
+
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: removeIds,
     addRules,

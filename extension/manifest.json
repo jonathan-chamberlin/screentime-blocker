@@ -3,7 +3,7 @@
   "name": "FocusContract",
   "version": "1.0.0",
   "description": "Hilariously guilt-trippy focus tool with social competition",
-  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms"],
+  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html"

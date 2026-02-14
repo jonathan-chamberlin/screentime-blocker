@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Soft Dark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 370px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: #161618;
+      color: #d4d4d4;
+    }
+
+    /* ---- header ---- */
+    .header {
+      padding: 16px 18px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-ring {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2.5px solid #e07a5f;
+      position: relative;
+    }
+    .brand-ring::after {
+      content: '';
+      position: absolute;
+      top: 4px; left: 4px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #e07a5f;
+    }
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ececec;
+      letter-spacing: -0.3px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: none;
+      background: #232326;
+      color: #777;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover {
+      background: #2e2e32;
+      color: #bbb;
+    }
+
+    /* ---- ratio ---- */
+    .ratio-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px 14px;
+      font-size: 13px;
+      color: #666;
+    }
+    .ratio-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e1e21;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+    .ratio-chip label {
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #888;
+    }
+    .ratio-chip input {
+      width: 38px;
+      padding: 2px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #29292d;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .ratio-chip input:focus {
+      outline: none;
+      border-color: #e07a5f;
+    }
+    .ratio-chip span { font-size: 12px; color: #555; }
+    .ratio-arrow { color: #444; font-size: 16px; }
+
+    /* ---- timer card ---- */
+    .timer-card {
+      margin: 0 18px;
+      padding: 28px 20px 24px;
+      border-radius: 16px;
+      background: #1e1e21;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .timer-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    }
+    .timer-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 52px;
+      font-weight: 700;
+      color: #444;
+      line-height: 1;
+      letter-spacing: 2px;
+    }
+    .timer-status {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      letter-spacing: 0.5px;
+    }
+
+    /* active */
+    .timer-card.active {
+      background: linear-gradient(160deg, #1e2a1e 0%, #1e1e21 100%);
+    }
+    .timer-card.active::before {
+      background: linear-gradient(90deg, transparent, #4a9 40%, #4a9 60%, transparent);
+      height: 2px;
+    }
+    .timer-card.active .timer-time { color: #5cb87a; }
+    .timer-card.active .timer-status { color: #5cb87a; }
+
+    /* reward */
+    .timer-card.reward {
+      background: linear-gradient(160deg, #2a261e 0%, #1e1e21 100%);
+    }
+    .timer-card.reward::before {
+      background: linear-gradient(90deg, transparent, #c9a14a 40%, #c9a14a 60%, transparent);
+      height: 2px;
+    }
+    .timer-card.reward .timer-time { color: #c9a14a; }
+    .timer-card.reward .timer-status { color: #c9a14a; }
+
+    /* ---- stats ---- */
+    .stats {
+      display: flex;
+      gap: 10px;
+      padding: 14px 18px 0;
+    }
+    .stat {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      background: #1e1e21;
+    }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: #d4d4d4;
+    }
+    .stat-label {
+      margin-top: 2px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    /* ---- streak ---- */
+    .streak {
+      text-align: center;
+      padding: 10px 18px 4px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    /* ---- progress bar visual ---- */
+    .progress-wrap {
+      padding: 4px 18px 14px;
+    }
+    .progress-track {
+      height: 3px;
+      border-radius: 2px;
+      background: #232326;
+      overflow: hidden;
+    }
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 2px;
+      background: #e07a5f;
+      transition: width 0.3s;
+    }
+
+    /* ---- actions ---- */
+    .actions {
+      padding: 0 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      background: #e07a5f;
+      color: #fff;
+    }
+    .btn-start:hover { opacity: 0.9; }
+
+    .btn-end {
+      background: #3a2020;
+      color: #e05555;
+      border: 1px solid #4a2525;
+    }
+
+    .btn-reward {
+      background: #2a261e;
+      color: #c9a14a;
+      border: 1px solid #3a3320;
+    }
+
+    .btn-login {
+      background: #232326;
+      color: #777;
+      font-weight: 500;
+    }
+    .btn-login:hover { color: #aaa; }
+
+    .btn-leaderboard {
+      background: #232326;
+      color: #d4d4d4;
+    }
+
+    /* ---- footer ---- */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      border-top: 1px solid #232326;
+      font-size: 11px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #555;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #333;
+    }
+    .dot.on {
+      background: #5cb87a;
+      box-shadow: 0 0 4px rgba(92,184,122,0.4);
+    }
+    .footer-link {
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    .footer-link:hover { color: #aaa; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-ring"></div>
+      <h1>FocusContract</h1>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" title="Leaderboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      </button>
+      <button class="icon-btn" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- RATIO -->
+  <div class="ratio-row">
+    <div class="ratio-chip">
+      <label>Grind</label>
+      <input type="number" value="50">
+      <span>min</span>
+    </div>
+    <span class="ratio-arrow">&rarr;</span>
+    <div class="ratio-chip">
+      <label>Earn</label>
+      <input type="number" value="10">
+      <span>min</span>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-card">
+    <div class="timer-time">00:00</div>
+    <div class="timer-status">Ready when you are</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Today (min)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Reward (min)</div>
+    </div>
+  </div>
+
+  <!-- STREAK + PROGRESS -->
+  <div class="streak">Certified Couch Goblin</div>
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-start">Lock In</button>
+    <!-- <button class="btn btn-end">Quit Early (coward)</button> -->
+    <!-- <button class="btn btn-reward">Burn Reward Minutes</button> -->
+    <button class="btn btn-login">Sign In for Leaderboard</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="status">
+      <span class="dot"></span>
+      <span>offline</span>
+    </div>
+    <button class="footer-link">settings</button>
+  </div>
+
+</body>
+</html>

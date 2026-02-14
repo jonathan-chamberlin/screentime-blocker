@@ -2,6 +2,8 @@ const DEFAULT_SETTINGS = {
     workMinutes: 50,
     rewardMinutes: 10,
     rewardSites: ['youtube.com', 'instagram.com', 'pinterest.com', 'reddit.com', 'tiktok.com'],
+    allowedPaths: [],
+    productiveMode: 'whitelist',
     productiveSites: ['docs.google.com', 'notion.so', 'github.com'],
     penaltyType: 'Charity',
     penaltyTarget: '',
@@ -19,11 +21,18 @@ function showConfirmation(elementId) {
 
 function loadSettings() {
     chrome.storage.local.get(Object.keys(DEFAULT_SETTINGS), (result) => {
-        document.getElementById('workMinutes').value = result.workMinutes || DEFAULT_SETTINGS.workMinutes;
-        document.getElementById('rewardMinutes').value = result.rewardMinutes || DEFAULT_SETTINGS.rewardMinutes;
-
         const rewardSites = result.rewardSites || DEFAULT_SETTINGS.rewardSites;
         document.getElementById('rewardSites').value = rewardSites.join('\n');
+
+        const allowedPaths = result.allowedPaths || DEFAULT_SETTINGS.allowedPaths;
+        document.getElementById('allowedPaths').value = allowedPaths.join('\n');
+
+        const productiveMode = result.productiveMode || DEFAULT_SETTINGS.productiveMode;
+        const modeRadios = document.querySelectorAll('input[name="productiveMode"]');
+        modeRadios.forEach(radio => {
+            if (radio.value === productiveMode) radio.checked = true;
+        });
+        toggleProductiveSitesList(productiveMode);
 
         const productiveSites = result.productiveSites || DEFAULT_SETTINGS.productiveSites;
         document.getElementById('productiveSites').value = productiveSites.join('\n');
@@ -42,20 +51,6 @@ function loadSettings() {
     });
 }
 
-function saveRatio() {
-    const workMinutes = parseInt(document.getElementById('workMinutes').value, 10);
-    const rewardMinutes = parseInt(document.getElementById('rewardMinutes').value, 10);
-
-    chrome.storage.local.set({ workMinutes, rewardMinutes }, () => {
-        chrome.runtime.sendMessage({
-            action: 'updateSettings',
-            workMinutes,
-            rewardMinutes
-        });
-        showConfirmation('ratioConfirmation');
-    });
-}
-
 function saveRewardSites() {
     const sitesText = document.getElementById('rewardSites').value;
     const sites = sitesText
@@ -63,7 +58,13 @@ function saveRewardSites() {
         .map(site => site.trim())
         .filter(site => site.length > 0);
 
-    chrome.storage.local.set({ rewardSites: sites }, () => {
+    const pathsText = document.getElementById('allowedPaths').value;
+    const allowedPaths = pathsText
+        .split('\n')
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+    chrome.storage.local.set({ rewardSites: sites, allowedPaths }, () => {
         chrome.runtime.sendMessage({
             action: 'updateRewardSites',
             sites: sites
@@ -72,14 +73,20 @@ function saveRewardSites() {
     });
 }
 
+function toggleProductiveSitesList(mode) {
+    const group = document.getElementById('productiveSitesGroup');
+    group.style.display = mode === 'whitelist' ? 'block' : 'none';
+}
+
 function saveProductiveSites() {
+    const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
     const sitesText = document.getElementById('productiveSites').value;
     const sites = sitesText
         .split('\n')
         .map(site => site.trim())
         .filter(site => site.length > 0);
 
-    chrome.storage.local.set({ productiveSites: sites }, () => {
+    chrome.storage.local.set({ productiveMode, productiveSites: sites }, () => {
         showConfirmation('productiveSitesConfirmation');
     });
 }
@@ -105,9 +112,13 @@ function savePayment() {
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
 
-    document.getElementById('saveRatio').addEventListener('click', saveRatio);
     document.getElementById('saveRewardSites').addEventListener('click', saveRewardSites);
     document.getElementById('saveProductiveSites').addEventListener('click', saveProductiveSites);
+
+    // Toggle productive sites list visibility when mode changes
+    document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => toggleProductiveSitesList(e.target.value));
+    });
     document.getElementById('savePenalty').addEventListener('click', savePenalty);
     document.getElementById('savePayment').addEventListener('click', savePayment);
 });

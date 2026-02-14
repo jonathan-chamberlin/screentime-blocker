@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusContract - Dungeon RPG</title>
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Crimson+Text:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      font-family: 'Crimson Text', Georgia, serif;
+      background: #1a1410;
+      color: #d4c4a8;
+      position: relative;
+    }
+
+    /* parchment texture-ish via gradients */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(80,60,30,0.1), transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(80,60,30,0.08), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ---- header / quest banner ---- */
+    .header {
+      padding: 14px 16px 10px;
+      background: linear-gradient(180deg, #231c14, #1a1410);
+      border-bottom: 2px solid #3a2e1e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* shield icon */
+    .shield {
+      width: 24px;
+      height: 28px;
+      background: linear-gradient(180deg, #8b7340, #6b5530);
+      border: 2px solid #4a3a20;
+      border-radius: 2px 2px 50% 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .shield::after {
+      content: '';
+      width: 8px; height: 8px;
+      border: 2px solid #d4aa40;
+      border-radius: 50%;
+    }
+    .brand h1 {
+      font-family: 'MedievalSharp', cursive;
+      font-size: 18px;
+      color: #d4aa40;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+    }
+    .header-btns {
+      display: flex;
+      gap: 4px;
+    }
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #3a2e1e;
+      background: rgba(212,170,64,0.08);
+      color: #8b7340;
+      font-family: 'MedievalSharp', cursive;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn:hover {
+      background: rgba(212,170,64,0.2);
+      color: #d4aa40;
+    }
+
+    /* ---- character sheet header ---- */
+    .char-sheet {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(35,28,20,0.6);
+      border-bottom: 1px solid #2a2218;
+    }
+    .char-portrait {
+      width: 44px;
+      height: 44px;
+      border: 2px solid #4a3a20;
+      background: #231c14;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .char-info {
+      flex: 1;
+    }
+    .char-name {
+      font-family: 'MedievalSharp', cursive;
+      font-size: 15px;
+      color: #d4c4a8;
+    }
+    .char-class {
+      font-size: 11px;
+      color: #8b7340;
+      font-style: italic;
+    }
+    .char-level {
+      background: #3a2e1e;
+      border: 1px solid #4a3a20;
+      padding: 2px 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #d4aa40;
+    }
+
+    /* ---- quest config / ratio ---- */
+    .quest-config {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      border-bottom: 1px solid #2a2218;
+    }
+    .quest-label {
+      font-family: 'MedievalSharp', cursive;
+      color: #8b7340;
+      font-size: 12px;
+    }
+    .quest-config input {
+      width: 40px;
+      padding: 3px;
+      border: 2px solid #3a2e1e;
+      background: #1a1410;
+      color: #d4aa40;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .quest-config input:focus {
+      outline: none;
+      border-color: #d4aa40;
+    }
+    .quest-config span { color: #5a4a30; font-size: 12px; }
+    .quest-arrow { color: #4a3a20; }
+
+    /* ---- timer dungeon area ---- */
+    .dungeon {
+      margin: 10px 16px;
+      padding: 20px 16px;
+      background: linear-gradient(180deg, #1e1812, #161210);
+      border: 2px solid #3a2e1e;
+      border-radius: 4px;
+      text-align: center;
+      position: relative;
+    }
+    /* torch glow corners */
+    .dungeon::before, .dungeon::after {
+      content: '';
+      position: absolute;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,160,40,0.08), transparent 70%);
+    }
+    .dungeon::before { top: -10px; left: -10px; }
+    .dungeon::after { top: -10px; right: -10px; }
+
+    .timer-time {
+      font-family: 'MedievalSharp', cursive;
+      font-size: 52px;
+      color: #3a2e1e;
+      line-height: 1;
+      letter-spacing: 3px;
+    }
+    .timer-sub {
+      font-size: 12px;
+      color: #5a4a30;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* XP bar */
+    .xp-bar-wrap {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .xp-label {
+      font-family: 'MedievalSharp', cursive;
+      font-size: 12px;
+      color: #8b7340;
+    }
+    .xp-track {
+      flex: 1;
+      height: 8px;
+      background: #231c14;
+      border: 1px solid #3a2e1e;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5e00, #d4aa40);
+      width: 0%;
+      transition: width 0.3s;
+      border-radius: 2px;
+    }
+    .xp-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #5a4a30;
+      white-space: nowrap;
+    }
+
+    /* active dungeon */
+    .dungeon.active {
+      border-color: #5a8a3a;
+    }
+    .dungeon.active .timer-time {
+      color: #7acc4a;
+      text-shadow: 0 0 12px rgba(122,204,74,0.2);
+    }
+    .dungeon.active .timer-sub { color: #5a8a3a; }
+
+    /* reward dungeon */
+    .dungeon.reward { border-color: #d4aa40; }
+    .dungeon.reward .timer-time {
+      color: #d4aa40;
+      text-shadow: 0 0 12px rgba(212,170,64,0.2);
+    }
+
+    /* ---- inventory / stats ---- */
+    .inventory {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px;
+    }
+    .inv-slot {
+      flex: 1;
+      padding: 10px;
+      background: #1e1812;
+      border: 2px solid #3a2e1e;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .inv-icon {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+    .inv-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #d4aa40;
+    }
+    .inv-label {
+      font-size: 10px;
+      color: #5a4a30;
+      font-style: italic;
+    }
+
+    /* ---- quest log / streak ---- */
+    .quest-log {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #5a4a30;
+      font-style: italic;
+      text-align: center;
+    }
+    .quest-log span {
+      color: #d4aa40;
+      font-style: normal;
+      font-family: 'MedievalSharp', cursive;
+    }
+
+    /* ---- actions ---- */
+    .actions {
+      padding: 4px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #3a2e1e;
+      font-family: 'MedievalSharp', cursive;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.12s;
+      background: transparent;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      background: linear-gradient(180deg, #5a8a3a, #3a6a1a);
+      border-color: #2a4a10;
+      color: #e0f0d0;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    .btn-start:hover { background: linear-gradient(180deg, #6a9a4a, #4a7a2a); }
+
+    .btn-end {
+      border-color: #4a2020;
+      color: #cc5544;
+    }
+
+    .btn-reward {
+      background: linear-gradient(180deg, #8b6a20, #6b5010);
+      border-color: #4a3a10;
+      color: #ffd866;
+    }
+
+    .btn-login {
+      border-color: #2a2218;
+      color: #5a4a30;
+      font-family: 'Crimson Text', serif;
+      font-size: 13px;
+    }
+    .btn-login:hover { color: #8b7340; border-color: #3a2e1e; }
+
+    /* ---- footer ---- */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-top: 2px solid #2a2218;
+      font-size: 10px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #5a4a30;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #2a2218;
+      border: 1px solid #3a2e1e;
+    }
+    .dot.on {
+      background: #7acc4a;
+      border-color: #5a8a3a;
+      box-shadow: 0 0 4px rgba(122,204,74,0.4);
+    }
+    .footer-link {
+      background: none;
+      border: none;
+      color: #5a4a30;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+    }
+    .footer-link:hover { color: #8b7340; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="shield"></div>
+      <h1>FocusContract</h1>
+    </div>
+    <div class="header-btns">
+      <button class="icon-btn" title="Leaderboard">LB</button>
+      <button class="icon-btn" title="Settings">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- CHARACTER SHEET -->
+  <div class="char-sheet">
+    <div class="char-portrait">&#x1f9d9;</div>
+    <div class="char-info">
+      <div class="char-name">Adventurer</div>
+      <div class="char-class">Lvl 1 &bull; Certified Couch Goblin</div>
+    </div>
+    <div class="char-level">LV 1</div>
+  </div>
+
+  <!-- QUEST CONFIG -->
+  <div class="quest-config">
+    <span class="quest-label">Quest:</span>
+    <span>Grind</span>
+    <input type="number" value="50">
+    <span>min</span>
+    <span class="quest-arrow">&rarr;</span>
+    <span>Loot</span>
+    <input type="number" value="10">
+    <span>min</span>
+  </div>
+
+  <!-- DUNGEON / TIMER -->
+  <div class="dungeon">
+    <div class="timer-time">00:00</div>
+    <div class="timer-sub">The dungeon awaits your courage...</div>
+    <div class="xp-bar-wrap">
+      <span class="xp-label">XP</span>
+      <div class="xp-track">
+        <div class="xp-fill" style="width: 0%"></div>
+      </div>
+      <span class="xp-text">0/50</span>
+    </div>
+  </div>
+
+  <!-- INVENTORY / STATS -->
+  <div class="inventory">
+    <div class="inv-slot">
+      <div class="inv-icon">&#x2694;&#xfe0f;</div>
+      <div class="inv-val">0</div>
+      <div class="inv-label">Focus (min)</div>
+    </div>
+    <div class="inv-slot">
+      <div class="inv-icon">&#x1f48e;</div>
+      <div class="inv-val">0</div>
+      <div class="inv-label">Reward (min)</div>
+    </div>
+  </div>
+
+  <!-- QUEST LOG -->
+  <div class="quest-log">
+    Current title: <span>Certified Couch Goblin</span>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-start">Enter the Dungeon</button>
+    <!-- <button class="btn btn-end">Flee Like a Coward</button> -->
+    <!-- <button class="btn btn-reward">Open Treasure Chest</button> -->
+    <button class="btn btn-login">Sign in for leaderboard</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="status">
+      <span class="dot"></span>
+      <span>No connection to the guild</span>
+    </div>
+    <button class="footer-link">settings</button>
+  </div>
+
+</body>
+</html>
