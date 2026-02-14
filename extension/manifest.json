@@ -2,12 +2,13 @@
   "manifest_version": 3,
   "name": "FocusContract",
   "version": "1.0.0",
-  "description": "Commitment contract focus timer",
+  "description": "Hilariously guilt-trippy focus tool with social competition",
   "permissions": ["declarativeNetRequest", "storage", "identity", "alarms"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html"
   },
+  "options_page": "settings.html",
   "background": {
     "service_worker": "background.js"
   },

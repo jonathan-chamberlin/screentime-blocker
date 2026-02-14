@@ -370,7 +370,9 @@ Fire one thin round through every layer of the system: Chrome extension popup â†
 8. Full round trip is observable and working
 
 ## Verification Tooling
-Use the `agent-browser` skill to automate verification of the success criteria above:
+Use the `browser-test` skill to automate verification of the success criteria above.
+
+**With agent-browser CLI (preferred):**
 ```bash
 # Load extension into a headed browser
 agent-browser --extension ./extension --headed open chrome-extension://<id>/popup.html
@@ -383,7 +385,6 @@ agent-browser screenshot popup-check.png
 agent-browser click @<start-btn-ref>
 agent-browser open https://youtube.com
 agent-browser get url        # Should be chrome-extension://<id>/blocked.html
-agent-browser screenshot blocked-check.png
 
 # Verify unblocking (criteria 5)
 agent-browser open chrome-extension://<id>/popup.html
@@ -394,4 +395,15 @@ agent-browser get url        # Should be https://youtube.com
 # Verify backend calls (criteria 4, 6)
 agent-browser network requests --filter localhost:3000
 ```
-Note: Replace `<id>` with the actual extension ID from `chrome://extensions`.
+
+**With Playwright fallback (if agent-browser has socket issues):**
+```bash
+node .claude/scripts/browser-launch.js &
+node .claude/scripts/browser-cmd.js popup
+node .claude/scripts/browser-cmd.js screenshot popup-check.png
+node .claude/scripts/browser-cmd.js click-role button "Start Work Session"
+node .claude/scripts/browser-cmd.js navigate https://youtube.com
+node .claude/scripts/browser-cmd.js url   # Should show blocked.html
+```
+
+Note: Replace `<id>` with the actual extension ID from `chrome://extensions` or `.browser-state.json`.

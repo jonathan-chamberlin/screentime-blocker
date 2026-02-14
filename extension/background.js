@@ -8,6 +8,7 @@ let state = {
   sessionStartTime: null,
   rewardActive: false,
   rewardEndTime: null,
+  blockedAttempts: 0,
   // Settings (defaults, will be overridden from storage)
   workMinutes: 50,
   rewardMinutes: 10,
@@ -78,6 +79,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
     return false;
   }
+  if (message.action === 'blockedPageLoaded') {
+    if (state.sessionActive) {
+      state.blockedAttempts++;
+      saveState();
+      // Fire-and-forget POST to backend
+      notifyBackend('blocked-attempt', { session_id: state.sessionId });
+    }
+    sendResponse({ success: true });
+    return false;
+  }
+  if (message.action === 'updateRewardSites') {
+    // If session is active, re-apply blocking with new sites
+    if (state.sessionActive) {
+      blockSites().then(() => sendResponse({ success: true }));
+      return true;
+    }
+    sendResponse({ success: true });
+    return false;
+  }
 });
 
 async function handleStartSession() {
@@ -118,15 +138,19 @@ async function handleEndSession(confirmed) {
     session_id: state.sessionId,
     minutes_completed: minutesCompleted,
     ended_early: true,
+    blocked_attempts: state.blockedAttempts,
   });
 
   state.sessionActive = false;
   state.sessionId = null;
   state.sessionStartTime = null;
+  state.blockedAttempts = 0;
   saveState();
 
   await unblockSites();
   chrome.alarms.clear('checkSession');
+
+  chrome.storage.local.set({ shameLevel: 0 });
 
   return { success: true, endedEarly: true, minutesCompleted };
 }
@@ -147,15 +171,19 @@ async function handleCompleteSession() {
     session_id: state.sessionId,
     minutes_completed: minutesCompleted,
     ended_early: false,
+    blocked_attempts: state.blockedAttempts,
   });
 
   state.sessionActive = false;
   state.sessionId = null;
   state.sessionStartTime = null;
+  state.blockedAttempts = 0;
   saveState();
 
   await unblockSites();
   chrome.alarms.clear('checkSession');
+
+  chrome.storage.local.set({ shameLevel: 0 });
 
   return { success: true, endedEarly: false, minutesCompleted, rewardEarned: state.rewardMinutes };
 }
@@ -211,27 +239,37 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 async function blockSites() {
-  // For now hardcode youtube.com — will be dynamic from settings in Phase 3
-  const rules = [
-    {
-      id: 1,
+  // Get reward sites from storage, default to common sites
+  const result = await new Promise(r => chrome.storage.local.get(['rewardSites'], r));
+  const sites = result.rewardSites || ['youtube.com'];
+
+  // Get existing rule IDs to remove
+  const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const removeIds = existingRules.map(r => r.id);
+
+  // Build new rules for each site using requestDomains for reliable matching
+  const addRules = sites
+    .map(s => s.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, ''))
+    .filter(s => s.length > 0)
+    .map((site, i) => ({
+      id: i + 1,
       priority: 1,
       action: { type: 'redirect', redirect: { extensionPath: '/blocked.html' } },
-      condition: { urlFilter: '||youtube.com', resourceTypes: ['main_frame'] },
-    },
-  ];
+      condition: { requestDomains: [site], resourceTypes: ['main_frame'] },
+    }));
 
+  // Atomic update: remove old and add new in single call
   await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: rules.map(r => r.id),
-    addRules: rules,
+    removeRuleIds: removeIds,
+    addRules,
   });
+  console.log(`[FocusContract] Blocked ${addRules.length} sites:`, sites);
 }
 
 async function unblockSites() {
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [1],
-    addRules: [],
-  });
+  const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const removeIds = existingRules.map(r => r.id);
+  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: removeIds, addRules: [] });
 }
 
 function getToken() {
@@ -246,7 +284,13 @@ async function notifyBackend(type, data) {
   try {
     const token = await getToken();
     if (token) {
-      const endpoint = type === 'start' ? '/session/start' : '/session/end';
+      const endpoints = {
+        'start': '/session/start',
+        'end': '/session/end',
+        'blocked-attempt': '/session/blocked-attempt',
+        'profile': '/auth/profile',
+      };
+      const endpoint = endpoints[type] || `/session/${type}`;
       await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {

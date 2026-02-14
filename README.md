@@ -1,10 +1,10 @@
 Began coding 2/14/26 11:15am
 
-# 📄 HACKATHON SPEC — COMMITMENT CONTRACT CHROME EXTENSION
+# 📄 HACKATHON SPEC — GUILT-TRIPPY FOCUS BLOCKER WITH LEADERBOARD
 
 ## Project Name
 
-FocusContract (working name)
+ScreenTime Blocker (working name)
 
 ---
 
@@ -14,11 +14,13 @@ Build a Chrome extension that:
 
 * Blocks reward websites during active work sessions
 * Uses a configurable work → reward ratio (default 50 → 10)
-* Tracks session data in Snowflake
-* Uses Auth0 for authentication and cross-device persistence
+* Escalates shame/guilt with 10 levels of GIF screens when you try to cheat
+* Tracks session data in a simple JSON file (no cloud database)
+* Uses Auth0 for leaderboard identity (not cross-device sync)
+* Shows competitive leaderboard of who's working the most
 * Simulates financial penalties for ending sessions early
 
-This is a commitment contract system, not just a blocker.
+This is a hilariously guilt-trippy focus tool with social competition, not a serious commitment contract.
 
 ---
 
@@ -34,6 +36,7 @@ Responsibilities:
 * Site blocking (full redirect)
 * Dashboard UI
 * Settings UI
+* Shame escalation (10 GIF screens)
 * Auth login trigger
 * API communication with backend
 
@@ -45,8 +48,9 @@ Responsibilities:
 
 * Auth0 JWT validation
 * REST API endpoints
-* Writing events to Snowflake
-* Querying aggregated stats from Snowflake
+* Writing events to JSON file (server/data/db.json)
+* Querying aggregated stats from JSON file
+* Leaderboard computation
 
 ## Auth
 
@@ -54,17 +58,24 @@ Use Auth0:
 
 * Google social login
 * Email/password fallback
-* Anonymous mode (local only, no backend persistence)
-* If user logs in, all future events tied to Auth0 user_id
+* Anonymous mode (local only, no backend persistence, no leaderboard)
+* If user logs in, events tied to Auth0 user_id for leaderboard only
 
 ## Database
 
-Snowflake
+Simple JSON file: server/data/db.json
 
-Tables:
+Structure:
 
-* focus_sessions
-* user_daily_stats (optional but recommended)
+```json
+{
+  "sessions": [],
+  "profiles": [],
+  "blockedAttempts": []
+}
+```
+
+No Snowflake. No cloud database. Just a local JSON file.
 
 ---
 
@@ -85,7 +96,7 @@ When user clicks "Start Work Session":
 
 1. reward sites are immediately blocked
 2. timer begins counting upward
-3. event logged to backend:
+3. event logged to backend (if logged in):
 
    * type: session_started
    * timestamp
@@ -118,6 +129,37 @@ No real payment integration.
 
 ---
 
+## 3.2 Shame Mode (10-Level Escalation)
+
+When user tries to visit a blocked site during a work session:
+
+* First visit: gentle reminder GIF ("You got this!")
+* 2nd–5th visits: progressively more disappointed/judgmental GIFs
+* 6th–9th visits: hilariously over-the-top guilt-trip GIFs
+* 10th+ visit: maximum shame GIF (e.g., "Really? AGAIN?")
+
+Each blocked attempt is logged via POST /session/blocked-attempt
+
+GIFs rotate through 10 fixed levels based on attempt count during current session.
+
+---
+
+## 3.3 Leaderboard
+
+Displays competitive stats:
+
+* Top 10 users by total work minutes this week
+* Top 10 users by completion streak
+* Top 10 users by fewest blocked attempts
+
+Pulled from GET /leaderboard endpoint.
+
+Auth0 identity required to appear on leaderboard (anonymous users can view but not participate).
+
+Leaderboard is purely for competition, not cross-device sync.
+
+---
+
 # 4. Site Blocking Logic
 
 User defines:
@@ -127,12 +169,13 @@ Reward sites (block during work unless reward minutes available)
 
 Blocking method:
 
-* Use Chrome declarativeNetRequest or webRequest API
+* Use Chrome declarativeNetRequest API
 * Full redirect to internal extension page:
   blocked.html
 
 Blocked page displays:
 
+* Shame GIF (level 1–10 based on attempt count)
 * "You're currently in a work session."
 * "Complete your session to unlock this site."
 * Show remaining work time
@@ -166,6 +209,7 @@ Buttons:
 * Start Work Session
 * End Session Early (only visible during session)
 * Use Reward Minutes (if available)
+* View Leaderboard
 * Settings
 * Sign In / Log Out
 
@@ -248,8 +292,8 @@ No real payment processing.
 
 All values stored:
 
-* Locally if anonymous
-* In backend if logged in
+* Locally (chrome.storage.local)
+* Synced to backend only if logged in (for leaderboard profile display)
 
 ---
 
@@ -259,22 +303,24 @@ Use Auth0 SPA flow.
 
 Frontend:
 
-* "Sign In to Sync Data" button
+* "Sign In to Join Leaderboard" button
 * On success:
 
   * store access token
   * send token to backend
   * backend validates JWT
+  * POST /auth/profile to register user in leaderboard
 
 Backend:
 
 * Use Auth0 middleware to verify JWT
 * Extract user_id from token
-* Associate all Snowflake records with user_id
+* Associate all JSON records with user_id
 
 If logged out:
 
 * revert to local-only mode
+* cannot appear on leaderboard
 
 No merging of anonymous data.
 
@@ -282,42 +328,15 @@ No parent-child logic in MVP.
 
 ---
 
-# 8. Snowflake Schema
+# 8. Backend API Endpoints
 
-## Table: focus_sessions
-
-Columns:
-
-* session_id (UUID)
-* user_id (string)
-* start_timestamp (timestamp)
-* end_timestamp (timestamp)
-* minutes_completed (int)
-* ended_early (boolean)
-* penalty_amount (number)
-* reward_minutes_earned (int)
-
----
-
-## Table: user_daily_stats (optional)
-
-* user_id
-* date
-* total_minutes_worked
-* unused_reward_minutes
-
-Alternatively:
-Compute aggregates dynamically via query.
-
----
-
-# 9. Backend API Endpoints
-
+GET /health
 POST /session/start
 POST /session/end
+POST /session/blocked-attempt
 GET /stats/today
-POST /settings/save
-GET /settings
+GET /leaderboard
+POST /auth/profile
 
 All authenticated endpoints require valid Auth0 JWT.
 
@@ -325,66 +344,71 @@ Anonymous mode:
 
 * no backend calls
 * all local
+* cannot access leaderboard
 
 ---
 
-# 10. Persistence Rules
+# 9. Persistence Rules
 
 If Anonymous:
 
 * Use chrome.storage.local
+* No leaderboard participation
 
 If Logged In:
 
-* Save settings to backend
-* Save sessions to Snowflake
-* Stats queried from Snowflake
+* Save sessions to JSON file (server/data/db.json)
+* Save blocked attempts to JSON file
+* Stats queried from JSON file
+* Leaderboard computed from JSON file
 
 Reward minutes accumulate indefinitely.
 Unused reward minutes persist across days.
 
 ---
 
-# 11. Demo Plan (Critical)
+# 10. Demo Plan (Critical)
 
 Demo Flow:
 
 1. Install extension
 2. Log in with Auth0
 3. Start session
-4. Try opening youtube.com → redirected
-5. Complete session
-6. Reward minutes granted
-7. Show Snowflake dashboard stats updating
-8. End session early to show penalty modal
-9. Show recorded penalty in Snowflake data
+4. Try opening youtube.com → redirected to shame GIF #1
+5. Try 5 more times → show escalating shame GIFs (levels 2-6)
+6. Complete session
+7. Reward minutes granted
+8. Show leaderboard with competitive stats
+9. End session early to show penalty modal
+10. Demonstrate 10th blocked attempt to show maximum shame GIF
 
 Highlight:
 
-* Identity persistence
-* Structured analytics
+* Shame escalation (10 GIF levels)
+* Leaderboard competition
 * Configurable commitment penalty
+* Clean UI with timer and rewards
 
 ---
 
-# 12. Out of Scope
+# 11. Out of Scope
 
 * No real payments
 * No Stripe
 * No crypto
-* No leaderboard
 * No AI evaluation
 * No parent-child for MVP
+* No cross-device sync (Auth0 is only for leaderboard identity)
 
 ---
 
-# 13. Non-Negotiable Constraints
+# 12. Non-Negotiable Constraints
 
 * Manifest V3
 * Clean UI
 * No console errors
 * Proper Auth0 token validation
-* Proper Snowflake connection pooling
+* Simple JSON file for persistence (no cloud database)
 
 ---
 
@@ -392,10 +416,11 @@ END OF SPEC
 
 ---
 
-If you want, next I can give you:
+Next steps:
 
-* The exact folder structure Claude should generate
-* The exact Snowflake SQL to create tables
-* Or a step-by-step implementation order so you don’t get overwhelmed
-
-What do you want next: architecture clarity, database setup, or implementation sequence?
+* Implement shame escalation with 10 GIF screens
+* Build leaderboard computation and display
+* Add POST /session/blocked-attempt endpoint
+* Add GET /leaderboard endpoint
+* Add POST /auth/profile endpoint
+* Test all 10 shame levels in demo

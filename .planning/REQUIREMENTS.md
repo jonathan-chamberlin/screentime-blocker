@@ -88,21 +88,26 @@
   - Values shown in end-early confirmation modal
 - **Priority**: Must-have
 
-## Phase: backend-snowflake
+## Phase: backend
 
-### REQ-011: Snowflake Integration
-- **Description**: Connect backend to Snowflake, create focus_sessions table, write/read session data
+### REQ-011: JSON File Storage
+- **Description**: Implement local JSON file database at server/data/db.json with auto-creation if missing
 - **Acceptance Criteria**:
-  - Snowflake connection established with connection pooling
-  - focus_sessions table created
-  - Can insert and query session records
+  - server/data/db.json created automatically on first run
+  - Stores users, sessions, and blocked attempts
+  - Supports read/write operations with proper error handling
 - **Priority**: Must-have
 
 ### REQ-012: REST API Endpoints
-- **Description**: Implement POST /session/start, POST /session/end, GET /stats/today, POST /settings/save, GET /settings
+- **Description**: Implement all backend API endpoints for session management, stats, and leaderboard
 - **Acceptance Criteria**:
-  - All 5 endpoints functional
-  - Proper error handling
+  - POST /session/start - Start new work session
+  - POST /session/end - End session and record stats
+  - POST /session/blocked-attempt - Track blocked site visits
+  - GET /stats/today - Return today's stats for user
+  - GET /leaderboard - Return all users ranked by work minutes
+  - POST /auth/profile - Save/update user profile
+  - Proper error handling on all endpoints
   - Returns correct data shapes
 - **Priority**: Must-have
 
@@ -121,15 +126,16 @@
 - **Acceptance Criteria**:
   - Valid JWT required for all API endpoints
   - user_id extracted from token
-  - All Snowflake records associated with user_id
+  - All database records associated with user_id
 - **Priority**: Must-have
 
-### REQ-015: Cross-Device Persistence
-- **Description**: Logged-in users get settings and stats from backend; anonymous users use local storage
+### REQ-015: Leaderboard
+- **Description**: Leaderboard showing all users ranked by total work minutes
 - **Acceptance Criteria**:
-  - Logged-in: settings saved to backend, stats from Snowflake
-  - Anonymous: everything in chrome.storage.local
-  - Logout reverts to local-only mode
+  - GET /leaderboard returns all users sorted by work minutes (descending)
+  - Each entry shows avatar, name, work minutes, and slack attempts count
+  - Frontend displays leaderboard with proper ranking
+  - Updates reflect new sessions in real-time
 - **Priority**: Must-have
 
 ## Phase: polish-demo
@@ -140,10 +146,33 @@
   - No console errors
   - Clean, professional styling
   - Smooth transitions between states
+  - Leaderboard UI is visually polished
 - **Priority**: Must-have
 
 ### REQ-017: Demo Flow Validation
-- **Description**: Full demo flow works end-to-end as specified in spec section 11
+- **Description**: Full demo flow works end-to-end including shame mode and leaderboard
 - **Acceptance Criteria**:
-  - Install → Login → Start session → Block site → Complete → Reward → Stats in Snowflake → Early end → Penalty recorded
+  - Install → Login → Start session → Block site (shame GIF appears) → Multiple blocks escalate shame level → Complete → Reward → Stats reflected in leaderboard → Early end → Penalty recorded
+  - All data flows through backend correctly
+  - Leaderboard updates with new session data
+- **Priority**: Must-have
+
+### REQ-018: Shame Mode - 10 Levels
+- **Description**: Escalating shame screens on blocked page with 10 levels of increasing guilt
+- **Acceptance Criteria**:
+  - Each blocked page visit increments shame level (1-10)
+  - Each level displays unique shame GIF/image
+  - Level persists throughout session
+  - Level resets when session ends
+  - GIFs escalate in intensity (mild disappointment → extreme guilt)
+- **Priority**: Must-have
+
+### REQ-019: Blocked Attempt Tracking
+- **Description**: Track every blocked page visit and display on leaderboard
+- **Acceptance Criteria**:
+  - Each blocked.html load tracked locally during session
+  - Total count sent with POST /session/end
+  - Count stored in database per session
+  - Leaderboard shows total "slack attempts" for each user
+  - Higher slack attempts indicate more procrastination
 - **Priority**: Must-have

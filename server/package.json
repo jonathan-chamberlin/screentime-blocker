@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js",
-    "setup-db": "node setup-db.js"
+    "dev": "node --watch index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -14,7 +13,6 @@
     "express": "^4.21.0",
     "express-jwt": "^8.4.1",
     "jwks-rsa": "^3.1.0",
-    "snowflake-sdk": "^1.14.0",
     "uuid": "^9.0.0"
   }
 }

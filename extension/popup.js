@@ -6,10 +6,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const ratioDisplay = document.getElementById('ratio-display');
   const todayMinutes = document.getElementById('today-minutes');
   const rewardBalance = document.getElementById('reward-balance');
+  const streakTitle = document.getElementById('streak-title');
   const btnStart = document.getElementById('btn-start');
   const btnEnd = document.getElementById('btn-end');
   const btnReward = document.getElementById('btn-reward');
   const btnLogin = document.getElementById('btn-login');
+  const btnLeaderboard = document.getElementById('btn-leaderboard');
   const btnSettings = document.getElementById('btn-settings');
   const authDot = document.getElementById('auth-dot');
   const authText = document.getElementById('auth-text');
@@ -28,6 +30,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+
+  // Show confetti animation
+  function showConfetti() {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+
+    const colors = ['#1a73e8', '#4caf50', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'];
+    const confettiCount = 50;
+
+    for (let i = 0; i < confettiCount; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = `${Math.random() * 100}%`;
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      container.appendChild(confetti);
+    }
+
+    setTimeout(() => {
+      document.body.removeChild(container);
+    }, 3500);
+  }
+
+  // Get streak title based on minutes
+  function getStreakTitle(minutes) {
+    if (minutes === 0) return 'Certified Couch Goblin 🛋️';
+    if (minutes < 50) return 'Mildly Functional Human 🚶';
+    if (minutes < 150) return 'Productivity Padawan ⚔️';
+    if (minutes < 300) return 'Focus Sensei 🧘';
+    return 'Productivity Demigod ⚡';
   }
 
   // Get full status from background
@@ -50,6 +85,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Update stats
     todayMinutes.textContent = status.todayMinutes || 0;
     rewardBalance.textContent = status.unusedRewardMinutes || 0;
+
+    // Update streak title
+    streakTitle.textContent = getStreakTitle(status.todayMinutes || 0);
 
     if (status.rewardActive) {
       timerSection.className = 'timer-section reward';
@@ -78,10 +116,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       authDot.className = 'auth-dot connected';
       authText.textContent = 'Synced';
       btnLogin.textContent = 'Sign Out';
+      btnLeaderboard.style.display = 'block';
     } else {
       authDot.className = 'auth-dot disconnected';
       authText.textContent = 'Not connected';
       btnLogin.textContent = 'Sign In to Sync Data';
+      btnLeaderboard.style.display = 'none';
     }
   }
 
@@ -179,22 +219,58 @@ document.addEventListener('DOMContentLoaded', async () => {
       await Auth.logout();
     } else {
       try {
-        await Auth.login();
+        const accessToken = await Auth.login();
+        // Fetch user profile from Auth0 and sync to backend
+        syncUserProfile(accessToken);
       } catch (err) {
-        console.log('Login failed:', err.message);
+        console.error('Login failed:', err.message);
+        alert('Login failed: ' + err.message);
       }
     }
     refreshStatus();
   });
 
+  // Sync user profile to backend after login
+  async function syncUserProfile(token) {
+    try {
+      // Decode JWT to get Auth0 domain (or use CONFIG)
+      const userInfoRes = await fetch(`https://${CONFIG.AUTH0_DOMAIN}/userinfo`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (userInfoRes.ok) {
+        const userInfo = await userInfoRes.json();
+        await fetch(`${CONFIG.API_BASE_URL}/auth/profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            displayName: userInfo.name || userInfo.nickname || userInfo.email,
+            pictureUrl: userInfo.picture || null,
+          }),
+        });
+      }
+    } catch (err) {
+      console.log('Profile sync failed:', err.message);
+    }
+  }
+
+  btnLeaderboard.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'leaderboard.html' });
+  });
+
   btnSettings.addEventListener('click', () => {
-    // Will open settings page in Phase 3
-    chrome.runtime.openOptionsPage && chrome.runtime.openOptionsPage();
+    chrome.tabs.create({ url: 'settings.html' });
   });
 
   // Listen for messages from background (session completed, reward expired)
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === 'sessionCompleted' || message.action === 'rewardExpired') {
+    if (message.action === 'sessionCompleted') {
+      showConfetti();
+      stopTimerUpdates();
+      refreshStatus();
+    } else if (message.action === 'rewardExpired') {
       stopTimerUpdates();
       refreshStatus();
     }

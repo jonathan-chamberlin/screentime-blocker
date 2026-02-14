@@ -1,0 +1,24 @@
+{
+  "name": "screentime-blocker",
+  "version": "1.0.0",
+  "description": "Began coding 2/14/26 11:15am",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathan-chamberlin/screentime-blocker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jonathan-chamberlin/screentime-blocker/issues"
+  },
+  "homepage": "https://github.com/jonathan-chamberlin/screentime-blocker#readme",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}

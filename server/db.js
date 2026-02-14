@@ -1,39 +1,36 @@
-const snowflake = require('snowflake-sdk');
+const fs = require('fs');
+const path = require('path');
 
-const connection = snowflake.createConnection({
-  account: process.env.SNOWFLAKE_ACCOUNT,
-  username: process.env.SNOWFLAKE_USERNAME,
-  password: process.env.SNOWFLAKE_PASSWORD,
-  database: process.env.SNOWFLAKE_DATABASE,
-  schema: process.env.SNOWFLAKE_SCHEMA,
-  warehouse: process.env.SNOWFLAKE_WAREHOUSE,
-});
+const DB_PATH = path.join(__dirname, 'data', 'db.json');
 
-function connect() {
-  return new Promise((resolve, reject) => {
-    connection.connect((err, conn) => {
-      if (err) {
-        console.error('Snowflake connection failed:', err.message);
-        reject(err);
-      } else {
-        console.log('Connected to Snowflake');
-        resolve(conn);
-      }
-    });
-  });
+const DEFAULT_DB = {
+  users: {},
+  sessions: []
+};
+
+function ensureDataDir() {
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
 }
 
-function execute(sqlText, binds = []) {
-  return new Promise((resolve, reject) => {
-    connection.execute({
-      sqlText,
-      binds,
-      complete: (err, stmt, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      },
-    });
-  });
+function readDb() {
+  ensureDataDir();
+  if (!fs.existsSync(DB_PATH)) {
+    fs.writeFileSync(DB_PATH, JSON.stringify(DEFAULT_DB, null, 2));
+    return DEFAULT_DB;
+  }
+  const data = fs.readFileSync(DB_PATH, 'utf8');
+  return JSON.parse(data);
 }
 
-module.exports = { connection, connect, execute };
+function writeDb(data) {
+  ensureDataDir();
+  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+}
+
+const getDb = readDb;
+const saveDb = writeDb;
+
+module.exports = { readDb, writeDb, getDb, saveDb };
