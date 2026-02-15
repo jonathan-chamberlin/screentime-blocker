@@ -57,7 +57,7 @@ const SHAME_SCREENS = {
     {
       title: "Your plants are judging you.",
       subtitle: "Even they have more discipline. They literally just sit there.",
-      gifUrl: "https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif",
+      gifUrl: "https://media.giphy.com/media/vvCyAToak6KIzg93P9/giphy.gif",
       bgGradient: 'linear-gradient(135deg, #4a266a 0%, #2d1b69 100%)',
       animClass: 'fade-in'
     }

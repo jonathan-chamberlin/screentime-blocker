@@ -20,7 +20,7 @@ Level 1 screens use text-only with rotating motivational quotes. No GIFs.
 1. ["Really? Again?" — "Your teacher expected better."](https://media.giphy.com/media/uEyF6LYS00kjuctIR7/giphy.gif)
 2. ["Your grandmother is disappointed." — "She bragged about you to her friends..."](https://media.giphy.com/media/JxETDJzJlrUoMnKPmv/giphy.gif)
 3. ["Even this puppy can't believe it." — "Look what your procrastination did."](https://media.giphy.com/media/Ci3nCVx952lfG/giphy.gif)
-4. ["Your plants are judging you." — "Even they have more discipline. They literally just sit there."](https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif)
+4. ["Your plants are judging you." — "Even they have more discipline. They literally just sit there."](https://media.giphy.com/media/vvCyAToak6KIzg93P9/giphy.gif)
 
 ---
 
