@@ -100,6 +100,8 @@ node server.js
 
 ## What's Next
 
+- the judges suggested that I make a feature where if you're on a website for more than 10 minutes, there is a pop-up that asks (are you really working right now, and if you say no then it can add this website to the blocked list).
+- another judge said that there should be more options of websites that are distracting on the default page.
 - Make it so when a work session is started, the blocked websites are automatically blocked without any reloading required.
 - Make it so when you are burning reward minutes and you click 'pause reward' it automatically directs you to the 'reward paused' screen, kicking you off the blocked sites.
 - Wire the frontend leaderboard to the live backend API
