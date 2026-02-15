@@ -5,7 +5,7 @@ Finished coding 2/14/26 8:45pm
 
 ## Project Name
 
-ScreenTime Blocker (working name)
+Brainrot Blocker
 
 ---
 

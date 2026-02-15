@@ -1,7 +1,7 @@
 {
-  "name": "focuscontract-server",
+  "name": "brainrot-blocker-server",
   "version": "1.0.0",
-  "description": "FocusContract backend API",
+  "description": "Brainrot Blocker backend API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

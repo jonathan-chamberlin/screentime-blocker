@@ -1,4 +1,4 @@
-// FocusContract Background Service Worker
+// Brainrot Blocker Background Service Worker
 importScripts('constants.js', 'storage.js', 'timer.js', 'site-utils.js');
 
 const API_BASE_URL = 'http://localhost:3000';
@@ -103,7 +103,7 @@ async function checkCurrentTab() {
       updateRewardState(isBlockedUrl(tab.url, blockedSites, allowedPaths));
     }
   } catch (err) {
-    console.log('[FocusContract] Tab check error:', err.message);
+    console.log('[BrainrotBlocker] Tab check error:', err.message);
   }
 }
 
@@ -471,7 +471,7 @@ async function redirectBlockedTabs(reason) {
       }
     }
   } catch (err) {
-    console.log('[FocusContract] Error redirecting blocked tabs:', err.message);
+    console.log('[BrainrotBlocker] Error redirecting blocked tabs:', err.message);
   }
 }
 
@@ -489,7 +489,7 @@ async function redirectNonActiveTabs(reason) {
       }
     }
   } catch (err) {
-    console.log('[FocusContract] Error redirecting non-active tabs:', err.message);
+    console.log('[BrainrotBlocker] Error redirecting non-active tabs:', err.message);
   }
 }
 

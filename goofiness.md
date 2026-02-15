@@ -28,7 +28,7 @@
 
 - **Live roast**: During the demo, have the extension roast you in real-time. "Jonathan has attempted to open YouTube 3 times in 2 minutes. Impressive, honestly."
 - **Sound effects**: Play a sad trombone (wah wah wah) when ending a session early. Play the MGS alert sound when you try to visit a blocked site.
-- **Name the extension something absurd**: "FocusContract" is clean but not goofy. Consider names like **"Touch Grass Timer"**, **"ScreenShamePlus Pro"**, or **"GetOffYourPhone.exe"**
+- **Name the extension something absurd**: Consider names like **"Touch Grass Timer"**, **"ScreenShamePlus Pro"**, or **"GetOffYourPhone.exe"**
 
 ## Quick Wins (low effort, high goofiness)
 

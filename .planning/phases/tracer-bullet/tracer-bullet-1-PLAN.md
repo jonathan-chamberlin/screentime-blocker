@@ -27,7 +27,7 @@ files_modified: [
 Fire one thin round through every layer of the system: Chrome extension popup â†’ background service worker â†’ declarativeNetRequest site blocking â†’ Node.js backend â†’ Snowflake database â†’ Auth0 authentication. Every layer gets the minimum viable implementation to prove the full path works.
 
 ## Context
-- Project: FocusContract â€” commitment contract Chrome extension
+- Project: Brainrot Blocker â€” commitment contract Chrome extension
 - Phase goals: Prove every layer works together end-to-end
 - Prerequisites: Empty repo with README
 - Key decisions: declarativeNetRequest for blocking, chrome.identity.launchWebAuthFlow for Auth0, snowflake-sdk for DB
@@ -42,7 +42,7 @@ Fire one thin round through every layer of the system: Chrome extension popup â†
 
     manifest.json:
     - manifest_version: 3
-    - name: "FocusContract"
+    - name: "Brainrot Blocker"
     - version: "1.0.0"
     - description: "Commitment contract focus timer"
     - permissions: ["declarativeNetRequest", "storage", "identity"]
@@ -52,7 +52,7 @@ Fire one thin round through every layer of the system: Chrome extension popup â†
     - web_accessible_resources: [{ resources: ["blocked.html"], matches: ["<all_urls>"] }]
 
     popup.html:
-    - Simple HTML with a title "FocusContract"
+    - Simple HTML with a title "Brainrot Blocker"
     - A status line showing "No active session"
     - "Sign In" button (id="btn-login")
     - "Start Work Session" button (id="btn-start")
@@ -87,7 +87,7 @@ Fire one thin round through every layer of the system: Chrome extension popup â†
     Create the server/ directory with a minimal Express server.
 
     package.json:
-    - name: "focuscontract-server"
+    - name: "brainrot-blocker-server"
     - scripts: { "start": "node index.js", "dev": "node --watch index.js" }
     - dependencies: express, cors, dotenv, snowflake-sdk, express-jwt (for future use), jwks-rsa (for future use)
 
@@ -158,7 +158,7 @@ Fire one thin round through every layer of the system: Chrome extension popup â†
     Create extension/config.js â€” Configuration constants:
     - AUTH0_DOMAIN (placeholder: "your-tenant.auth0.com")
     - AUTH0_CLIENT_ID (placeholder: "your-client-id")
-    - AUTH0_AUDIENCE (placeholder: "https://focuscontract-api")
+    - AUTH0_AUDIENCE (placeholder: "https://brainrot-blocker-api")
     - API_BASE_URL: "http://localhost:3000"
     - Export all as window.CONFIG object
 
@@ -346,7 +346,7 @@ Fire one thin round through every layer of the system: Chrome extension popup â†
        - Set Allowed Callback URLs to: https://{EXTENSION_ID}.chromiumapp.org/
        - Set Allowed Web Origins to: chrome-extension://{EXTENSION_ID}
        - Note the Domain and Client ID
-    2. Create a custom API in Auth0 with identifier "https://focuscontract-api"
+    2. Create a custom API in Auth0 with identifier "https://brainrot-blocker-api"
     3. Copy server/.env.example to server/.env and fill in:
        - Snowflake credentials (SNOWFLAKE_ACCOUNT, USERNAME, PASSWORD, DATABASE, SCHEMA, WAREHOUSE)
        - Auth0 credentials (AUTH0_DOMAIN, AUTH0_AUDIENCE)

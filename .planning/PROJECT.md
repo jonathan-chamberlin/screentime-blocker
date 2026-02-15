@@ -1,4 +1,4 @@
-# Project: FocusContract
+# Project: Brainrot Blocker
 
 ## Vision
 A Chrome extension commitment contract system that blocks reward websites during active work sessions, uses a configurable work-to-reward ratio, tracks session data in Snowflake, and uses Auth0 for authentication and cross-device persistence. Simulates financial penalties for ending sessions early to create real commitment accountability.

@@ -33,7 +33,7 @@ const { chromium } = require('playwright');
   console.log(devEnabled);
   await new Promise(r => setTimeout(r, 1000));
 
-  // Click reload on FocusContract extension
+  // Click reload on Brainrot Blocker extension
   const reloaded = await page.evaluate(() => {
     const manager = document.querySelector('extensions-manager');
     if (!manager || !manager.shadowRoot) return 'no manager';
@@ -43,7 +43,7 @@ const { chromium } = require('playwright');
     for (const item of items) {
       if (!item.shadowRoot) continue;
       const name = item.shadowRoot.querySelector('#name');
-      if (name && name.textContent.includes('FocusContract')) {
+      if (name && name.textContent.includes('Brainrot Blocker')) {
         const reload = item.shadowRoot.querySelector('#dev-reload-button');
         if (reload) {
           reload.click();

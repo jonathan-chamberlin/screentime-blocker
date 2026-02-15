@@ -1,4 +1,4 @@
-// Launch Chromium with the FocusContract extension loaded
+// Launch Chromium with the Brainrot Blocker extension loaded
 // Stays running in background with CDP on port 9222
 const { chromium } = require('playwright');
 const path = require('path');
@@ -59,7 +59,7 @@ const PORT = 9222;
       for (const item of items) {
         if (item.shadowRoot) {
           const name = item.shadowRoot.querySelector('#name');
-          if (name && name.textContent.includes('FocusContract')) {
+          if (name && name.textContent.includes('Brainrot Blocker')) {
             return item.id;
           }
         }

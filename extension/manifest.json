@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "FocusContract",
+  "name": "Brainrot Blocker",
   "version": "1.0.0",
   "description": "Hilariously guilt-trippy focus tool with social competition",
   "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs"],

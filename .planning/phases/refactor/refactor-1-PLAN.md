@@ -14,7 +14,7 @@ files_modified: [extension/storage.js, extension/constants.js, extension/timer.j
 The codebase has grown organically through feature additions. Every change now risks breaking something because the same logic patterns (timer flushing, storage access, site matching, state bookkeeping) are copy-pasted 5-20 times across files. This refactor extracts shared utilities and reduces background.js from ~620 lines of tangled concerns to clear, single-responsibility functions. **Zero behavior changes** — only structural improvements.
 
 ## Context
-- Project: FocusContract Chrome Extension (MV3)
+- Project: Brainrot Blocker Chrome Extension (MV3)
 - Phase goals: Make the codebase resilient to future changes by eliminating duplication
 - Prerequisites: All features complete (core, shame, auth, polish phases done)
 - Key decisions: No new features, no behavior changes, refactor only
