@@ -1,423 +1,113 @@
-Began coding 2/14/26 11:15am
-Finished coding 2/14/26 8:45pm
+# Brainrot Blocker
 
-# 📄 HACKATHON SPEC — GUILT-TRIPPY FOCUS BLOCKER WITH LEADERBOARD
+**A site blocker that fights back.**
 
-## Project Name
+Brainrot Blocker is a Chrome extension that locks distracting sites during timed "Lock In" sessions, earns you reward minutes for real work, and roasts every cheat attempt with escalating shame GIFs — then ranks your focus streak on a competitive leaderboard.
 
-Brainrot Blocker
+Built for students, founders, and anyone who swears they'll work but doomscrolls instead.
 
----
-
-# 1. Overview
-
-Build a Chrome extension that:
-
-* Blocks reward websites during active work sessions
-* Uses a configurable work → reward ratio (default 50 → 10)
-* Escalates shame/guilt with 10 levels of GIF screens when you try to cheat
-* Tracks session data in a simple JSON file (no cloud database)
-* Uses Auth0 for leaderboard identity (not cross-device sync)
-* Shows competitive leaderboard of who's working the most
-* Simulates financial penalties for ending sessions early
-
-This is a hilariously guilt-trippy focus tool with social competition, not a serious commitment contract.
+![Default state](screenshots_for_readme/default_screenshot.png)
 
 ---
 
-# 2. Architecture
+## Why This Exists
 
-## Frontend
+One "quick" YouTube video turns into 30–60 minutes, twice a day. Over a year, that's **700+ hours** — 18 full-time workweeks — gone to distraction.
 
-Chrome Extension (Manifest V3)
+Most site blockers are passive. They show a polite message you dismiss in seconds. Brainrot Blocker creates real emotional friction: escalating shame, public accountability, and sessions you literally can't quit early.
 
-Responsibilities:
+---
 
-* Timer logic
-* Site blocking (full redirect)
-* Dashboard UI
-* Settings UI
-* Shame escalation (10 GIF screens)
-* Auth login trigger
-* API communication with backend
+## How It Works
 
-## Backend
+1. **Lock In** — Click the button to start a work session. Reward sites (YouTube, Reddit, Instagram, etc.) are instantly blocked.
+2. **Earn reward time** — The work timer only counts when you're on a productive tab. Every 50 minutes of real work earns 10 minutes of reward time (configurable).
 
-Node.js + Express server
+![Work mode](screenshots_for_readme/work_mode_screenshot.png)
 
-Responsibilities:
+3. **Burn reward time** — Spend your banked minutes on reward sites. The countdown only ticks while you're actually on those sites. Pause it, save it, use it later.
 
-* Auth0 JWT validation
-* REST API endpoints
-* Writing events to JSON file (server/data/db.json)
-* Querying aggregated stats from JSON file
-* Leaderboard computation
+![Reward burn mode](screenshots_for_readme/reward_burn_screenshot.png)
 
-## Auth
+4. **Get shamed** — Try to visit a blocked site and the extension escalates through 4 levels of shame, from *"Hey. Focus."* all the way to *"DEFCON 1: TOTAL SHAME MELTDOWN"* complete with dramatic chipmunk GIFs and asteroids hitting Earth.
 
-Use Auth0:
+| ![Shame Level 1](screenshots_for_readme/shame_level_1_screenshot.png) | ![Shame Level 2](screenshots_for_readme/shame_level_2_screenshot.png) | ![Shame Level 3](screenshots_for_readme/shame_level_3_screenshot.png) | ![Shame Level 4](screenshots_for_readme/shame_level_4_screenshot.png) |
+|:---:|:---:|:---:|:---:|
+| Level 1: Low | Level 2: Medium | Level 3: High | Level 4: Maximum |
+5. **Compete** — A leaderboard ranks users by productive minutes and how many times they tried to slack off.
 
-* Google social login
-* Email/password fallback
-* Anonymous mode (local only, no backend persistence, no leaderboard)
-* If user logs in, events tied to Auth0 user_id for leaderboard only
+### Strict Mode
 
-## Database
+Toggle Strict Mode on and you **cannot** end your session until you hit the work threshold. No override, no escape hatch.
 
-Simple JSON file: server/data/db.json
+### Early Exit Penalty
 
-Structure:
+Want to quit early? Configure a donation to a charity you love — or one you hate — to make walking away cost something real.
 
-```json
-{
-  "sessions": [],
-  "profiles": [],
-  "blockedAttempts": []
-}
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Extension | Chrome Manifest V3, vanilla JS/CSS |
+| Blocking | `declarativeNetRequest` API with rule priorities |
+| Backend | Node.js + Express |
+| Auth | Auth0 (Google OAuth) |
+| Leaderboard API | JWT-secured REST endpoints |
+| Data | JSON file storage |
+
+The UI was built from scratch — dark theme, Space Grotesk font, neon green and orange accents, animated confetti on reward grants, and a settings page that locks itself mid-session so you can't cheat.
+
+---
+
+## Install
+
+1. Clone this repo
+2. Open `chrome://extensions` and enable Developer Mode
+3. Click **Load unpacked** and select the project root
+4. Click the Brainrot Blocker icon and hit **Lock In**
+
+For the leaderboard backend:
+
+```bash
+cd server
+npm install
+cp .env.example .env   # add your Auth0 credentials
+node server.js
 ```
 
-No Snowflake. No cloud database. Just a local JSON file.
+---
+
+## Project Structure
+
+```
+├── manifest.json          # Chrome extension manifest (V3)
+├── background.js          # Service worker: session state, timers, blocking rules
+├── popup.html/js/css      # Main extension popup UI
+├── settings.html/js/css   # Configuration page
+├── blocked.html/js/css    # Shame escalation page
+├── leaderboard.html/js    # Competitive rankings
+├── overview/              # Project narrative and pitch
+│   ├── project_story.md
+│   └── pitch.md
+└── server/                # Backend API
+    ├── server.js
+    └── data/db.json
+```
 
 ---
 
-# 3. Core Features
+## What's Next
 
-## 3.1 Session Logic
-
-Default configuration:
-
-* Work: 50 minutes
-* Reward: 10 minutes
-
-Users can edit these values in settings.
-
-### Session Flow
-
-When user clicks "Start Work Session":
-
-1. reward sites are immediately blocked
-2. timer begins counting upward
-3. event logged to backend (if logged in):
-
-   * type: session_started
-   * timestamp
-   * user_id (if logged in)
-
-When user completes full work duration:
-
-* reward_minutes += configured reward
-* event logged:
-
-  * session_completed
-  * minutes_completed
-  * reward_minutes_earned
-
-If user clicks "End Session Early":
-
-* show confirmation modal:
-  "If you end early, you will give $X to {selected_target} (charged to {payment_method})."
-* if confirmed:
-
-  * session ends
-  * event logged:
-
-    * session_ended_early
-    * minutes_completed
-    * penalty_amount
-  * reward not granted
-
-No real payment integration.
+- Make it so when a work session is started, the blocked websites are automatically blocked without any reloading required.
+- Wire the frontend leaderboard to the live backend API
+- Streak tracking — consecutive days hitting your work target
+- Team competitions so friend groups can shame each other
+- Chrome Web Store deployment
+- Behavioral analytics dashboard showing distraction patterns over time
+- Real payment integration for early-exit penalties
 
 ---
 
-## 3.2 Shame Mode (10-Level Escalation)
-
-When user tries to visit a blocked site during a work session:
-
-* First visit: gentle reminder GIF ("You got this!")
-* 2nd–5th visits: progressively more disappointed/judgmental GIFs
-* 6th–9th visits: hilariously over-the-top guilt-trip GIFs
-* 10th+ visit: maximum shame GIF (e.g., "Really? AGAIN?")
-
-Each blocked attempt is logged via POST /session/blocked-attempt
-
-GIFs rotate through 10 fixed levels based on attempt count during current session.
-
----
-
-## 3.3 Leaderboard
-
-Displays competitive stats:
-
-* Top 10 users by total work minutes this week
-* Top 10 users by completion streak
-* Top 10 users by fewest blocked attempts
-
-Pulled from GET /leaderboard endpoint.
-
-Auth0 identity required to appear on leaderboard (anonymous users can view but not participate).
-
-Leaderboard is purely for competition, not cross-device sync.
-
----
-
-# 4. Site Blocking Logic
-
-User defines:
-
-Productive sites (allow during work)
-Reward sites (block during work unless reward minutes available)
-
-Blocking method:
-
-* Use Chrome declarativeNetRequest API
-* Full redirect to internal extension page:
-  blocked.html
-
-Blocked page displays:
-
-* Shame GIF (level 1–10 based on attempt count)
-* "You're currently in a work session."
-* "Complete your session to unlock this site."
-* Show remaining work time
-
-During reward time:
-
-* reward sites temporarily unblocked
-* reward timer decrements
-
-If reward minutes reach zero:
-
-* reward sites blocked again
-
----
-
-# 5. Dashboard UI (Popup UI)
-
-Main Popup Layout:
-
-Large Text:
-"You've worked X minutes this session."
-
-Smaller Text:
-
-* "Today: Y work minutes"
-* "Unused reward minutes: Z"
-* "Work 50 minutes → Earn 10 reward minutes"
-
-Buttons:
-
-* Start Work Session
-* End Session Early (only visible during session)
-* Use Reward Minutes (if available)
-* View Leaderboard
-* Settings
-* Sign In / Log Out
-
-Dashboard pulls:
-
-* today's total minutes
-* unused reward minutes
-  from backend if logged in
-  from local storage if anonymous
-
----
-
-# 6. Settings Page
-
-Sections:
-
-## 6.1 Work / Reward Ratio
-
-Inputs:
-
-* Work Minutes (default 50)
-* Reward Minutes (default 10)
-  Save button
-
----
-
-## 6.2 Reward Sites
-
-Text area:
-
-* One domain per line
-  Example:
-  youtube.com
-  instagram.com
-  pinterest.com
-
-Save button
-
----
-
-## 6.3 Productive Sites
-
-Text area:
-Example:
-canvas.instructure.com
-docs.google.com
-notion.so
-
-Save button
-
----
-
-## 6.4 Penalty Configuration (Simulated Only)
-
-Radio Select:
-( ) Charity
-( ) Anti-Charity
-
-If Charity selected:
-
-* Text input: Charity Name
-* Number input: Donation Amount per failed session
-
-If Anti-Charity selected:
-
-* Text input: Anti-Charity Name
-* Number input: Donation Amount per failed session
-
----
-
-## 6.5 Payment Method (Simulated)
-
-Text input:
-
-* Payment method label (e.g., "Visa ending in 4242")
-
-Save button
-
-No real payment processing.
-
-All values stored:
-
-* Locally (chrome.storage.local)
-* Synced to backend only if logged in (for leaderboard profile display)
-
----
-
-# 7. Authentication Flow (Auth0)
-
-Use Auth0 SPA flow.
-
-Frontend:
-
-* "Sign In to Join Leaderboard" button
-* On success:
-
-  * store access token
-  * send token to backend
-  * backend validates JWT
-  * POST /auth/profile to register user in leaderboard
-
-Backend:
-
-* Use Auth0 middleware to verify JWT
-* Extract user_id from token
-* Associate all JSON records with user_id
-
-If logged out:
-
-* revert to local-only mode
-* cannot appear on leaderboard
-
-No merging of anonymous data.
-
-No parent-child logic in MVP.
-
----
-
-# 8. Backend API Endpoints
-
-GET /health
-POST /session/start
-POST /session/end
-POST /session/blocked-attempt
-GET /stats/today
-GET /leaderboard
-POST /auth/profile
-
-All authenticated endpoints require valid Auth0 JWT.
-
-Anonymous mode:
-
-* no backend calls
-* all local
-* cannot access leaderboard
-
----
-
-# 9. Persistence Rules
-
-If Anonymous:
-
-* Use chrome.storage.local
-* No leaderboard participation
-
-If Logged In:
-
-* Save sessions to JSON file (server/data/db.json)
-* Save blocked attempts to JSON file
-* Stats queried from JSON file
-* Leaderboard computed from JSON file
-
-Reward minutes accumulate indefinitely.
-Unused reward minutes persist across days.
-
----
-
-# 10. Demo Plan (Critical)
-
-Demo Flow:
-
-1. Install extension
-2. Log in with Auth0
-3. Start session
-4. Try opening youtube.com → redirected to shame GIF #1
-5. Try 5 more times → show escalating shame GIFs (levels 2-6)
-6. Complete session
-7. Reward minutes granted
-8. Show leaderboard with competitive stats
-9. End session early to show penalty modal
-10. Demonstrate 10th blocked attempt to show maximum shame GIF
-
-Highlight:
-
-* Shame escalation (10 GIF levels)
-* Leaderboard competition
-* Configurable commitment penalty
-* Clean UI with timer and rewards
-
----
-
-# 11. Out of Scope
-
-* No real payments
-* No Stripe
-* No crypto
-* No AI evaluation
-* No parent-child for MVP
-* No cross-device sync (Auth0 is only for leaderboard identity)
-
----
-
-# 12. Non-Negotiable Constraints
-
-* Manifest V3
-* Clean UI
-* No console errors
-* Proper Auth0 token validation
-* Simple JSON file for persistence (no cloud database)
-
----
-
-END OF SPEC
-
----
-
-## Ways to Improve
-
-* Once the work minutes threshold is reached, it takes 5-10 seconds for the UI to update and allow you to burn reward minutes. The reward grant check runs on a 15-second alarm cycle, so there's a noticeable delay between crossing the threshold and seeing the confetti/burn button enable.
-* Make the leaderboard live — currently uses static CSV test data. Wire it up to the backend API so it pulls real user stats from the JSON database.
+*Built solo at HackBeanpot (Northeastern University) in 36 hours.*
