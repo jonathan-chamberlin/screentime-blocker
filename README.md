@@ -101,6 +101,7 @@ node server.js
 ## What's Next
 
 - Make it so when a work session is started, the blocked websites are automatically blocked without any reloading required.
+- Make it so when you are burning reward minutes and you click 'pause reward' it automatically directs you to the 'reward paused' screen, kicking you off the blocked sites.
 - Wire the frontend leaderboard to the live backend API
 - Streak tracking — consecutive days hitting your work target
 - Team competitions so friend groups can shame each other
