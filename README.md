@@ -417,11 +417,7 @@ END OF SPEC
 
 ---
 
-Next steps:
+## Ways to Improve
 
-* Implement shame escalation with 10 GIF screens
-* Build leaderboard computation and display
-* Add POST /session/blocked-attempt endpoint
-* Add GET /leaderboard endpoint
-* Add POST /auth/profile endpoint
-* Test all 10 shame levels in demo
+* Once the work minutes threshold is reached, it takes 5-10 seconds for the UI to update and allow you to burn reward minutes. The reward grant check runs on a 15-second alarm cycle, so there's a noticeable delay between crossing the threshold and seeing the confetti/burn button enable.
+* Make the leaderboard live — currently uses static CSV test data. Wire it up to the backend API so it pulls real user stats from the JSON database.
