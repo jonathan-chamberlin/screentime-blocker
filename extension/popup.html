@@ -269,12 +269,13 @@
       border: 1px solid rgba(255,170,0,0.3);
     }
     .btn-pause:hover { background: rgba(255,170,0,0.25); }
-    .btn-resume {
-      background: linear-gradient(135deg, #ffaa00, #ff8800);
-      color: #1a1000;
-      box-shadow: 0 4px 15px rgba(255,170,0,0.25);
+    .btn-reward:disabled {
+      background: linear-gradient(135deg, #555, #444);
+      color: #888;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.6;
     }
-    .btn-resume:hover { box-shadow: 0 6px 20px rgba(255,170,0,0.35); }
 
     /* Footer */
     .footer {
@@ -450,7 +451,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-value" id="reward-balance">0</div>
-      <div class="stat-label">Reward (min)</div>
+      <div class="stat-label">Reward</div>
     </div>
   </div>
 
@@ -461,7 +462,6 @@
     <button type="button" class="btn-end" id="btn-end" style="display:none">Quit Early (coward)</button>
     <button type="button" class="btn-reward" id="btn-reward" style="display:none">Burn Reward Minutes</button>
     <button type="button" class="btn-pause" id="btn-pause" style="display:none">Pause Reward</button>
-    <button type="button" class="btn-resume" id="btn-resume" style="display:none">Resume Reward</button>
     <button type="button" class="btn-login" id="btn-login">Sign In for Leaderboard</button>
   </div>
 
@@ -495,6 +495,8 @@
     </a>
   </div>
 
+  <script src="constants.js"></script>
+  <script src="storage.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script src="popup.js"></script>

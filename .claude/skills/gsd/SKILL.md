@@ -3,6 +3,9 @@ name: gsd
 description: Spec-driven development framework with structured planning, parallel execution, and verification. Use when starting a new project, planning implementation phases, executing structured plans, or verifying completed work. Invoke with /gsd.
 ---
 
+# When to use this
+When the user wants to make a project or build a feature. 
+
 # GSD — Getting Shit Done Framework
 
 A disciplined, spec-driven development system adapted from [GSD-OpenCode/TÂCHES v1.9.4](https://github.com/rokicool/gsd-opencode). Provides structured workflows for project initialization, planning, execution, and verification with AI-assisted development.

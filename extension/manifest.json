@@ -5,15 +5,25 @@
   "description": "Hilariously guilt-trippy focus tool with social competition",
   "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs"],
   "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
   },
   "options_page": "settings.html",
   "background": {
     "service_worker": "background.js"
   },
   "web_accessible_resources": [{
-    "resources": ["blocked.html"],
+    "resources": ["blocked.html", "example-leaderboard.csv"],
     "matches": ["<all_urls>"]
   }]
 }

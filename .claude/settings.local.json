@@ -7,7 +7,8 @@
       "WebFetch(domain:en.wikipedia.org)",
       "Bash(npm install:*)",
       "Bash(node:*)",
-      "Bash(*)"
+      "Bash(*)",
+      "Skill(browser-test)"
     ]
   }
 }

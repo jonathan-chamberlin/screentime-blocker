@@ -5,14 +5,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const timerLabel = document.getElementById('timer-label');
   const workInput = document.getElementById('work-input');
   const rewardInput = document.getElementById('reward-input');
-  const todayMinutes = document.getElementById('today-minutes');
-  const rewardBalance = document.getElementById('reward-balance');
+  const todayMinutesEl = document.getElementById('today-minutes');
+  const rewardBalanceEl = document.getElementById('reward-balance');
   const streakTitle = document.getElementById('streak-title');
   const btnStart = document.getElementById('btn-start');
   const btnEnd = document.getElementById('btn-end');
   const btnReward = document.getElementById('btn-reward');
   const btnPause = document.getElementById('btn-pause');
-  const btnResume = document.getElementById('btn-resume');
   const btnLogin = document.getElementById('btn-login');
   const btnLeaderboard = document.getElementById('btn-leaderboard');
   const btnSettings = document.getElementById('btn-settings');
@@ -29,19 +28,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let statusPollInterval = null;
   let currentStatus = null;
-  let lastFetchTime = 0;
 
-  // Load saved ratio values into inputs
-  chrome.storage.local.get(['workMinutes', 'rewardMinutes'], (result) => {
-    workInput.value = result.workMinutes || 50;
-    rewardInput.value = result.rewardMinutes || 10;
-  });
+  // Load saved ratio values
+  const saved = await getStorage(['workMinutes', 'rewardMinutes']);
+  workInput.value = saved.workMinutes || DEFAULTS.workMinutes;
+  rewardInput.value = saved.rewardMinutes || DEFAULTS.rewardMinutes;
 
   // Save ratio on change
   function saveRatio() {
-    const workMinutes = parseInt(workInput.value, 10) || 50;
-    const rewardMinutes = parseInt(rewardInput.value, 10) || 10;
-    chrome.storage.local.set({ workMinutes, rewardMinutes });
+    const workMinutes = parseInt(workInput.value, 10) || DEFAULTS.workMinutes;
+    const rewardMinutes = parseInt(rewardInput.value, 10) || DEFAULTS.rewardMinutes;
+    setStorage({ workMinutes, rewardMinutes });
     chrome.runtime.sendMessage({ action: 'updateSettings', workMinutes, rewardMinutes });
   }
   workInput.addEventListener('change', saveRatio);
@@ -62,9 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.body.appendChild(container);
 
     const colors = ['#00ff88', '#f093fb', '#ffaa00', '#ff4757', '#667eea', '#f5576c'];
-    const confettiCount = 60;
-
-    for (let i = 0; i < confettiCount; i++) {
+    for (let i = 0; i < 60; i++) {
       const confetti = document.createElement('div');
       confetti.className = 'confetti';
       confetti.style.left = `${Math.random() * 100}%`;
@@ -74,12 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       container.appendChild(confetti);
     }
 
-    setTimeout(() => {
-      document.body.removeChild(container);
-    }, 3500);
+    setTimeout(() => document.body.removeChild(container), 3500);
   }
 
-  // Get streak title based on minutes
   function getStreakTitle(minutes) {
     if (minutes === 0) return 'Certified Couch Goblin';
     if (minutes < 50) return 'Mildly Functional Human';
@@ -97,10 +89,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Unified 1-second loop: fetch status + render UI
+  // --- Polling ---
+
   function startPolling() {
     stopPolling();
-    poll(); // immediate first tick
+    poll();
     statusPollInterval = setInterval(poll, 1000);
   }
 
@@ -113,26 +106,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function poll() {
     const status = await getStatus();
-    lastFetchTime = Date.now();
     currentStatus = status;
     renderUI(status);
   }
 
-  // Cache strict mode setting
+  // --- Strict mode cache ---
+
   let strictMode = false;
-  chrome.storage.local.get(['strictMode'], (result) => {
-    strictMode = result.strictMode === 'on';
-  });
+  const strictResult = await getStorage(['strictMode']);
+  strictMode = strictResult.strictMode === 'on';
+
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.strictMode) {
       strictMode = changes.strictMode.newValue === 'on';
     }
   });
 
-  // Show end button — visible but disabled in strict mode until threshold met
+  // --- Render functions (split from monolithic renderUI) ---
+
+  function renderStats(status) {
+    todayMinutesEl.textContent = status.todayMinutes || 0;
+    rewardBalanceEl.textContent = formatTime(status.unusedRewardSeconds || 0);
+    streakTitle.textContent = getStreakTitle(status.todayMinutes || 0);
+  }
+
+  function renderInputLock(status) {
+    const locked = status.sessionActive || status.rewardActive;
+    workInput.disabled = locked;
+    rewardInput.disabled = locked;
+  }
+
   function showEndButton(status) {
     btnEnd.style.display = 'block';
-    if (strictMode && (status.rewardGrantCount || 0) === 0) {
+    const thresholdMet = (status.rewardGrantCount || 0) >= 1;
+    btnEnd.textContent = thresholdMet ? 'End Session' : 'Quit Early (coward)';
+    if (strictMode && !thresholdMet) {
       btnEnd.disabled = true;
       btnEnd.title = 'Complete your work threshold to unlock';
     } else {
@@ -141,31 +149,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Render the full UI from a status snapshot
-  function renderUI(status) {
-    // Update stats
-    todayMinutes.textContent = status.todayMinutes || 0;
-    rewardBalance.textContent = status.unusedRewardMinutes || 0;
-    streakTitle.textContent = getStreakTitle(status.todayMinutes || 0);
-
-    // Disable ratio inputs during active session/reward (not when only reward-paused)
-    const locked = status.sessionActive || status.rewardActive;
-    workInput.disabled = locked;
-    rewardInput.disabled = locked;
-
-    // Hide all action buttons first
-    btnStart.style.display = 'none';
-    btnEnd.style.display = 'none';
-    btnReward.style.display = 'none';
-    btnPause.style.display = 'none';
-    btnResume.style.display = 'none';
-
-    // Determine primary UI state
-    // Priority: rewardActive > rewardPaused > sessionActive > idle
+  function renderTimer(status) {
     if (status.rewardActive) {
-      // Reward is actively burning
       const remaining = status.rewardRemainingSeconds || 0;
-
+      timerDisplay.textContent = formatTime(remaining);
       if (status.isOnRewardSite) {
         timerSection.className = 'timer-section reward';
         timerLabel.textContent = 'burning reward time';
@@ -173,31 +160,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         timerSection.className = 'timer-section paused';
         timerLabel.textContent = 'paused \u2014 switch to a reward site';
       }
-      timerDisplay.textContent = formatTime(remaining);
-
-      btnPause.style.display = 'block';
-      if (status.sessionActive) {
-        showEndButton(status);
-      }
-    } else if (status.rewardPaused) {
-      timerSection.className = 'timer-section paused';
-      const remainMin = Math.ceil((status.rewardRemainingSeconds || 0) / 60);
-      timerDisplay.textContent = formatTime(status.rewardRemainingSeconds || 0);
-      timerLabel.textContent = `reward paused \u2014 ${remainMin} min saved`;
-      btnResume.style.display = 'block';
-      if (status.sessionActive) {
-        showEndButton(status);
-      } else {
-        // No active session — let user start one while reward stays banked
-        btnStart.textContent = 'Start New Session';
-        btnStart.style.display = 'block';
-      }
     } else if (status.sessionActive) {
-      // Active work session
       const productiveSec = status.productiveSeconds || 0;
       timerDisplay.textContent = formatTime(productiveSec);
 
-      const goalSec = (status.workMinutes || 50) * 60;
+      const goalSec = (status.workMinutes || DEFAULTS.workMinutes) * 60;
       const nextThreshold = goalSec * ((status.rewardGrantCount || 0) + 1);
       const remainingSec = Math.max(0, nextThreshold - productiveSec);
       const remainingMin = Math.ceil(remainingSec / 60);
@@ -209,26 +176,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         timerSection.className = 'timer-section paused';
         timerLabel.textContent = 'paused \u2014 switch to a productive tab';
       }
-
-      showEndButton(status);
-
-      // Show burn button if there are unused reward minutes
-      if ((status.unusedRewardMinutes || 0) > 0) {
-        btnReward.style.display = 'block';
-      }
     } else {
-      // Idle
       timerSection.className = 'timer-section';
       timerDisplay.textContent = '00:00';
       timerLabel.textContent = 'ready when you are';
+    }
+  }
+
+  function renderButtons(status) {
+    btnStart.style.display = 'none';
+    btnEnd.style.display = 'none';
+    btnReward.style.display = 'none';
+    btnPause.style.display = 'none';
+
+    if (status.rewardActive) {
+      btnPause.style.display = 'block';
+      if (status.sessionActive) showEndButton(status);
+    } else if (status.sessionActive) {
+      showEndButton(status);
+      if ((status.unusedRewardSeconds || 0) > 0) {
+        btnReward.style.display = 'block';
+        if ((status.rewardGrantCount || 0) === 0) {
+          btnReward.disabled = true;
+          btnReward.title = 'Complete your work threshold first';
+        } else {
+          btnReward.disabled = false;
+          btnReward.title = '';
+        }
+      }
+    } else {
       btnStart.textContent = 'Lock In';
       btnStart.style.display = 'block';
-      if ((status.unusedRewardMinutes || 0) > 0) {
-        btnReward.style.display = 'block';
-      }
     }
+  }
 
-    // Auth status (async, fire and forget)
+  function renderUI(status) {
+    renderStats(status);
+    renderInputLock(status);
+    renderTimer(status);
+    renderButtons(status);
     updateAuthUI();
   }
 
@@ -247,7 +233,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Button handlers
+  // --- Button handlers ---
+
   btnStart.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'startSession' }, (response) => {
       if (response && response.success) {
@@ -257,18 +244,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  btnEnd.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'endSession', confirmed: false }, (response) => {
-      if (response && response.needsConfirmation) {
+  btnEnd.addEventListener('click', async () => {
+    chrome.runtime.sendMessage({ action: 'endSession', confirmed: false }, async (response) => {
+      if (response && response.success) {
+        stopPolling();
+        poll();
+      } else if (response && response.needsConfirmation) {
         const elapsed = currentStatus ? Math.floor((currentStatus.productiveSeconds || 0) / 60) : 0;
         modalMinutes.textContent = elapsed;
-        chrome.storage.local.get(['penaltyAmount', 'penaltyTarget', 'penaltyType'], (config) => {
-          const amount = config.penaltyAmount || 5;
-          const target = config.penaltyTarget || 'charity';
-          const type = config.penaltyType || 'Charity';
-          modalPenalty.textContent = `$${amount.toFixed(2)}`;
-          modalTarget.textContent = `to ${target} (${type})`;
-        });
+        const config = await getStorage(['penaltyAmount', 'penaltyTarget', 'penaltyType']);
+        const amount = config.penaltyAmount || 5;
+        const target = config.penaltyTarget || 'charity';
+        const type = config.penaltyType || 'Charity';
+        modalPenalty.textContent = `$${amount.toFixed(2)}`;
+        modalTarget.textContent = `to ${target} (${type})`;
         penaltyModal.classList.add('visible');
       }
     });
@@ -299,18 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   btnPause.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'pauseReward' }, (response) => {
-      if (response && response.success) {
-        poll();
-      }
-    });
-  });
-
-  btnResume.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'resumeReward' }, (response) => {
-      if (response && response.success) {
-        poll();
-        startPolling();
-      }
+      if (response && response.success) poll();
     });
   });
 
@@ -362,7 +340,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnSettings.addEventListener('click', openSettings);
   btnSettingsLink.addEventListener('click', openSettings);
 
-  // LinkedIn credits link
   linkedinLink.addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: 'https://www.linkedin.com/in/jonathan-chamberlin-bbb661241/' });
@@ -372,7 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   chrome.runtime.onMessage.addListener((message) => {
     if (message.action === 'rewardEarned') {
       showConfetti();
-      poll(); // refresh UI to show updated reward balance
+      poll();
     } else if (message.action === 'rewardExpired') {
       poll();
     }
@@ -380,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize
   await poll();
-  if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive || currentStatus.rewardPaused)) {
+  if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive)) {
     startPolling();
   }
 });

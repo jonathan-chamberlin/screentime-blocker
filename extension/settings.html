@@ -229,7 +229,7 @@
             <a href="javascript:window.close()" class="close-link">Close Tab</a>
         </div>
 
-        <div class="section">
+        <div class="section" data-lockable>
             <h2>Reward Sites</h2>
             <div class="form-group">
                 <label for="rewardSites">Sites to block during work (one per line)</label>
@@ -245,7 +245,7 @@
             </div>
         </div>
 
-        <div class="section">
+        <div class="section" data-lockable>
             <h2>Productive Sites</h2>
             <div class="form-group">
                 <label>What counts as productive?</label>
@@ -270,7 +270,7 @@
             </div>
         </div>
 
-        <div class="section">
+        <div class="section" data-lockable>
             <h2>Strict Mode</h2>
             <div class="form-group">
                 <label>Session commitment level</label>
@@ -291,7 +291,7 @@
             </div>
         </div>
 
-        <div class="section">
+        <div class="section" data-lockable>
             <h2>Penalty Configuration</h2>
             <div class="form-group">
                 <label>Penalty Type</label>
@@ -320,7 +320,7 @@
             </div>
         </div>
 
-        <div class="section">
+        <div class="section" data-lockable>
             <h2>Payment Method (Simulated)</h2>
             <div class="form-group">
                 <label for="paymentMethod">Payment Method</label>
@@ -333,6 +333,8 @@
         </div>
     </div>
 
+    <script src="constants.js"></script>
+    <script src="storage.js"></script>
     <script src="config.js"></script>
     <script src="settings.js"></script>
 </body>

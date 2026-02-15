@@ -4,31 +4,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   const table = document.getElementById('leaderboard-table');
 
   try {
-    const token = await Auth.getToken();
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    // Load example CSV data
+    const exampleEntries = await loadExampleData();
 
-    const res = await fetch(`${CONFIG.API_BASE_URL}/leaderboard`, { headers });
-    const data = await res.json();
+    // Load real leaderboard data from API
+    let apiData = [];
+    let currentUserId = null;
+    try {
+      const token = await Auth.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    if (!data.length) {
+      const res = await fetch(`${CONFIG.API_BASE_URL}/leaderboard`, { headers });
+      apiData = await res.json();
+
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          currentUserId = payload.sub;
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.warn('Could not fetch API leaderboard, using example data only:', e);
+    }
+
+    // Merge real users + example data, sort by totalMinutes descending
+    const allEntries = [
+      ...apiData.map(e => ({ ...e, isReal: true })),
+      ...exampleEntries.map(e => ({ ...e, isReal: false }))
+    ].sort((a, b) => b.totalMinutes - a.totalMinutes);
+
+    if (!allEntries.length) {
       table.style.display = 'none';
       emptyState.style.display = 'block';
       return;
     }
 
-    // Get current user ID from token (decode JWT payload)
-    let currentUserId = null;
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        currentUserId = payload.sub;
-      } catch (e) {}
-    }
-
-    data.forEach((entry, i) => {
+    allEntries.forEach((entry, i) => {
       const tr = document.createElement('tr');
-      if (entry.userId === currentUserId) tr.className = 'current-user';
+      if (entry.isReal && entry.userId === currentUserId) tr.className = 'current-user';
 
       const rankClass = i < 3 ? ` rank-${i + 1}` : '';
       const rankText = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1;
@@ -53,6 +67,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyState.querySelector('p').textContent = 'Make sure the backend server is running.';
   }
 });
+
+async function loadExampleData() {
+  try {
+    const url = chrome.runtime.getURL('example-leaderboard.csv');
+    const res = await fetch(url);
+    const text = await res.text();
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',');
+    return lines.slice(1).filter(l => l.trim()).map(line => {
+      const vals = line.split(',');
+      return {
+        displayName: vals[0].trim(),
+        totalMinutes: parseInt(vals[1].trim(), 10),
+        totalSlackAttempts: parseInt(vals[2].trim(), 10),
+        pictureUrl: null,
+        userId: null
+      };
+    });
+  } catch (e) {
+    console.warn('Could not load example leaderboard data:', e);
+    return [];
+  }
+}
 
 function escapeHtml(str) {
   const div = document.createElement('div');

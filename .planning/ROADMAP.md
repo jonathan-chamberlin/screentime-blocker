@@ -54,3 +54,17 @@
 - **Requirements**: REQ-016, REQ-017
 - **Dependencies**: Phase 3
 - **Status**: IN PROGRESS
+
+## Phase 5: refactor
+- **Goal**: Eliminate fragility by extracting shared utilities, deduplicating patterns (9x timer flushing, 20x storage callbacks), and splitting monolithic functions
+- **Success Criteria**:
+  - Zero behavior changes — all existing features work identically
+  - Shared utility modules: constants.js, storage.js, timer.js, site-utils.js
+  - No duplicated time-flushing pattern (currently 9 copies)
+  - All storage access uses async/await (no more callback hell)
+  - popup.js renderUI split into focused sub-functions (<30 lines each)
+  - Shame data extracted from blocked.js to separate data file
+  - No magic numbers — defaults come from constants.js
+  - background.js reduced from ~620 to ~400 lines
+- **Dependencies**: Phase 4
+- **Status**: PLANNING
