@@ -33,9 +33,41 @@ const DEFAULTS = {
 };
 
 const CURATED_APPS = [
+  // Communication
+  { name: 'Discord', process: 'Discord', category: 'Communication' },
+  { name: 'Microsoft Teams', process: 'ms-teams', category: 'Communication' },
+  { name: 'Slack', process: 'slack', category: 'Communication' },
+  { name: 'Zoom', process: 'Zoom', category: 'Communication' },
+  // Office
+  { name: 'Adobe Acrobat', process: 'Acrobat', category: 'Office' },
+  { name: 'Microsoft Excel', process: 'EXCEL', category: 'Office' },
+  { name: 'Microsoft PowerPoint', process: 'POWERPNT', category: 'Office' },
+  { name: 'Microsoft Word', process: 'WINWORD', category: 'Office' },
+  // Productivity
+  { name: 'ClickUp', process: 'ClickUp', category: 'Productivity' },
+  { name: 'Notion', process: 'Notion', category: 'Productivity' },
+  { name: 'Obsidian', process: 'Obsidian', category: 'Productivity' },
+  { name: 'OneNote', process: 'ONENOTE', category: 'Productivity' },
+  { name: 'Todoist', process: 'Todoist', category: 'Productivity' },
+  // AI Assistants
+  { name: 'ChatGPT Desktop', process: 'ChatGPT', category: 'AI Assistants' },
+  { name: 'Claude Desktop', process: 'claude', category: 'AI Assistants' },
+  { name: 'Cursor', process: 'Cursor', category: 'AI Assistants' },
+  // Design
+  { name: 'Adobe Illustrator', process: 'Illustrator', category: 'Design' },
+  { name: 'Adobe Photoshop', process: 'Photoshop', category: 'Design' },
+  { name: 'Blender', process: 'blender', category: 'Design' },
+  { name: 'Figma', process: 'Figma', category: 'Design' },
+  { name: 'Unity', process: 'Unity', category: 'Design' },
+  // Sales & Customer Support
+  { name: 'Freshdesk', process: 'Freshdesk', category: 'Sales & Customer Support' },
+  { name: 'HubSpot', process: 'HubSpot', category: 'Sales & Customer Support' },
+  { name: 'Intercom', process: 'Intercom', category: 'Sales & Customer Support' },
+  { name: 'Salesforce', process: 'Salesforce', category: 'Sales & Customer Support' },
+  { name: 'Zendesk', process: 'Zendesk', category: 'Sales & Customer Support' },
+  { name: 'Zoho CRM', process: 'ZohoCRM', category: 'Sales & Customer Support' },
   // Development — IDEs & Editors
   { name: 'Android Studio', process: 'studio64', category: 'Development' },
-  { name: 'Cursor', process: 'Cursor', category: 'Development' },
   { name: 'JetBrains IDEs', process: 'idea64', category: 'Development' },
   { name: 'Notepad++', process: 'notepad++', category: 'Development' },
   { name: 'PyCharm', process: 'pycharm64', category: 'Development' },
@@ -59,34 +91,20 @@ const CURATED_APPS = [
   { name: 'pgAdmin', process: 'pgAdmin4', category: 'Development' },
   { name: 'SQL Workbench', process: 'SQLWorkbench', category: 'Development' },
   { name: 'SSMS', process: 'Ssms', category: 'Development' },
-  // AI Assistants
-  { name: 'ChatGPT Desktop', process: 'ChatGPT', category: 'AI Assistants' },
-  { name: 'Claude Desktop', process: 'claude', category: 'AI Assistants' },
+  // Deployment & Hosting
+  { name: 'AWS Console', process: 'aws', category: 'Deployment & Hosting' },
+  { name: 'Azure CLI', process: 'az', category: 'Deployment & Hosting' },
+  { name: 'FileZilla', process: 'filezilla', category: 'Deployment & Hosting' },
+  { name: 'Google Cloud CLI', process: 'gcloud', category: 'Deployment & Hosting' },
+  { name: 'Kubernetes (kubectl)', process: 'kubectl', category: 'Deployment & Hosting' },
+  { name: 'PuTTY', process: 'putty', category: 'Deployment & Hosting' },
+  { name: 'Terraform', process: 'terraform', category: 'Deployment & Hosting' },
+  { name: 'WinSCP', process: 'WinSCP', category: 'Deployment & Hosting' },
   // Virtualization
   { name: 'Hyper-V Manager', process: 'virtmgmt', category: 'Virtualization' },
   { name: 'VirtualBox', process: 'VirtualBoxVM', category: 'Virtualization' },
   { name: 'VMware Player', process: 'vmplayer', category: 'Virtualization' },
   { name: 'VMware Workstation', process: 'vmware', category: 'Virtualization' },
-  // Office
-  { name: 'Adobe Acrobat', process: 'Acrobat', category: 'Office' },
-  { name: 'Microsoft Excel', process: 'EXCEL', category: 'Office' },
-  { name: 'Microsoft PowerPoint', process: 'POWERPNT', category: 'Office' },
-  { name: 'Microsoft Word', process: 'WINWORD', category: 'Office' },
-  // Productivity
-  { name: 'Notion', process: 'Notion', category: 'Productivity' },
-  { name: 'Obsidian', process: 'Obsidian', category: 'Productivity' },
-  { name: 'OneNote', process: 'ONENOTE', category: 'Productivity' },
-  { name: 'Todoist', process: 'Todoist', category: 'Productivity' },
-  // Communication
-  { name: 'Discord', process: 'Discord', category: 'Communication' },
-  { name: 'Microsoft Teams', process: 'ms-teams', category: 'Communication' },
-  { name: 'Slack', process: 'slack', category: 'Communication' },
-  { name: 'Zoom', process: 'Zoom', category: 'Communication' },
-  // Design
-  { name: 'Adobe Illustrator', process: 'Illustrator', category: 'Design' },
-  { name: 'Adobe Photoshop', process: 'Photoshop', category: 'Design' },
-  { name: 'Blender', process: 'blender', category: 'Design' },
-  { name: 'Figma', process: 'Figma', category: 'Design' },
 ];
 
 const NATIVE_HOST_NAME = 'com.brainrotblocker.native';
