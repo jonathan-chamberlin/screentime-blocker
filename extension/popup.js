@@ -224,12 +224,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       authDot.className = 'auth-dot connected';
       authText.textContent = 'synced';
       btnLogin.textContent = 'Sign Out';
-      btnLeaderboard.style.display = 'flex';
     } else {
       authDot.className = 'auth-dot disconnected';
       authText.textContent = 'offline';
       btnLogin.textContent = 'Sign In for Leaderboard';
-      btnLeaderboard.style.display = 'none';
     }
   }
 
@@ -331,6 +329,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('Profile sync failed:', err.message);
     }
   }
+
+  const btnInfo = document.getElementById('btn-info');
+  btnInfo.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://www.youtube.com/watch?v=NeZd0Q4seCI' });
+  });
 
   btnLeaderboard.addEventListener('click', () => {
     chrome.tabs.create({ url: 'leaderboard.html' });
