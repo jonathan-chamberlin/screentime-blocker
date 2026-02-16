@@ -1,9 +1,11 @@
-// Blocked page — routes between reward-expired and shame screens
+// Blocked page — routes between reward-expired, reward-paused, and shame screens
 const urlParams = new URLSearchParams(window.location.search);
 const reason = urlParams.get('reason');
 
 if (reason === 'reward-expired') {
   showRewardExpiredScreen();
+} else if (reason === 'reward-paused') {
+  showRewardPausedScreen();
 } else {
   showShameScreen();
 }
@@ -23,6 +25,27 @@ function showRewardExpiredScreen() {
   `;
 
   document.getElementById('btn-got-it').addEventListener('click', () => {
+    chrome.tabs.getCurrent((tab) => {
+      if (tab) chrome.tabs.remove(tab.id);
+    });
+  });
+}
+
+function showRewardPausedScreen() {
+  const container = document.querySelector('.container');
+  document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+
+  container.innerHTML = `
+    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Reward Paused</h1>
+    <p class="subtitle fade-in" style="color: rgba(255,255,255,0.7); margin-top: 16px;">
+      Time to get back to work! Your remaining reward time has been banked.
+    </p>
+    <div class="fade-in" style="margin-top: 40px;">
+      <button class="btn-burn-reward" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f;" id="btn-got-it-paused">Got It</button>
+    </div>
+  `;
+
+  document.getElementById('btn-got-it-paused').addEventListener('click', () => {
     chrome.tabs.getCurrent((tab) => {
       if (tab) chrome.tabs.remove(tab.id);
     });
