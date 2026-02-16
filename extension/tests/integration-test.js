@@ -291,6 +291,30 @@ async function runTests() {
     assert(Array.isArray(config.allowedPaths), 'allowedPaths is array');
   });
 
+  await test('DEFAULTS.rewardSites has no duplicates', () => {
+    const uniqueSites = new Set(DEFAULTS.rewardSites);
+    assertEqual(uniqueSites.size, DEFAULTS.rewardSites.length, 'No duplicate blocked sites');
+  });
+
+  await test('DEFAULTS.rewardSites all formatted correctly', () => {
+    DEFAULTS.rewardSites.forEach(site => {
+      assert(!site.startsWith('www.'), `${site} should not include www.`);
+      assert(!site.startsWith('http'), `${site} should not include protocol`);
+    });
+  });
+
+  await test('DEFAULTS.productiveSites has no duplicates', () => {
+    const uniqueSites = new Set(DEFAULTS.productiveSites);
+    assertEqual(uniqueSites.size, DEFAULTS.productiveSites.length, 'No duplicate productive sites');
+  });
+
+  await test('DEFAULTS.productiveSites all formatted correctly', () => {
+    DEFAULTS.productiveSites.forEach(site => {
+      assert(!site.startsWith('www.'), `${site} should not include www.`);
+      assert(!site.startsWith('http'), `${site} should not include protocol`);
+    });
+  });
+
   await test('loadSiteConfig returns stored values', async () => {
     storageData.rewardSites = ['custom.com'];
     storageData.allowedPaths = ['custom.com/ok'];
@@ -310,6 +334,14 @@ async function runTests() {
     const ytRule = dynamicRules.find(r => r.condition.requestDomains && r.condition.requestDomains.includes('youtube.com'));
     assert(ytRule, 'youtube rule exists');
     assertEqual(ytRule.action.type, 'redirect', 'redirect action');
+  });
+
+  await test('DEFAULTS.rewardSites contains 50+ sites', () => {
+    assert(DEFAULTS.rewardSites.length >= 50, `Expected >=50 blocked sites, got ${DEFAULTS.rewardSites.length}`);
+  });
+
+  await test('DEFAULTS.productiveSites contains 15+ sites', () => {
+    assert(DEFAULTS.productiveSites.length >= 15, `Expected >=15 productive sites, got ${DEFAULTS.productiveSites.length}`);
   });
 
   await test('blockSites creates allow rules for allowed paths', async () => {
