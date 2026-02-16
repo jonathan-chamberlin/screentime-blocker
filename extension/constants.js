@@ -48,7 +48,7 @@ const CURATED_APPS = [
   { name: 'Figma', process: 'Figma', category: 'Design' },
 ];
 
-const PRODUCTIVITY_CHECK_MINUTES = 1; // minutes before "Are you really working?" popup
+const PRODUCTIVITY_CHECK_MINUTES = 10; // minutes before "Are you really working?" popup
 
 const NATIVE_HOST_NAME = 'com.brainrotblocker.native';
 
