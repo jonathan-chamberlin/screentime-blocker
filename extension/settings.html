@@ -149,13 +149,6 @@
             accent-color: #f093fb;
         }
 
-        .save-button-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
         button {
             background-color: #00ff88;
             color: #0f0f1a;
@@ -179,18 +172,6 @@
 
         button:active {
             transform: translateY(0);
-        }
-
-        .save-confirmation {
-            color: #00ff88;
-            font-size: 14px;
-            font-weight: 500;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .save-confirmation.show {
-            opacity: 1;
         }
 
         .section-locked {
@@ -266,59 +247,28 @@
             margin-top: 0;
         }
 
-        .save-banner {
+
+        .saved-indicator {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1a1a2e;
-            border-top: 2px solid #00ff88;
-            padding: 16px 32px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 -4px 20px rgba(0, 255, 136, 0.2);
-            transition: transform 0.3s ease;
-        }
-
-        .save-banner.hidden {
-            transform: translateY(100%);
-        }
-
-        .save-banner-content {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        .save-banner-message {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-            flex: 1;
-        }
-
-        .save-all-btn {
+            top: 20px;
+            right: 20px;
             background: #00ff88;
-            color: #1a1a2e;
-            border: none;
-            padding: 10px 32px;
+            color: #0f0f1a;
+            padding: 12px 24px;
             border-radius: 8px;
-            font-weight: 600;
             font-size: 14px;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 2000;
         }
 
-        .save-all-btn:hover {
-            background: #00cc6f;
-            transform: scale(1.05);
-        }
-
-        .save-all-btn:active {
-            transform: scale(0.95);
+        .saved-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -406,10 +356,6 @@
                 <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
             </div>
 
-            <div class="save-button-container">
-                <button id="saveBlockedApps">Save</button>
-                <span class="save-confirmation" id="blockedAppsConfirmation">Saved!</span>
-            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -465,12 +411,7 @@
         </div>
     </div>
 
-    <div id="save-banner" class="save-banner hidden">
-        <div class="save-banner-content">
-            <span class="save-banner-message">You have unsaved changes</span>
-            <button id="save-all-btn" class="save-all-btn">Save Changes</button>
-        </div>
-    </div>
+    <div id="saved-indicator" class="saved-indicator">Saved!</div>
 
     <script src="constants.js"></script>
     <script src="storage.js"></script>

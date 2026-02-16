@@ -4,6 +4,29 @@ function showConfirmation(elementId) {
   setTimeout(() => confirmation.classList.remove('show'), 2000);
 }
 
+function showSavedIndicator() {
+  const indicator = document.getElementById('saved-indicator');
+  indicator.classList.add('show');
+  setTimeout(() => indicator.classList.remove('show'), 2000);
+}
+
+let saveTimeouts = {};
+
+function autoSave(key, value) {
+  if (saveTimeouts[key]) {
+    clearTimeout(saveTimeouts[key]);
+  }
+
+  saveTimeouts[key] = setTimeout(async () => {
+    await setStorage({ [key]: value });
+    showSavedIndicator();
+
+    if (key === 'rewardSites') {
+      chrome.runtime.sendMessage({ action: 'updateRewardSites', sites: value });
+    }
+  }, 500);
+}
+
 async function loadSettings() {
   const result = await getStorage(Object.keys(DEFAULTS));
 
@@ -261,28 +284,96 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (message.action === 'sessionEnded') lockSiteSections(false);
   });
 
-  document.getElementById('saveRewardSites').addEventListener('click', saveRewardSites);
-  document.getElementById('saveProductiveSites').addEventListener('click', saveProductiveSites);
+  // Auto-save for reward sites
+  document.getElementById('rewardSites').addEventListener('input', (e) => {
+    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    autoSave('rewardSites', sites);
+  });
 
+  // Auto-save for allowed paths
+  document.getElementById('allowedPaths').addEventListener('input', (e) => {
+    const paths = e.target.value.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+    autoSave('allowedPaths', paths);
+  });
+
+  // Auto-save for productive mode
   document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
-    radio.addEventListener('change', (e) => toggleProductiveSitesList(e.target.value));
+    radio.addEventListener('change', (e) => {
+      toggleProductiveSitesList(e.target.value);
+      autoSave('productiveMode', e.target.value);
+    });
   });
 
-  document.getElementById('saveStrictMode').addEventListener('click', async () => {
-    const strictMode = document.querySelector('input[name="strictMode"]:checked').value;
-    await setStorage({ strictMode });
-    showConfirmation('strictModeConfirmation');
+  // Auto-save for productive sites
+  document.getElementById('productiveSites').addEventListener('input', (e) => {
+    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    autoSave('productiveSites', sites);
   });
 
-  document.getElementById('savePenalty').addEventListener('click', savePenalty);
-  document.getElementById('savePayment').addEventListener('click', savePayment);
+  // Auto-save for productive apps checkboxes
+  document.getElementById('curatedAppsList').addEventListener('change', async (e) => {
+    if (e.target.type === 'checkbox') {
+      await saveProductiveApps();
+      showSavedIndicator();
+    }
+  });
 
-  document.getElementById('saveProductiveApps').addEventListener('click', saveProductiveApps);
+  // Auto-save for custom productive apps
+  let customAppsTimeout;
+  document.getElementById('customApps').addEventListener('input', () => {
+    if (customAppsTimeout) clearTimeout(customAppsTimeout);
+    customAppsTimeout = setTimeout(async () => {
+      await saveProductiveApps();
+      showSavedIndicator();
+    }, 500);
+  });
+
+  // Auto-save for blocked apps checkboxes
+  document.getElementById('blockedAppsList').addEventListener('change', async (e) => {
+    if (e.target.type === 'checkbox') {
+      await saveBlockedApps();
+      showSavedIndicator();
+    }
+  });
+
+  // Auto-save for strict mode
+  document.querySelectorAll('input[name="strictMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      autoSave('strictMode', e.target.value);
+    });
+  });
+
+  // Auto-save for penalty type
+  document.querySelectorAll('input[name="penaltyType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      autoSave('penaltyType', e.target.value);
+    });
+  });
+
+  // Auto-save for penalty target
+  document.getElementById('penaltyTarget').addEventListener('input', (e) => {
+    autoSave('penaltyTarget', e.target.value.trim());
+  });
+
+  // Auto-save for penalty amount
+  document.getElementById('penaltyAmount').addEventListener('input', (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value)) {
+      autoSave('penaltyAmount', value);
+    }
+  });
+
+  // Auto-save for payment method
+  document.getElementById('paymentMethod').addEventListener('input', (e) => {
+    autoSave('paymentMethod', e.target.value.trim());
+  });
+
+  // Keep add blocked app button functionality
+  document.getElementById('add-blocked-app').addEventListener('click', addCustomBlockedApp);
+
+  // Keep install instructions link
   document.getElementById('installInstructions').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
   });
-
-  document.getElementById('saveBlockedApps').addEventListener('click', saveBlockedApps);
-  document.getElementById('add-blocked-app').addEventListener('click', addCustomBlockedApp);
 });
