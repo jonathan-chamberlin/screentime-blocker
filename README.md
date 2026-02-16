@@ -44,6 +44,10 @@ Toggle Strict Mode on and you **cannot** end your session until you hit the work
 
 Want to quit early? Configure a donation to a charity you love — or one you hate — to make walking away cost something real.
 
+### Productivity Check
+
+Spend too long on one site during a work session? After 10 minutes on the same website, a popup asks: *"Are you really working right now?"* Answer honestly — if you say no, that site gets added to your blocked list automatically.
+
 ---
 
 ## Tech Stack
@@ -100,14 +104,10 @@ node server.js
 
 ## What's Next
 
-- the judges suggested that I make a feature where if you're on a website for more than 10 minutes, there is a pop-up that asks (are you really working right now, and if you say no then it can add this website to the blocked list).
 - another judge said that there should be more options of websites that are distracting on the default page.
-- create a info icon , tjat when clicked opens a youtube video tutorial
 - Wyatt said that it would be useful if he could use the steam application as a break. To do this I would have to make it so the extension can block applications, not just track time spent on them.
 - in the settings page, instead of there being a different save button for each setting, there should be one saved button that appears as a banner on the bottom of the screen that scrolls with your window so it stays at the bottom.
 - add a category on productive sites for music and music production
-- Make it so when a work session is started, the blocked websites are automatically blocked without any reloading required.
-- Make it so when you are burning reward minutes and you click 'pause reward' it automatically directs you to the 'reward paused' screen, kicking you off the blocked sites.
 - Wire the frontend leaderboard to the live backend API
 - Streak tracking — consecutive days hitting your work target
 - Team competitions so friend groups can shame each other
