@@ -34,7 +34,13 @@ function connectNativeHost() {
 
     nativePort.onMessage.addListener((msg) => {
       if (msg.type === 'app-focus') {
+        const prevApp = currentAppName;
         currentAppName = msg.processName;
+        if (state.sessionActive && !browserHasFocus && currentAppName !== prevApp) {
+          isProductiveApp(currentAppName).then(isProductive => {
+            updateProductiveState(isProductive);
+          });
+        }
       } else if (msg.type === 'pong') {
         nativeHostAvailable = true;
       }
@@ -310,6 +316,7 @@ async function handleStartSession() {
   saveState();
 
   await blockSites();
+  await redirectBlockedTabs();
   await checkCurrentTab();
 
   notifyBackend('start', { session_id: state.sessionId });
