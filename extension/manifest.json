@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Brainrot Blocker",
+  "name": "Brainrot Blocker [productivity-check]",
   "version": "1.0.0",
   "description": "Hilariously guilt-trippy focus tool with social competition",
   "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs", "nativeMessaging"],
@@ -22,6 +22,11 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["constants.js", "productivity-check.js"],
+    "run_at": "document_idle"
+  }],
   "web_accessible_resources": [{
     "resources": ["blocked.html", "example-leaderboard.csv", "install-guide.html"],
     "matches": ["<all_urls>"]
