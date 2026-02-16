@@ -3,7 +3,7 @@
 // Uses per-site timer that resets when navigating to a different domain.
 
 (function() {
-  const THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+  const THRESHOLD_MS = PRODUCTIVITY_CHECK_MINUTES * 60 * 1000;
   let startTime = Date.now();
   let prompted = false;
 
@@ -35,7 +35,7 @@
       <div class="brainrot-modal-backdrop">
         <div class="brainrot-modal">
           <h2>Are you really working right now?</h2>
-          <p>You've been on <strong>${window.location.hostname}</strong> for over 10 minutes.</p>
+          <p>You've been on <strong>${window.location.hostname}</strong> for over ${PRODUCTIVITY_CHECK_MINUTES} minute${PRODUCTIVITY_CHECK_MINUTES !== 1 ? 's' : ''}.</p>
           <div class="brainrot-modal-buttons">
             <button id="brainrot-yes-working" class="brainrot-btn brainrot-btn-yes">Yes, I'm working</button>
             <button id="brainrot-not-working" class="brainrot-btn brainrot-btn-no">No, block this site</button>
@@ -136,6 +136,6 @@
 
   // Check every 30 seconds
   setInterval(checkTime, 30000);
-  // Also check after 10 minutes exactly
+  // Also check after threshold exactly
   setTimeout(checkTime, THRESHOLD_MS);
 })();

@@ -24,7 +24,7 @@
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["productivity-check.js"],
+    "js": ["constants.js", "productivity-check.js"],
     "run_at": "document_idle"
   }],
   "web_accessible_resources": [{
