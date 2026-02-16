@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('customApps').addEventListener('input', () => {
-    // This will be handled specially in saveProductiveApps
+    // This will be handled specially in unified save handler
     markAsChanged('_productiveAppsChanged', true);
   });
 
