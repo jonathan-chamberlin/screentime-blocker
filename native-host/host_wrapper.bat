@@ -1,2 +1,2 @@
 @echo off
-node "%~dp0host.js"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0host.ps1"

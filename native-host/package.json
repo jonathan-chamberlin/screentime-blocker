@@ -1,6 +1,0 @@
-{
-  "name": "brainrot-blocker-native-host",
-  "version": "1.0.0",
-  "description": "Native messaging host for Brainrot Blocker - detects focused desktop application",
-  "main": "host.js"
-}
