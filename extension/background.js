@@ -67,6 +67,7 @@ function connectNativeHost() {
       unblockSites();
       checkCurrentTab();
       chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+      startRewardCountdown();
     }
     if (!state.sessionActive && !state.rewardActive) {
       unblockSites();
@@ -172,6 +173,10 @@ function updateRewardState(isOnReward) {
   state.lastRewardTick = Date.now();
   saveState();
   updateBadge(isOnReward);
+
+  if (state.rewardActive && state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
+    handleRewardExpired();
+  }
 }
 
 function updateBadge(isActive) {
@@ -362,6 +367,7 @@ async function handleEndSession(confirmed) {
     state.rewardBurnedSeconds = 0;
     state.isOnRewardSite = false;
     state.lastRewardTick = null;
+    stopRewardCountdown();
   }
 
   state.sessionActive = false;
@@ -424,6 +430,7 @@ async function handleUseReward() {
   await unblockSites();
   chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
   await checkCurrentTab();
+  startRewardCountdown();
 
   return { success: true, rewardSeconds: availableSeconds };
 }
@@ -447,15 +454,53 @@ async function handlePauseReward() {
   state.rewardTotalSeconds = 0;
   state.rewardBurnedSeconds = 0;
   saveState();
+  stopRewardCountdown();
 
   if (state.sessionActive) {
     setTimeout(() => {
       blockSites().catch(e => console.log('[handlePauseReward] blockSites error:', e));
-      redirectNonActiveTabs().catch(e => console.log('[handlePauseReward] redirect error:', e));
+      redirectBlockedTabs('reward-paused').catch(e => console.log('[handlePauseReward] redirect error:', e));
     }, 0);
   }
 
   return { success: true, bankedSeconds: remaining };
+}
+
+// --- Reward expiry helpers ---
+
+async function handleRewardExpired() {
+  state.rewardActive = false;
+  state.rewardTotalSeconds = 0;
+  state.rewardBurnedSeconds = 0;
+  state.isOnRewardSite = false;
+  state.lastRewardTick = null;
+  saveState();
+  chrome.action.setBadgeText({ text: '' });
+  await blockSites();
+  await redirectBlockedTabs('reward-expired');
+  chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
+  stopRewardCountdown();
+}
+
+let rewardCountdownInterval = null;
+
+function startRewardCountdown() {
+  stopRewardCountdown();
+  rewardCountdownInterval = setInterval(() => {
+    if (!state.rewardActive) { stopRewardCountdown(); return; }
+    flushReward();
+    saveState();
+    if (state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
+      handleRewardExpired();
+    }
+  }, 1000);
+}
+
+function stopRewardCountdown() {
+  if (rewardCountdownInterval) {
+    clearInterval(rewardCountdownInterval);
+    rewardCountdownInterval = null;
+  }
 }
 
 // --- Alarm handler ---
@@ -483,17 +528,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       saveState();
 
       if (state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
-        state.rewardActive = false;
-        state.rewardTotalSeconds = 0;
-        state.rewardBurnedSeconds = 0;
-        state.isOnRewardSite = false;
-        state.lastRewardTick = null;
-        saveState();
-        chrome.action.setBadgeText({ text: '' });
-
-        await blockSites();
-        await redirectBlockedTabs('reward-expired');
-        chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
+        await handleRewardExpired();
       }
     }
 
