@@ -13,11 +13,19 @@ Set up the project foundation by capturing vision, requirements, and roadmap thr
    - Known requirements and features
    - Timeline and scope boundaries
 
-2. **Parallel Research** (optional, for complex projects) — Launch up to 4 Explore subagents in parallel to investigate:
-   - Technology stack options and trade-offs
+2. **Human-Led Architectural Decisions** — For major technology choices, explicitly ask the user to research and decide:
+   - **Framework selection** (React vs Vue vs Svelte, Express vs Fastify, etc.)
+   - **Database choice** (PostgreSQL vs MongoDB vs SQLite)
+   - **Hosting/deployment platform** (Vercel, AWS, Docker, etc.)
+   - **Authentication approach** (JWT vs sessions, Auth0 vs Supabase vs custom)
+
+   AI struggles with these architectural decisions because they have long-term implications and depend on team experience, existing infrastructure, and non-technical factors. Present options and trade-offs, but defer the final decision to the user.
+
+3. **Parallel Research** (optional, for complex projects) — Launch up to 4 Explore subagents in parallel to investigate:
+   - Implementation patterns for chosen technologies
    - Similar implementations and patterns
-   - Architecture approaches
-   - Common pitfalls and gotchas
+   - Common pitfalls and gotchas for selected stack
+   - Integration approaches
 
 3. **Document Generation** — Create the `.planning/` directory with:
    - `PROJECT.md` — Vision, context, constraints, tech stack decisions

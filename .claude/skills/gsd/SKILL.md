@@ -18,6 +18,8 @@ A disciplined, spec-driven development system adapted from [GSD-OpenCode/TÂCHES
 4. **Where am I?** → `/gsd-progress`
 5. **Quick task?** → `/gsd-quick` for ad-hoc work without full ceremony
 
+**For small/solo projects:** The full 5-phase ceremony is optimized for complex, multi-phase projects. For simple projects or single features, consider using `/gsd-quick` for most work—linear commits to main are simpler and less error-prone than heavy planning overhead.
+
 ## Core Workflow (5 Phases)
 
 ```
@@ -84,6 +86,8 @@ See [references/agents.md](references/agents.md) for full agent role definitions
 
 ## Parallel Worktree Execution
 
+**Use sparingly:** Parallel worktrees are powerful for genuinely independent features (3+ worktrees with no shared files), but add complexity. For 1-2 features or when files overlap significantly, sequential execution on main is simpler and less error-prone. Default to linear development unless parallelism provides clear value.
+
 When multiple independent features or fixes can be built simultaneously, use git worktrees to parallelize development:
 
 ### Organization
@@ -100,19 +104,23 @@ When multiple independent features or fixes can be built simultaneously, use git
 6. **Native messaging registration** — For Chrome extensions with `nativeMessaging`, remind the user after each worktree is loaded to provide the extension ID so the native host manifest's `allowed_origins` can be updated for testing
 
 ### Token Efficiency
-- When launching executor subagents for worktrees, paste the full content of files they need to modify into the prompt so they don't need to re-read them
-- When launching verification subagents, paste file contents already in the main agent's context into the subagent prompt instead of having them re-read via tools
-- For trivial changes (single file, <10 lines), the main agent should implement directly instead of launching a subagent
+- **ALWAYS paste file contents inline** — When launching ANY subagent, paste full content of files already in main agent's context rather than having subagents re-read via tools. This saves 5-15k tokens per subagent launch.
+- **Extract relevant sections** — For files >25k tokens, paste only the relevant sections (functions, classes, components) the subagent needs
+- **Inline for verification too** — Verification subagents should receive file contents inline, not re-read them
+- **Skip subagents for trivial work** — For single-file changes <10 lines, main agent should implement directly
 
 ## Key Principles
 
 1. **Atomic commits** — One commit per completed task, bisect-able and independently revertable
 2. **Goal-backward verification** — Test observable outcomes, not task completion
 3. **Dependency waves** — Parallel execution within waves, sequential across waves
-4. **Fresh context per task** — Each task gets its own subagent to prevent context degradation
-5. **Honest reporting** — Mark confidence levels (HIGH/MEDIUM/LOW), document unknowns
-6. **Anti-pattern scanning** — Detect TODOs, placeholders, empty handlers before marking complete
-7. **No fabricated data** — When subagents generate data entries (process names, file paths, API endpoints, etc.), they must validate entries against reality. Never invent plausible-sounding values. For desktop app process names, verify the application has a real Windows desktop installer and a known process name.
+4. **Fresh context per task** — Each task gets its own subagent to prevent context degradation. For modern models (Opus 4.6, Sonnet 4.5), larger tasks consuming 60-70% context are acceptable before spawning fresh context—quality degradation is less severe than earlier models.
+5. **CLI-first development** — Build command-line interfaces, APIs, and backend logic before UI layers. This enables faster validation through automated testing rather than manual UI verification.
+6. **Documentation-driven** — Maintain a `docs/` folder with architectural decisions, integration patterns, and design notes. Update docs as you implement—they become prompts for future phases and reduce redundant research.
+7. **Cross-project patterns** — Reference solutions from other projects for common problems (auth, payments, file uploads). Maintain `~/.claude/patterns/` to document reusable approaches and avoid reinventing wheels.
+8. **Honest reporting** — Mark confidence levels (HIGH/MEDIUM/LOW), document unknowns
+9. **Anti-pattern scanning** — Detect TODOs, placeholders, empty handlers before marking complete
+10. **No fabricated data** — When subagents generate data entries (process names, file paths, API endpoints, etc.), they must validate entries against reality. Never invent plausible-sounding values. For desktop app process names, verify the application has a real Windows desktop installer and a known process name.
 
 ## Reference Documents
 

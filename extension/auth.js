@@ -1,7 +1,16 @@
 // Auth0 authentication for Chrome Extension
 window.Auth = {
+  isConfigured() {
+    return Boolean(CONFIG && CONFIG.AUTH0_DOMAIN && CONFIG.AUTH0_CLIENT_ID);
+  },
+
   login() {
     return new Promise((resolve, reject) => {
+      if (!this.isConfigured()) {
+        reject(new Error('Leaderboard sign-in is not configured for this build.'));
+        return;
+      }
+
       const redirectUri = `https://${chrome.runtime.id}.chromiumapp.org/`;
       const nonce = Math.random().toString(36).substring(2);
 

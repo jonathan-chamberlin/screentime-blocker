@@ -1,14 +1,18 @@
 # Project State
 
 ## Current Position
-- **Phase**: ai-readability-refactor
+- **Phase**: ready for new phases (8-11)
 - **Stage**: planning
-- **Plan**: 1
+- **Plan**: —
 - **Wave**: —
 - **Last Updated**: 2026-02-16
 
 ## Session Context
-Full refactoring analysis completed. 15 opportunities identified across all extension JS files. Generating PLAN.md for 4-wave execution.
+Phase 7 (ai-readability-refactor) completed and merged to main. Ready to plan parallel execution of Phases 8-10 using worktrees:
+- Phase 8: expanded-site-lists (simple data additions)
+- Phase 9: application-blocking (native host enhancement)
+- Phase 10: unified-settings-save (UI refactor)
+- Phase 11: chrome-web-store (deployment - depends on 8-10)
 
 ## Key Decisions Made
 | When | Decision | Rationale |
@@ -35,4 +39,8 @@ Full refactoring analysis completed. 15 opportunities identified across all exte
 | polish-demo | complete | Testing, bug fixes, reward expiry redirect |
 | refactor | complete | 4-wave refactor: shared utilities, async/await, deduplication |
 | application-detection | complete | Native messaging host + productive apps tracking |
-| ai-readability-refactor | in-progress | Analysis done, generating PLAN.md |
+| ai-readability-refactor | complete | Modular architecture: background.js split into 8 focused modules, timer drift fixed, all tests passing |
+| expanded-site-lists | not-started | More blocked sites + music production category |
+| application-blocking | not-started | Block desktop apps, Steam as reward app |
+| unified-settings-save | not-started | Single floating save banner in settings |
+| chrome-web-store | not-started | Package and deploy to Chrome Web Store |

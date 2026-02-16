@@ -11,18 +11,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     let apiData = [];
     let currentUserId = null;
     try {
-      const token = await Auth.getToken();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (CONFIG.API_BASE_URL) {
+        const token = await Auth.getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`${CONFIG.API_BASE_URL}/leaderboard`, { headers });
-      apiData = await res.json();
+        const res = await fetch(`${CONFIG.API_BASE_URL}/leaderboard`, { headers });
+        apiData = await res.json();
 
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          currentUserId = payload.sub;
-        } catch (e) {}
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            currentUserId = payload.sub;
+          } catch (e) {}
+        }
       }
     } catch (e) {
       console.warn('Could not fetch API leaderboard, using example data only:', e);

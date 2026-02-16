@@ -1,5 +1,5 @@
 // Popup UI — main extension popup
-// Depends on: constants.js (APP_NAME, DEFAULTS), storage.js, auth.js (Auth), config.js (CONFIG)
+// Depends on: constants.js (APP_NAME, DEFAULTS), storage.js, auth.js (Auth), config.js/config.default.js (CONFIG)
 
 // --- Pure helpers (no DOM dependency) ---
 
@@ -46,6 +46,7 @@ function showConfetti() {
 }
 
 async function syncUserProfile(token) {
+  if (!CONFIG.AUTH0_DOMAIN || !CONFIG.API_BASE_URL) return;
   try {
     const userInfoRes = await fetch(`https://${CONFIG.AUTH0_DOMAIN}/userinfo`, {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -174,6 +175,14 @@ function renderUI(status) {
 }
 
 async function updateAuthUI() {
+  if (!Auth.isConfigured()) {
+    el.authDot.className = 'auth-dot disconnected';
+    el.authText.textContent = 'leaderboard offline';
+    el.btnLogin.textContent = 'Leaderboard Not Configured';
+    el.btnLogin.disabled = true;
+    return;
+  }
+
   const token = await Auth.getToken();
   if (token) {
     el.authDot.className = 'auth-dot connected';

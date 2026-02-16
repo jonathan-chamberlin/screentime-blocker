@@ -108,10 +108,11 @@ node server.js
 - Wyatt said that it would be useful if he could use the steam application as a break. To do this I would have to make it so the extension can block applications, not just track time spent on them.
 - in the settings page, instead of there being a different save button for each setting, there should be one saved button that appears as a banner on the bottom of the screen that scrolls with your window so it stays at the bottom.
 - add a category on productive sites for music and music production
+- Chrome Web Store deployment
+
 - Wire the frontend leaderboard to the live backend API
 - Streak tracking — consecutive days hitting your work target
 - Team competitions so friend groups can shame each other
-- Chrome Web Store deployment
 - Behavioral analytics dashboard showing distraction patterns over time
 - Real payment integration for early-exit penalties
 

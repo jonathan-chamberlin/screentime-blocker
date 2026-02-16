@@ -93,4 +93,50 @@
   - Global state is explicit via state.js module
 - **Requirements**: REQ-024 through REQ-034
 - **Dependencies**: Phase 6
-- **Status**: in-progress
+- **Status**: complete
+
+## Phase 8: expanded-site-lists
+- **Goal**: Add more default blocked site options and music/music production category to productive sites
+- **Success Criteria**:
+  - Default blocked sites list expanded with more common distracting websites (social media, video platforms, news, shopping)
+  - New "Music & Production" category added to productive sites with common DAWs, streaming platforms, tutorial sites
+  - Settings UI shows new options with clear categorization
+  - All new sites properly matched by URL detection logic
+- **Dependencies**: Phase 7
+- **Status**: not-started
+
+## Phase 9: application-blocking
+- **Goal**: Enable blocking desktop applications (not just time tracking), specifically for Steam and other apps to be used as break/reward apps
+- **Success Criteria**:
+  - Native host can block applications by closing them when detected
+  - Settings UI allows marking apps as "blocked" vs "productive"
+  - During work session, attempting to open blocked app triggers closure + shame redirect
+  - During reward burn, blocked apps are accessible
+  - Steam specifically can be used as a reward app
+  - Graceful fallback when native host unavailable
+- **Dependencies**: Phase 7
+- **Status**: not-started
+
+## Phase 10: unified-settings-save
+- **Goal**: Replace individual save buttons with single floating banner save button at bottom of settings page
+- **Success Criteria**:
+  - All individual "Save" buttons removed from settings page
+  - Single "Save Changes" banner appears at bottom when any setting is modified
+  - Banner floats/sticks to bottom of viewport as user scrolls
+  - Banner shows clear visual feedback (unsaved changes indicator)
+  - Clicking "Save" persists all changed settings at once
+  - Banner disappears after successful save with confirmation message
+- **Dependencies**: Phase 7
+- **Status**: not-started
+
+## Phase 11: chrome-web-store
+- **Goal**: Package extension for Chrome Web Store deployment with proper metadata, screenshots, privacy policy
+- **Success Criteria**:
+  - Extension packaged with production manifest (no dev-only features)
+  - 5+ high-quality screenshots showing core features
+  - Privacy policy document created and hosted
+  - Store listing copy written with clear value proposition
+  - Extension submitted and passing Chrome Web Store review
+  - Public store link available
+- **Dependencies**: Phases 8, 9, 10
+- **Status**: not-started
