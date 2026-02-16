@@ -33,16 +33,40 @@ const DEFAULTS = {
 };
 
 const CURATED_APPS = [
-  // Development
+  // Development — IDEs & Editors
   { name: 'Visual Studio Code', process: 'Code', category: 'Development' },
   { name: 'Visual Studio', process: 'devenv', category: 'Development' },
+  { name: 'Cursor', process: 'Cursor', category: 'Development' },
   { name: 'JetBrains IDEs', process: 'idea64', category: 'Development' },
+  { name: 'PyCharm', process: 'pycharm64', category: 'Development' },
+  { name: 'WebStorm', process: 'webstorm64', category: 'Development' },
+  { name: 'Android Studio', process: 'studio64', category: 'Development' },
   { name: 'Sublime Text', process: 'sublime_text', category: 'Development' },
   { name: 'Notepad++', process: 'notepad++', category: 'Development' },
+  { name: 'Vim/Neovim', process: 'nvim', category: 'Development' },
+  // Development — Terminals & Tools
   { name: 'Windows Terminal', process: 'WindowsTerminal', category: 'Development' },
   { name: 'Command Prompt', process: 'cmd', category: 'Development' },
   { name: 'PowerShell', process: 'powershell', category: 'Development' },
   { name: 'Git Bash', process: 'mintty', category: 'Development' },
+  { name: 'Docker Desktop', process: 'Docker Desktop', category: 'Development' },
+  { name: 'Postman', process: 'Postman', category: 'Development' },
+  { name: 'Insomnia', process: 'Insomnia', category: 'Development' },
+  // Development — Database
+  { name: 'SQL Workbench', process: 'SQLWorkbench', category: 'Development' },
+  { name: 'MySQL Workbench', process: 'MySQLWorkbench', category: 'Development' },
+  { name: 'DBeaver', process: 'dbeaver', category: 'Development' },
+  { name: 'pgAdmin', process: 'pgAdmin4', category: 'Development' },
+  { name: 'Azure Data Studio', process: 'azuredatastudio', category: 'Development' },
+  { name: 'SSMS', process: 'Ssms', category: 'Development' },
+  // AI Assistants
+  { name: 'Claude Desktop', process: 'claude', category: 'AI Assistants' },
+  { name: 'ChatGPT Desktop', process: 'ChatGPT', category: 'AI Assistants' },
+  // Virtualization
+  { name: 'VMware Workstation', process: 'vmware', category: 'Virtualization' },
+  { name: 'VMware Player', process: 'vmplayer', category: 'Virtualization' },
+  { name: 'VirtualBox', process: 'VirtualBoxVM', category: 'Virtualization' },
+  { name: 'Hyper-V Manager', process: 'virtmgmt', category: 'Virtualization' },
   // Office
   { name: 'Microsoft Word', process: 'WINWORD', category: 'Office' },
   { name: 'Microsoft Excel', process: 'EXCEL', category: 'Office' },
@@ -52,12 +76,17 @@ const CURATED_APPS = [
   { name: 'Notion', process: 'Notion', category: 'Productivity' },
   { name: 'Obsidian', process: 'Obsidian', category: 'Productivity' },
   { name: 'OneNote', process: 'ONENOTE', category: 'Productivity' },
+  { name: 'Todoist', process: 'Todoist', category: 'Productivity' },
   // Communication
   { name: 'Slack', process: 'slack', category: 'Communication' },
   { name: 'Zoom', process: 'Zoom', category: 'Communication' },
   { name: 'Microsoft Teams', process: 'ms-teams', category: 'Communication' },
+  { name: 'Discord', process: 'Discord', category: 'Communication' },
   // Design
   { name: 'Figma', process: 'Figma', category: 'Design' },
+  { name: 'Adobe Photoshop', process: 'Photoshop', category: 'Design' },
+  { name: 'Adobe Illustrator', process: 'Illustrator', category: 'Design' },
+  { name: 'Blender', process: 'blender', category: 'Design' },
 ];
 
 const NATIVE_HOST_NAME = 'com.brainrotblocker.native';
