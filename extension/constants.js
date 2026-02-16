@@ -3,7 +3,7 @@
 // ── Display name (change here to rename everywhere) ──
 // NOTE: Also update manifest.json "name" field — it can't read JS constants.
 const APP_NAME = 'Brainrot Blocker';
-const APP_NAME_FULL = 'Brainrot Blocker [app-detection]';
+const APP_NAME_FULL = 'Brainrot Blocker';
 
 const DEFAULTS = {
   workMinutes: 50,
