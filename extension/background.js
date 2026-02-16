@@ -112,12 +112,14 @@ function flushReward() {
 // --- Tab monitoring ---
 
 async function isProductiveApp(processName) {
-  if (!processName || !nativeHostAvailable) return false;
-
   const result = await getStorage(['productiveApps', 'productiveMode']);
   const mode = result.productiveMode || DEFAULTS.productiveMode;
 
+  // "Always counting" mode: everything is productive (sites + apps), no native host needed
   if (mode === 'all-except-blocked') return true;
+
+  // Whitelist mode: need native host and a matching process name
+  if (!processName || !nativeHostAvailable) return false;
 
   const productiveApps = result.productiveApps || DEFAULTS.productiveApps;
   return productiveApps.some(app =>
