@@ -349,6 +349,7 @@ async function handleStartSession() {
 
   notifyBackend('start', { session_id: state.sessionId });
   chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+  chrome.runtime.sendMessage({ action: 'sessionStarted' }).catch(() => {});
 
   return { success: true, sessionId: state.sessionId };
 }
@@ -414,6 +415,7 @@ async function handleEndSession(confirmed) {
   chrome.alarms.clear('checkSession');
   await setStorage({ shameLevel: 0 });
   chrome.action.setBadgeText({ text: '' });
+  chrome.runtime.sendMessage({ action: 'sessionEnded' }).catch(() => {});
 
   return { success: true, endedEarly: true, minutesCompleted };
 }

@@ -168,6 +168,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (status && status.sessionActive) lockSiteSections(true);
   });
 
+  // Listen for session start/end while settings page is open
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.action === 'sessionStarted') lockSiteSections(true);
+    if (message.action === 'sessionEnded') lockSiteSections(false);
+  });
+
   document.getElementById('saveRewardSites').addEventListener('click', saveRewardSites);
   document.getElementById('saveProductiveSites').addEventListener('click', saveProductiveSites);
 
