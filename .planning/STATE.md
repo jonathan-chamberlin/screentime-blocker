@@ -1,12 +1,14 @@
 # Project State
 
 ## Current Position
-- **Phase**: application-detection
-- **Stage**: executing
-- **Last Updated**: 2026-02-15
+- **Phase**: ai-readability-refactor
+- **Stage**: planning
+- **Plan**: 1
+- **Wave**: —
+- **Last Updated**: 2026-02-16
 
 ## Session Context
-Starting Phase 6: application-detection. User journey decisions have been captured through extensive Q&A. Ready to generate PLAN.md.
+Full refactoring analysis completed. 15 opportunities identified across all extension JS files. Generating PLAN.md for 4-wave execution.
 
 ## Key Decisions Made
 | When | Decision | Rationale |
@@ -16,14 +18,10 @@ Starting Phase 6: application-detection. User journey decisions have been captur
 | 2026-02-14 | Extract shared utility modules | Reduces duplication, makes changes less likely to break things |
 | 2026-02-14 | data-lockable attributes | Robust section locking instead of fragile index-based approach |
 | 2026-02-15 | Curated apps + custom process names | Friendly UX for common apps, flexible for power users |
-| 2026-02-15 | Same section, separate list for apps | Keeps "What counts as productive?" as single concept |
-| 2026-02-15 | Windows only | Simplest path; cross-platform can come later |
-| 2026-02-15 | Badge text "⏸" for paused indicator | Subtle but visible feedback on toolbar icon |
-| 2026-02-15 | Both modes support apps | All-except-blocked: any app productive. Whitelist: only listed apps |
-| 2026-02-15 | 1-second poll rate | Responsive with minimal resource impact |
-| 2026-02-15 | Always-running native host | Simpler lifecycle, no start/stop coordination |
-| 2026-02-15 | Graceful fallback with warning | Extension works without native host, shows warning in settings |
-| 2026-02-15 | Checkbox UI for curated apps | More discoverable than typing process names |
+| 2026-02-16 | importScripts() module system | No build system; MV3 service workers don't support ES modules |
+| 2026-02-16 | Self-contained test.html for unit tests | No npm/node; runs in browser |
+| 2026-02-16 | Handler map for message routing | Single-line registration vs 100-line if/else |
+| 2026-02-16 | 4-wave execution | Tests first, then small refactors, then big split, then popup cleanup |
 
 ## Blockers
 - None
@@ -36,4 +34,5 @@ Starting Phase 6: application-detection. User journey decisions have been captur
 | backend-and-auth | complete | JSON file DB, Auth0 login, session persistence, leaderboard API |
 | polish-demo | complete | Testing, bug fixes, reward expiry redirect |
 | refactor | complete | 4-wave refactor: shared utilities, async/await, deduplication |
-| application-detection | discussing | Native messaging host + productive apps tracking |
+| application-detection | complete | Native messaging host + productive apps tracking |
+| ai-readability-refactor | in-progress | Analysis done, generating PLAN.md |

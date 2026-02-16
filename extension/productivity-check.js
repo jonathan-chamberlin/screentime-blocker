@@ -10,6 +10,12 @@
   function checkTime() {
     if (prompted) return;
 
+    // Defensive check: verify chrome.runtime exists
+    if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+      console.warn('[Productivity Check] chrome.runtime unavailable - extension may be reloading');
+      return;
+    }
+
     // Ask background if session is active
     chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
       if (chrome.runtime.lastError || !response) return;
@@ -132,6 +138,15 @@
     overlay.querySelector('#brainrot-not-working').addEventListener('click', (e) => {
       e.stopPropagation();
       const domain = window.location.hostname.replace(/^www\./, '');
+
+      // Defensive check
+      if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+        console.warn('[Productivity Check] chrome.runtime unavailable - cannot block site');
+        overlay.remove();
+        style.remove();
+        return;
+      }
+
       chrome.runtime.sendMessage({
         action: 'addToBlockedSites',
         site: domain

@@ -80,4 +80,17 @@
   - Install/uninstall scripts register native host in Windows registry
 - **Requirements**: REQ-020, REQ-021, REQ-022, REQ-023
 - **Dependencies**: Phase 5
-- **Status**: not-started
+- **Status**: complete
+
+## Phase 7: ai-readability-refactor
+- **Goal**: Make the codebase maximally readable for AI coding agents, reducing hallucination and cross-file breakage while improving human maintainability
+- **Success Criteria**:
+  - No JS file exceeds 200 lines (background.js drops from 680 to ~150)
+  - All pure functions have automated unit tests that pass
+  - No dead code, duplicated logic, or magic numbers without named constants
+  - Extension loads and runs identically to before (manual verification)
+  - Message router uses handler map instead of if/else chain
+  - Global state is explicit via state.js module
+- **Requirements**: REQ-024 through REQ-034
+- **Dependencies**: Phase 6
+- **Status**: in-progress

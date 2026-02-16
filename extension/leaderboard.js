@@ -48,15 +48,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       const rankText = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1;
       const avatarSrc = entry.pictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.displayName)}&background=random&size=32`;
 
-      tr.innerHTML = `
-        <td class="rank${rankClass}">${rankText}</td>
-        <td><div class="player-cell">
-          <img src="${avatarSrc}" class="avatar" alt="">
-          <span class="player-name">${escapeHtml(entry.displayName)}</span>
-        </div></td>
-        <td class="minutes">${entry.totalMinutes}</td>
-        <td class="attempts">${entry.totalSlackAttempts}</td>
-      `;
+      const rankTd = document.createElement('td');
+      rankTd.className = `rank${rankClass}`;
+      rankTd.innerHTML = rankText;
+
+      const playerTd = document.createElement('td');
+      const playerCell = document.createElement('div');
+      playerCell.className = 'player-cell';
+      const avatar = document.createElement('img');
+      avatar.className = 'avatar';
+      avatar.alt = '';
+      avatar.src = avatarSrc;
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'player-name';
+      nameSpan.textContent = entry.displayName;
+      playerCell.appendChild(avatar);
+      playerCell.appendChild(nameSpan);
+      playerTd.appendChild(playerCell);
+
+      const minutesTd = document.createElement('td');
+      minutesTd.className = 'minutes';
+      minutesTd.textContent = entry.totalMinutes;
+
+      const attemptsTd = document.createElement('td');
+      attemptsTd.className = 'attempts';
+      attemptsTd.textContent = entry.totalSlackAttempts;
+
+      tr.appendChild(rankTd);
+      tr.appendChild(playerTd);
+      tr.appendChild(minutesTd);
+      tr.appendChild(attemptsTd);
+
       tbody.appendChild(tr);
     });
   } catch (err) {
@@ -89,10 +111,4 @@ async function loadExampleData() {
     console.warn('Could not load example leaderboard data:', e);
     return [];
   }
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }

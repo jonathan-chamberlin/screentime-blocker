@@ -217,3 +217,80 @@
   - Auto-reconnect attempted every 5 seconds on disconnect
   - No console errors when native host missing
 - **Priority**: Must-have
+
+## Phase: ai-readability-refactor
+
+### REQ-024: Split background.js god module
+- **Description**: Decompose 680-line background.js into focused modules
+- **Acceptance Criteria**:
+  - background.js under 200 lines, orchestrator only
+  - Each extracted module under 150 lines, single responsibility
+  - importScripts() loads all modules correctly
+  - Extension runs identically to before
+- **Priority**: Must-have
+
+### REQ-025: Explicit state management
+- **Description**: Extract global mutable state into dedicated state.js with getter/setter
+- **Acceptance Criteria**:
+  - State shape documented in one place
+  - All modules access via getState/saveState
+- **Priority**: Must-have
+
+### REQ-026: Message handler map
+- **Description**: Replace 100-line if/else message router with handler map
+- **Acceptance Criteria**:
+  - All actions in a map object
+  - Adding a handler is a single line
+  - return true/false behavior preserved
+- **Priority**: Must-have
+
+### REQ-027: Unit tests for pure functions
+- **Description**: Automated tests for timer.js, site-utils.js, shame-data.js
+- **Acceptance Criteria**:
+  - Tests run via test.html in browser
+  - All tests pass
+- **Priority**: Must-have
+
+### REQ-028: Remove dead code and duplicates
+- **Description**: Delete unused redirectNonActiveTabs, remove stale console.logs
+- **Acceptance Criteria**:
+  - No dead functions
+  - No debug console.logs
+- **Priority**: Must-have
+
+### REQ-029: Fix API_BASE_URL duplication
+- **Description**: Single source of truth for API base URL
+- **Acceptance Criteria**:
+  - background.js reads from config, not hardcoded
+- **Priority**: Should-have
+
+### REQ-030: Extract handleEndSession helpers
+- **Description**: Break 65-line function into bankActiveReward + resetSessionState
+- **Acceptance Criteria**:
+  - handleEndSession under 30 lines
+- **Priority**: Should-have
+
+### REQ-031: Event subscriber documentation
+- **Description**: Comment listing subscribers for each sendMessage broadcast
+- **Acceptance Criteria**:
+  - Every sendMessage has subscriber comment
+- **Priority**: Should-have
+
+### REQ-032: Deduplicate blocked.js screens
+- **Description**: Extract shared showInfoScreen from duplicate functions
+- **Acceptance Criteria**:
+  - Single showInfoScreen function used by both screens
+- **Priority**: Nice-to-have
+
+### REQ-033: Extract popup.js from closure
+- **Description**: Move functions to module scope, DOMContentLoaded only wires listeners
+- **Acceptance Criteria**:
+  - Helper and render functions at module scope
+- **Priority**: Nice-to-have
+
+### REQ-034: Leaderboard XSS fix and shame constants
+- **Description**: Sanitize avatarSrc, add named constants for shame thresholds
+- **Acceptance Criteria**:
+  - avatarSrc set via DOM property
+  - Shame thresholds use named constants
+- **Priority**: Nice-to-have
