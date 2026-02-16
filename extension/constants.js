@@ -100,6 +100,7 @@ const DEFAULTS = {
   allowedPaths: [],
   productiveMode: 'all-except-blocked',
   productiveApps: [],
+  blockedApps: [],
   strictMode: 'off',
   penaltyType: 'Charity',
   penaltyTarget: '',

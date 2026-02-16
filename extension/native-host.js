@@ -14,6 +14,10 @@ function connectNativeHost() {
       if (msg.type === 'app-focus') {
         currentAppName = msg.processName;
         if (state.sessionActive && !browserHasFocus) {
+          // Check if app is blocked first
+          processAppUpdate(currentAppName);
+
+          // Then handle productive app logic
           isProductiveApp(currentAppName).then(isProductive => {
             if (isProductive !== state.isOnProductiveSite) {
               updateProductiveState(isProductive);
@@ -22,6 +26,8 @@ function connectNativeHost() {
         }
       } else if (msg.type === 'pong') {
         nativeHostAvailable = true;
+      } else if (msg.type === 'appClosed') {
+        // Response from closeApp command - could log for debugging
       }
     });
 
@@ -35,6 +41,28 @@ function connectNativeHost() {
     nativePort.postMessage({ type: 'ping' });
   } catch (err) {
     nativeHostAvailable = false;
+  }
+}
+
+async function processAppUpdate(appName) {
+  const result = await getStorage(['blockedApps', 'sessionActive', 'rewardActive']);
+  const blockedApps = result.blockedApps || [];
+
+  // During work session: close blocked apps
+  if (result.sessionActive && !result.rewardActive) {
+    const blockedApp = blockedApps.find(app => app.process === appName);
+    if (blockedApp) {
+      // Send closeApp command to native host
+      if (nativePort) {
+        nativePort.postMessage({
+          command: 'closeApp',
+          processName: appName
+        });
+      }
+
+      // Trigger shame redirect in browser
+      chrome.runtime.sendMessage({ action: 'blockedAppDetected', appName: blockedApp.name });
+    }
   }
 }
 

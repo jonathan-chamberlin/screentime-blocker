@@ -1,11 +1,14 @@
-// Blocked page — routes between reward-expired, reward-paused, and shame screens
+// Blocked page — routes between reward-expired, reward-paused, app blocking, and shame screens
 const urlParams = new URLSearchParams(window.location.search);
 const reason = urlParams.get('reason');
+const blockedApp = urlParams.get('app');
 
 if (reason === 'reward-expired') {
   showInfoScreen("Break Time's Up!", "Your earned break time has run out. Back to work!");
 } else if (reason === 'reward-paused') {
   showInfoScreen("Break Ended Early", "Your unused break time has been saved. You can use it later.");
+} else if (blockedApp) {
+  showAppBlockedScreen(blockedApp);
 } else {
   showShameScreen();
 }
@@ -36,6 +39,27 @@ function showInfoScreen(title, subtitle) {
   container.appendChild(h1);
   container.appendChild(p);
   container.appendChild(btn);
+}
+
+function showAppBlockedScreen(appName) {
+  chrome.runtime.sendMessage({ action: 'blockedPageLoaded' });
+
+  const container = document.querySelector('.container');
+  document.body.style.background = 'linear-gradient(135deg, #2d1b3d 0%, #1a0f29 100%)';
+
+  const h1 = document.createElement('h1');
+  h1.className = 'dramatic fade-in';
+  h1.style.cssText = 'font-size: 42px; color: #ff4757;';
+  h1.textContent = appName + ' was closed';
+
+  const p = document.createElement('p');
+  p.className = 'subtitle fade-in';
+  p.style.cssText = 'color: rgba(255,255,255,0.7); margin-top: 16px; font-size: 20px;';
+  p.textContent = 'Focus on your work! You can use this app during your break.';
+
+  container.innerHTML = '';
+  container.appendChild(h1);
+  container.appendChild(p);
 }
 
 function pickNonRepeating(items, lastIndex, key) {

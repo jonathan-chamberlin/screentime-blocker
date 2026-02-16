@@ -76,6 +76,57 @@ namespace BrainrotBlocker
             return sb.ToString();
         }
 
+        private static void HandleCloseApp(string message)
+        {
+            try
+            {
+                // Extract processName from JSON message (simple string search)
+                int processNameIndex = message.IndexOf("\"processName\"");
+                if (processNameIndex == -1)
+                {
+                    SendMessage("{\"type\":\"appClosed\",\"success\":false,\"error\":\"Missing processName\"}");
+                    return;
+                }
+
+                string afterKey = message.Substring(processNameIndex);
+                int valueStart = afterKey.IndexOf(":") + 1;
+                int quoteStart = afterKey.IndexOf("\"", valueStart) + 1;
+                int quoteEnd = afterKey.IndexOf("\"", quoteStart);
+                string processName = afterKey.Substring(quoteStart, quoteEnd - quoteStart);
+
+                if (string.IsNullOrWhiteSpace(processName))
+                {
+                    SendMessage("{\"type\":\"appClosed\",\"success\":false,\"error\":\"Invalid processName\"}");
+                    return;
+                }
+
+                // Use taskkill to terminate process
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "taskkill",
+                    Arguments = "/IM \"" + processName + ".exe\" /F",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                Process proc = Process.Start(psi);
+                proc.WaitForExit();
+
+                bool success = proc.ExitCode == 0;
+                string error = success ? "" : "Process not found or access denied";
+
+                SendMessage("{\"type\":\"appClosed\",\"success\":" + (success ? "true" : "false") +
+                           ",\"processName\":\"" + EscapeJson(processName) + "\"" +
+                           (success ? "" : ",\"error\":\"" + EscapeJson(error) + "\"") + "}");
+            }
+            catch (Exception ex)
+            {
+                SendMessage("{\"type\":\"appClosed\",\"success\":false,\"error\":\"" + EscapeJson(ex.Message) + "\"}");
+            }
+        }
+
         private static void StdinReaderThread()
         {
             try
@@ -125,6 +176,10 @@ namespace BrainrotBlocker
                         if (message.Contains("\"ping\""))
                         {
                             SendMessage("{\"type\":\"pong\"}");
+                        }
+                        else if (message.Contains("\"closeApp\""))
+                        {
+                            HandleCloseApp(message);
                         }
                     }
 
