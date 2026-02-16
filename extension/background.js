@@ -294,6 +294,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
     return false;
   }
+  if (message.action === 'addToBlockedSites') {
+    (async () => {
+      try {
+        const result = await getStorage(['rewardSites']);
+        const sites = result.rewardSites || DEFAULTS.rewardSites;
+        if (!sites.includes(message.site)) {
+          sites.push(message.site);
+          await setStorage({ rewardSites: sites });
+        }
+        if (state.sessionActive) {
+          await blockSites();
+          await redirectBlockedTabs();
+        }
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
 });
 
 // --- Session handlers ---
