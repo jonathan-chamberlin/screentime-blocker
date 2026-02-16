@@ -178,9 +178,11 @@ const GUILT_QUOTES = [
 const SHAME_LEVEL_LABELS = { 1: 'LOW', 2: 'MEDIUM', 3: 'HIGH', 4: 'MAXIMUM' };
 const SHAME_LEVEL_COLORS = { 1: '#667eea', 2: '#f093fb', 3: '#ff4757', 4: '#ff0000' };
 
+const SHAME_THRESHOLDS = { LOW: 2, MEDIUM: 4, HIGH: 6 };
+
 function getShameLevel(attempts) {
-  if (attempts <= 2) return 1;
-  if (attempts <= 4) return 2;
-  if (attempts <= 6) return 3;
+  if (attempts <= SHAME_THRESHOLDS.LOW) return 1;
+  if (attempts <= SHAME_THRESHOLDS.MEDIUM) return 2;
+  if (attempts <= SHAME_THRESHOLDS.HIGH) return 3;
   return 4;
 }
