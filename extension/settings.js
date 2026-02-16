@@ -1,7 +1,45 @@
+let hasUnsavedChanges = false;
+const pendingChanges = {};
+
 function showConfirmation(elementId) {
   const confirmation = document.getElementById(elementId);
   confirmation.classList.add('show');
   setTimeout(() => confirmation.classList.remove('show'), 2000);
+}
+
+function markAsChanged(settingKey, value) {
+  hasUnsavedChanges = true;
+  pendingChanges[settingKey] = value;
+  showSaveBanner();
+}
+
+function showSaveBanner() {
+  const banner = document.getElementById('save-banner');
+  banner.classList.remove('hidden');
+}
+
+function hideSaveBanner() {
+  const banner = document.getElementById('save-banner');
+  banner.classList.add('hidden');
+  hasUnsavedChanges = false;
+  Object.keys(pendingChanges).forEach(key => delete pendingChanges[key]);
+}
+
+function showSuccessMessage(msg) {
+  const bannerMessage = document.querySelector('.save-banner-message');
+  bannerMessage.textContent = msg;
+  bannerMessage.style.color = '#00ff88';
+  setTimeout(() => {
+    hideSaveBanner();
+    bannerMessage.textContent = 'You have unsaved changes';
+    bannerMessage.style.color = 'rgba(255, 255, 255, 0.8)';
+  }, 2000);
+}
+
+function showErrorMessage(msg) {
+  const bannerMessage = document.querySelector('.save-banner-message');
+  bannerMessage.textContent = msg;
+  bannerMessage.style.color = '#ff4757';
 }
 
 async function loadSettings() {
@@ -74,7 +112,13 @@ async function loadProductiveApps() {
       item.appendChild(checkbox);
       item.appendChild(label);
       item.addEventListener('click', (e) => {
-        if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+        markAsChanged('_productiveAppsChanged', true);
+      });
+      checkbox.addEventListener('change', () => {
+        markAsChanged('_productiveAppsChanged', true);
       });
       grid.appendChild(item);
     });
@@ -194,5 +238,91 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('installInstructions').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
+  });
+
+  // Change detection for all inputs
+  document.getElementById('rewardSites').addEventListener('input', (e) => {
+    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    markAsChanged('rewardSites', sites);
+  });
+
+  document.getElementById('allowedPaths').addEventListener('input', (e) => {
+    const paths = e.target.value.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+    markAsChanged('allowedPaths', paths);
+  });
+
+  document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      markAsChanged('productiveMode', e.target.value);
+    });
+  });
+
+  document.getElementById('productiveSites').addEventListener('input', (e) => {
+    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    markAsChanged('productiveSites', sites);
+  });
+
+  document.querySelectorAll('input[name="strictMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      markAsChanged('strictMode', e.target.value);
+    });
+  });
+
+  document.querySelectorAll('input[name="penaltyType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      markAsChanged('penaltyType', e.target.value);
+    });
+  });
+
+  document.getElementById('penaltyTarget').addEventListener('input', (e) => {
+    markAsChanged('penaltyTarget', e.target.value.trim());
+  });
+
+  document.getElementById('penaltyAmount').addEventListener('input', (e) => {
+    markAsChanged('penaltyAmount', parseInt(e.target.value, 10));
+  });
+
+  document.getElementById('paymentMethod').addEventListener('input', (e) => {
+    markAsChanged('paymentMethod', e.target.value.trim());
+  });
+
+  document.getElementById('customApps').addEventListener('input', () => {
+    // This will be handled specially in saveProductiveApps
+    markAsChanged('_productiveAppsChanged', true);
+  });
+
+  // Unified save button handler
+  document.getElementById('save-all-btn').addEventListener('click', async () => {
+    try {
+      // If productive apps changed, rebuild the full list
+      if (pendingChanges._productiveAppsChanged) {
+        const apps = [];
+        CURATED_APPS.forEach(app => {
+          const checkbox = document.getElementById('app-' + app.process);
+          if (checkbox && checkbox.checked) {
+            apps.push(app.process);
+          }
+        });
+        const customText = document.getElementById('customApps').value;
+        const customApps = customText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+        apps.push(...customApps);
+        pendingChanges.productiveApps = apps;
+        delete pendingChanges._productiveAppsChanged;
+      }
+
+      await setStorage(pendingChanges);
+
+      // Send update message for reward sites if changed
+      if (pendingChanges.rewardSites) {
+        chrome.runtime.sendMessage({
+          action: 'updateRewardSites',
+          sites: pendingChanges.rewardSites
+        });
+      }
+
+      showSuccessMessage('All settings saved!');
+    } catch (error) {
+      showErrorMessage('Failed to save settings: ' + error.message);
+    }
   });
 });
