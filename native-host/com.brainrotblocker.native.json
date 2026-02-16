@@ -1,0 +1,9 @@
+{
+  "name": "com.brainrotblocker.native",
+  "description": "Brainrot Blocker - Desktop App Detection",
+  "path": "C:\\Repositories for Git\\screen-time-blocker\\screentime-blocker-application-detection\\native-host\\host_wrapper.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://jcpembhiicpmeikeoggmlbjkbbaajnkf/"
+  ]
+}

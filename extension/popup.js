@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  // Apply app name from constants
+  document.title = APP_NAME;
+  document.querySelector('.brand h1').textContent = APP_NAME;
+
   // Elements
   const timerSection = document.getElementById('timer-section');
   const timerDisplay = document.getElementById('timer-display');
@@ -171,7 +175,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (status.isOnProductiveSite) {
         timerSection.className = 'timer-section active';
-        timerLabel.textContent = `${remainingMin} min to next reward`;
+        const appSuffix = status.currentAppName ? ` (${status.currentAppName})` : '';
+        timerLabel.textContent = `${remainingMin} min to next reward${appSuffix}`;
       } else {
         timerSection.className = 'timer-section paused';
         timerLabel.textContent = 'paused \u2014 switch to a productive tab';

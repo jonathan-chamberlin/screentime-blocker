@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Brainrot Blocker",
+  "name": "Brainrot Blocker [app-detection]",
   "version": "1.0.0",
   "description": "Hilariously guilt-trippy focus tool with social competition",
-  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs"],
+  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs", "nativeMessaging"],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "16": "icon16.png",
@@ -23,7 +23,7 @@
     "service_worker": "background.js"
   },
   "web_accessible_resources": [{
-    "resources": ["blocked.html", "example-leaderboard.csv"],
+    "resources": ["blocked.html", "example-leaderboard.csv", "install-guide.html"],
     "matches": ["<all_urls>"]
   }]
 }
