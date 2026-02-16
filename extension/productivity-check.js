@@ -97,6 +97,9 @@
       .brainrot-btn:hover {
         transform: scale(1.05);
       }
+      .brainrot-btn:active {
+        transform: scale(0.95);
+      }
       .brainrot-btn-yes {
         background: #333;
         color: #fff;
@@ -111,7 +114,8 @@
     document.body.appendChild(overlay);
 
     // "Yes, I'm working" — dismiss and reset timer
-    document.getElementById('brainrot-yes-working').addEventListener('click', () => {
+    overlay.querySelector('#brainrot-yes-working').addEventListener('click', (e) => {
+      e.stopPropagation();
       overlay.remove();
       style.remove();
       prompted = false;
@@ -119,17 +123,22 @@
     });
 
     // "No, block this site" — add to blocked list
-    document.getElementById('brainrot-not-working').addEventListener('click', () => {
+    overlay.querySelector('#brainrot-not-working').addEventListener('click', (e) => {
+      e.stopPropagation();
       const domain = window.location.hostname.replace(/^www\./, '');
       chrome.runtime.sendMessage({
         action: 'addToBlockedSites',
         site: domain
       }, (response) => {
-        if (response && response.success) {
-          // The tab will be redirected by the background script
+        if (chrome.runtime.lastError) {
+          // Extension context invalidated — just remove the overlay
           overlay.remove();
           style.remove();
+          return;
         }
+        // The tab will be redirected by the background script
+        overlay.remove();
+        style.remove();
       });
     });
   }
