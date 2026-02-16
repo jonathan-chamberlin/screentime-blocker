@@ -156,6 +156,10 @@ function lockSiteSections(locked) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Apply app name from constants
+  document.title = APP_NAME + ' Settings';
+  document.querySelector('.header h1').textContent = APP_NAME + ' Settings';
+
   await loadSettings();
   await loadProductiveApps();
 

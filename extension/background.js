@@ -26,6 +26,7 @@ let state = {
 let nativePort = null;
 let currentAppName = null;
 let nativeHostAvailable = false;
+let browserHasFocus = true;
 
 function connectNativeHost() {
   try {
@@ -135,12 +136,17 @@ async function checkCurrentTab() {
       const mode = result.productiveMode || DEFAULTS.productiveMode;
 
       if (urlMatchesAllowedPaths(tab.url, allowedPaths)) {
+        console.log('[BrainrotBlocker] Tab productive (allowed path):', tab.url);
         updateProductiveState(true);
       } else if (mode === 'all-except-blocked') {
-        updateProductiveState(!urlMatchesSites(tab.url, blockedSites));
+        const isProductive = !urlMatchesSites(tab.url, blockedSites);
+        console.log('[BrainrotBlocker] mode=all-except-blocked, url:', tab.url, 'productive:', isProductive);
+        updateProductiveState(isProductive);
       } else {
         const productiveSites = result.productiveSites || DEFAULTS.productiveSites;
-        updateProductiveState(urlMatchesSites(tab.url, productiveSites));
+        const isProductive = urlMatchesSites(tab.url, productiveSites);
+        console.log('[BrainrotBlocker] mode=whitelist, url:', tab.url, 'productive:', isProductive, 'sites:', productiveSites);
+        updateProductiveState(isProductive);
       }
     }
 
@@ -190,8 +196,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  browserHasFocus = windowId !== chrome.windows.WINDOW_ID_NONE;
+
   if (state.sessionActive || state.rewardActive) {
-    if (windowId === chrome.windows.WINDOW_ID_NONE) {
+    if (!browserHasFocus) {
       if (state.sessionActive) {
         const isProductive = await isProductiveApp(currentAppName);
         updateProductiveState(isProductive);
@@ -457,7 +465,16 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (state.sessionActive) {
       flushProductive();
       saveState();
-      await checkCurrentTab();
+
+      // Only check Chrome tab when browser has focus;
+      // when another app has focus, re-evaluate via native host
+      if (browserHasFocus) {
+        await checkCurrentTab();
+      } else {
+        const isProductive = await isProductiveApp(currentAppName);
+        updateProductiveState(isProductive);
+      }
+
       await checkAndGrantReward();
     }
 

@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  // Apply app name from constants
+  document.title = APP_NAME;
+  document.querySelector('.brand h1').textContent = APP_NAME;
+
   // Elements
   const timerSection = document.getElementById('timer-section');
   const timerDisplay = document.getElementById('timer-display');
