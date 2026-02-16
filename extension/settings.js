@@ -1,12 +1,6 @@
 let hasUnsavedChanges = false;
 const pendingChanges = {};
 
-function showConfirmation(elementId) {
-  const confirmation = document.getElementById(elementId);
-  confirmation.classList.add('show');
-  setTimeout(() => confirmation.classList.remove('show'), 2000);
-}
-
 function markAsChanged(settingKey, value) {
   hasUnsavedChanges = true;
   pendingChanges[settingKey] = value;
@@ -135,62 +129,9 @@ async function loadProductiveApps() {
   });
 }
 
-async function saveProductiveApps() {
-  const apps = [];
-
-  CURATED_APPS.forEach(app => {
-    const checkbox = document.getElementById('app-' + app.process);
-    if (checkbox && checkbox.checked) {
-      apps.push(app.process);
-    }
-  });
-
-  const customText = document.getElementById('customApps').value;
-  const customApps = customText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-  apps.push(...customApps);
-
-  await setStorage({ productiveApps: apps });
-  showConfirmation('productiveAppsConfirmation');
-}
-
-async function saveRewardSites() {
-  const sites = document.getElementById('rewardSites').value
-    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
-  const allowedPaths = document.getElementById('allowedPaths').value
-    .split('\n').map(p => p.trim()).filter(p => p.length > 0);
-
-  await setStorage({ rewardSites: sites, allowedPaths });
-  chrome.runtime.sendMessage({ action: 'updateRewardSites', sites });
-  showConfirmation('rewardSitesConfirmation');
-}
-
 function toggleProductiveSitesList(mode) {
   document.getElementById('productiveSitesGroup').style.display =
     mode === 'whitelist' ? 'block' : 'none';
-}
-
-async function saveProductiveSites() {
-  const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
-  const sites = document.getElementById('productiveSites').value
-    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
-
-  await setStorage({ productiveMode, productiveSites: sites });
-  showConfirmation('productiveSitesConfirmation');
-}
-
-async function savePenalty() {
-  const penaltyType = document.querySelector('input[name="penaltyType"]:checked').value;
-  const penaltyTarget = document.getElementById('penaltyTarget').value.trim();
-  const penaltyAmount = parseInt(document.getElementById('penaltyAmount').value, 10);
-
-  await setStorage({ penaltyType, penaltyTarget, penaltyAmount });
-  showConfirmation('penaltyConfirmation');
-}
-
-async function savePayment() {
-  const paymentMethod = document.getElementById('paymentMethod').value.trim();
-  await setStorage({ paymentMethod });
-  showConfirmation('paymentConfirmation');
 }
 
 function lockSiteSections(locked) {
@@ -218,23 +159,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (message.action === 'sessionEnded') lockSiteSections(false);
   });
 
-  document.getElementById('saveRewardSites').addEventListener('click', saveRewardSites);
-  document.getElementById('saveProductiveSites').addEventListener('click', saveProductiveSites);
-
   document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
     radio.addEventListener('change', (e) => toggleProductiveSitesList(e.target.value));
   });
 
-  document.getElementById('saveStrictMode').addEventListener('click', async () => {
-    const strictMode = document.querySelector('input[name="strictMode"]:checked').value;
-    await setStorage({ strictMode });
-    showConfirmation('strictModeConfirmation');
-  });
-
-  document.getElementById('savePenalty').addEventListener('click', savePenalty);
-  document.getElementById('savePayment').addEventListener('click', savePayment);
-
-  document.getElementById('saveProductiveApps').addEventListener('click', saveProductiveApps);
   document.getElementById('installInstructions').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
