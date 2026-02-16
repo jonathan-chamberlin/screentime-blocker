@@ -265,6 +265,61 @@
         .app-category-header:first-child {
             margin-top: 0;
         }
+
+        .save-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border-top: 2px solid #00ff88;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0, 255, 136, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .save-banner.hidden {
+            transform: translateY(100%);
+        }
+
+        .save-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .save-banner-message {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .save-all-btn {
+            background: #00ff88;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .save-all-btn:hover {
+            background: #00cc6f;
+            transform: scale(1.05);
+        }
+
+        .save-all-btn:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -284,10 +339,6 @@
             <div class="form-group" style="margin-top: 18px;">
                 <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
                 <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
-            </div>
-            <div class="save-button-container">
-                <button id="saveRewardSites">Save</button>
-                <span class="save-confirmation" id="rewardSitesConfirmation">Saved!</span>
             </div>
         </div>
 
@@ -311,10 +362,6 @@
                 <label for="productiveSites">Productive sites (one per line) — your timer only runs on these</label>
                 <textarea id="productiveSites" placeholder="docs.google.com&#10;notion.so&#10;github.com"></textarea>
             </div>
-            <div class="save-button-container">
-                <button id="saveProductiveSites">Save</button>
-                <span class="save-confirmation" id="productiveSitesConfirmation">Saved!</span>
-            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -334,11 +381,6 @@
                 <label for="customApps">Custom process names (one per line)</label>
                 <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
                 <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
-            </div>
-
-            <div class="save-button-container">
-                <button id="saveProductiveApps">Save</button>
-                <span class="save-confirmation" id="productiveAppsConfirmation">Saved!</span>
             </div>
         </div>
 
@@ -385,10 +427,6 @@
                     </label>
                 </div>
             </div>
-            <div class="save-button-container">
-                <button id="saveStrictMode">Save</button>
-                <span class="save-confirmation" id="strictModeConfirmation">Saved!</span>
-            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -415,10 +453,6 @@
                 <label for="penaltyAmount">Donation Amount per Failed Session ($)</label>
                 <input type="number" id="penaltyAmount" min="1" max="1000" value="5">
             </div>
-            <div class="save-button-container">
-                <button id="savePenalty">Save</button>
-                <span class="save-confirmation" id="penaltyConfirmation">Saved!</span>
-            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -428,10 +462,13 @@
                 <label for="paymentMethod">Your payment method</label>
                 <input type="text" id="paymentMethod" placeholder="e.g., Visa ending in 4242">
             </div>
-            <div class="save-button-container">
-                <button id="savePayment">Save</button>
-                <span class="save-confirmation" id="paymentConfirmation">Saved!</span>
-            </div>
+        </div>
+    </div>
+
+    <div id="save-banner" class="save-banner hidden">
+        <div class="save-banner-content">
+            <span class="save-banner-message">You have unsaved changes</span>
+            <button id="save-all-btn" class="save-all-btn">Save Changes</button>
         </div>
     </div>
 
