@@ -164,6 +164,25 @@ const messageHandlers = {
     })();
     return true;
   },
+  blockedAppDetected: (msg, sender, sendResponse) => {
+    if (state.sessionActive) {
+      state.blockedAttempts++;
+      saveState();
+
+      // Redirect active tab to blocked page
+      chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          chrome.tabs.update(tabs[0].id, {
+            url: chrome.runtime.getURL('blocked.html?app=' + encodeURIComponent(msg.appName))
+          });
+        }
+      });
+
+      notifyBackend('blocked-attempt', { session_id: state.sessionId, app: msg.appName });
+    }
+    sendResponse({ success: true });
+    return false;
+  },
 };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
