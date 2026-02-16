@@ -40,6 +40,7 @@
             <button id="brainrot-yes-working" class="brainrot-btn brainrot-btn-yes">Yes, I'm working</button>
             <button id="brainrot-not-working" class="brainrot-btn brainrot-btn-no">No, block this site</button>
           </div>
+          <p class="brainrot-modal-hint">"No" will add <strong>${window.location.hostname}</strong> to your blocked sites list</p>
         </div>
       </div>
     `;
@@ -107,6 +108,11 @@
       .brainrot-btn-no {
         background: #ff4757;
         color: #fff;
+      }
+      .brainrot-modal-hint {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 12px;
+        margin: 12px 0 0 0;
       }
     `;
 
