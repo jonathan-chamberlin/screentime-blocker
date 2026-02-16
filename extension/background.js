@@ -34,11 +34,12 @@ function connectNativeHost() {
 
     nativePort.onMessage.addListener((msg) => {
       if (msg.type === 'app-focus') {
-        const prevApp = currentAppName;
         currentAppName = msg.processName;
-        if (state.sessionActive && !browserHasFocus && currentAppName !== prevApp) {
+        if (state.sessionActive && !browserHasFocus) {
           isProductiveApp(currentAppName).then(isProductive => {
-            updateProductiveState(isProductive);
+            if (isProductive !== state.isOnProductiveSite) {
+              updateProductiveState(isProductive);
+            }
           });
         }
       } else if (msg.type === 'pong') {
