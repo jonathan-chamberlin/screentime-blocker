@@ -55,7 +55,7 @@ function updateRewardState(isOnReward) {
   saveState();
   updateBadge(isOnReward);
 
-  if (state.rewardActive && state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
+  if (state.rewardActive && state.rewardBurnedMillis >= state.rewardTotalMillis) {
     handleRewardExpired();
   }
 }

@@ -4,8 +4,8 @@
 //             tab-monitor.js (checkCurrentTab)
 
 async function checkAndGrantReward() {
-  const nextThreshold = state.workMinutes * 60 * (state.rewardGrantCount + 1);
-  if (state.productiveSeconds >= nextThreshold) {
+  const nextThreshold = state.workMinutes * 60 * 1000 * (state.rewardGrantCount + 1);
+  if (state.productiveMillis >= nextThreshold) {
     state.rewardGrantCount++;
     saveState();
 
@@ -34,8 +34,8 @@ async function handleUseReward() {
   }
 
   state.rewardActive = true;
-  state.rewardTotalSeconds = availableSeconds;
-  state.rewardBurnedSeconds = 0;
+  state.rewardTotalMillis = availableSeconds * 1000;
+  state.rewardBurnedMillis = 0;
   state.isOnRewardSite = false;
   state.lastRewardTick = Date.now();
   saveState();
@@ -56,17 +56,18 @@ async function handlePauseReward() {
 
   flushReward();
 
-  const remaining = Math.max(0, state.rewardTotalSeconds - state.rewardBurnedSeconds);
-  if (remaining > 0) {
+  const remainingMillis = Math.max(0, state.rewardTotalMillis - state.rewardBurnedMillis);
+  const remainingSeconds = Math.floor(remainingMillis / 1000);
+  if (remainingSeconds > 0) {
     const cur = await getStorage(['unusedRewardSeconds']);
-    await setStorage({ unusedRewardSeconds: (cur.unusedRewardSeconds || 0) + remaining });
+    await setStorage({ unusedRewardSeconds: (cur.unusedRewardSeconds || 0) + remainingSeconds });
   }
 
   state.rewardActive = false;
   state.isOnRewardSite = false;
   state.lastRewardTick = null;
-  state.rewardTotalSeconds = 0;
-  state.rewardBurnedSeconds = 0;
+  state.rewardTotalMillis = 0;
+  state.rewardBurnedMillis = 0;
   saveState();
   stopRewardCountdown();
 
@@ -77,15 +78,15 @@ async function handlePauseReward() {
     }, 0);
   }
 
-  return { success: true, bankedSeconds: remaining };
+  return { success: true, bankedSeconds: remainingSeconds };
 }
 
 // --- Reward expiry ---
 
 async function handleRewardExpired() {
   state.rewardActive = false;
-  state.rewardTotalSeconds = 0;
-  state.rewardBurnedSeconds = 0;
+  state.rewardTotalMillis = 0;
+  state.rewardBurnedMillis = 0;
   state.isOnRewardSite = false;
   state.lastRewardTick = null;
   saveState();
@@ -100,14 +101,15 @@ async function handleRewardExpired() {
 // Bank remaining reward time back to storage (used when ending session with active reward)
 async function bankActiveReward() {
   flushReward();
-  const remainingSec = Math.max(0, state.rewardTotalSeconds - state.rewardBurnedSeconds);
+  const remainingMillis = Math.max(0, state.rewardTotalMillis - state.rewardBurnedMillis);
+  const remainingSec = Math.floor(remainingMillis / 1000);
   if (remainingSec > 0) {
     const cur = await getStorage(['unusedRewardSeconds']);
     await setStorage({ unusedRewardSeconds: (cur.unusedRewardSeconds || 0) + remainingSec });
   }
   state.rewardActive = false;
-  state.rewardTotalSeconds = 0;
-  state.rewardBurnedSeconds = 0;
+  state.rewardTotalMillis = 0;
+  state.rewardBurnedMillis = 0;
   state.isOnRewardSite = false;
   state.lastRewardTick = null;
   stopRewardCountdown();
@@ -123,7 +125,7 @@ function startRewardCountdown() {
     if (!state.rewardActive) { stopRewardCountdown(); return; }
     flushReward();
     saveState();
-    if (state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
+    if (state.rewardBurnedMillis >= state.rewardTotalMillis) {
       handleRewardExpired();
     }
   }, 1000);

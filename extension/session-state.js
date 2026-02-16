@@ -7,12 +7,12 @@ let state = {
   sessionStartTime: null,
   rewardActive: false,
   blockedAttempts: 0,
-  productiveSeconds: 0,
+  productiveMillis: 0,  // Changed from productiveSeconds
   lastProductiveTick: null,
   isOnProductiveSite: false,
   rewardGrantCount: 0,
-  rewardTotalSeconds: 0,
-  rewardBurnedSeconds: 0,
+  rewardTotalMillis: 0,  // Changed from rewardTotalSeconds
+  rewardBurnedMillis: 0,  // Changed from rewardBurnedSeconds
   isOnRewardSite: false,
   lastRewardTick: null,
   workMinutes: DEFAULTS.workMinutes,
@@ -25,15 +25,15 @@ function saveState() {
 
 // Flush elapsed productive time into accumulator
 function flushProductive() {
-  const flushed = flushElapsed(state.isOnProductiveSite, state.lastProductiveTick, state.productiveSeconds);
-  state.productiveSeconds = flushed.seconds;
+  const flushed = flushElapsed(state.isOnProductiveSite, state.lastProductiveTick, state.productiveMillis);
+  state.productiveMillis = flushed.millis;
   state.lastProductiveTick = flushed.lastTick;
 }
 
 // Flush elapsed reward burn time into accumulator
 function flushReward() {
-  const flushed = flushElapsed(state.isOnRewardSite, state.lastRewardTick, state.rewardBurnedSeconds);
-  state.rewardBurnedSeconds = flushed.seconds;
+  const flushed = flushElapsed(state.isOnRewardSite, state.lastRewardTick, state.rewardBurnedMillis);
+  state.rewardBurnedMillis = flushed.millis;
   state.lastRewardTick = flushed.lastTick;
 }
 
@@ -43,7 +43,7 @@ function resetSessionState() {
   state.sessionId = null;
   state.sessionStartTime = null;
   state.blockedAttempts = 0;
-  state.productiveSeconds = 0;
+  state.productiveMillis = 0;
   state.lastProductiveTick = null;
   state.isOnProductiveSite = false;
   state.rewardGrantCount = 0;

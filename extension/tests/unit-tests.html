@@ -235,46 +235,46 @@
     // ──────────────────────────────────────────────────────────────────────
 
     test('flushElapsed: inactive (isActive=false) returns unchanged values', () => {
-      const result = flushElapsed(false, 1000000, 42);
-      assertEquals(result.seconds, 42);
+      const result = flushElapsed(false, 1000000, 42000);
+      assertEquals(result.millis, 42000);
       assertEquals(result.lastTick, 1000000);
     });
 
     test('flushElapsed: null lastTick returns unchanged values', () => {
-      const result = flushElapsed(true, null, 42);
-      assertEquals(result.seconds, 42);
+      const result = flushElapsed(true, null, 42000);
+      assertEquals(result.millis, 42000);
       assertEquals(result.lastTick, null);
     });
 
-    test('flushElapsed: active with valid lastTick adds elapsed seconds', () => {
+    test('flushElapsed: active with valid lastTick adds elapsed milliseconds', () => {
       const lastTick = Date.now() - 5000; // 5 seconds ago
-      const result = flushElapsed(true, lastTick, 10);
+      const result = flushElapsed(true, lastTick, 10000);
 
-      // Should be 10 + ~5 seconds (allow 1 second tolerance for execution time)
-      assert(result.seconds >= 14 && result.seconds <= 16, `Expected ~15 seconds, got ${result.seconds}`);
+      // Should be 10000 + ~5000 millis (allow 1000ms tolerance for execution time)
+      assert(result.millis >= 14000 && result.millis <= 16000, `Expected ~15000 millis, got ${result.millis}`);
       assert(result.lastTick > lastTick, 'lastTick should be updated to now');
     });
 
     test('flushElapsed: negative elapsed (lastTick in future) clamped to 0', () => {
       const futureLastTick = Date.now() + 10000; // 10 seconds in future
-      const result = flushElapsed(true, futureLastTick, 20);
+      const result = flushElapsed(true, futureLastTick, 20000);
 
-      assertEquals(result.seconds, 20, 'Should not add negative elapsed time');
-      assert(result.lastTick > futureLastTick - 1000, 'lastTick should be updated to now');
+      assertEquals(result.millis, 20000, 'Should not add negative elapsed time');
+      assert(result.lastTick <= Date.now(), 'lastTick should be updated to now');
     });
 
     // ──────────────────────────────────────────────────────────────────────
     // TESTS: timer.js - snapshotSeconds()
     // ──────────────────────────────────────────────────────────────────────
 
-    test('snapshotSeconds: inactive returns accumulatedSeconds', () => {
-      const result = snapshotSeconds(false, 1000000, 42);
+    test('snapshotSeconds: inactive returns accumulatedMillis as seconds', () => {
+      const result = snapshotSeconds(false, 1000000, 42000);
       assertEquals(result, 42);
     });
 
-    test('snapshotSeconds: active returns accumulated + elapsed', () => {
+    test('snapshotSeconds: active returns accumulated + elapsed in seconds', () => {
       const lastTick = Date.now() - 3000; // 3 seconds ago
-      const result = snapshotSeconds(true, lastTick, 10);
+      const result = snapshotSeconds(true, lastTick, 10000);
 
       // Should be 10 + ~3 seconds (allow 1 second tolerance)
       assert(result >= 12 && result <= 14, `Expected ~13 seconds, got ${result}`);
