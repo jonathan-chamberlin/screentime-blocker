@@ -59,13 +59,6 @@ const CURATED_APPS = [
   { name: 'Blender', process: 'blender', category: 'Design' },
   { name: 'Figma', process: 'Figma', category: 'Design' },
   { name: 'Unity', process: 'Unity', category: 'Design' },
-  // Sales & Customer Support
-  { name: 'Freshdesk', process: 'Freshdesk', category: 'Sales & Customer Support' },
-  { name: 'HubSpot', process: 'HubSpot', category: 'Sales & Customer Support' },
-  { name: 'Intercom', process: 'Intercom', category: 'Sales & Customer Support' },
-  { name: 'Salesforce', process: 'Salesforce', category: 'Sales & Customer Support' },
-  { name: 'Zendesk', process: 'Zendesk', category: 'Sales & Customer Support' },
-  { name: 'Zoho CRM', process: 'ZohoCRM', category: 'Sales & Customer Support' },
   // Development — IDEs & Editors
   { name: 'Android Studio', process: 'studio64', category: 'Development' },
   { name: 'JetBrains IDEs', process: 'idea64', category: 'Development' },
@@ -92,13 +85,8 @@ const CURATED_APPS = [
   { name: 'SQL Workbench', process: 'SQLWorkbench', category: 'Development' },
   { name: 'SSMS', process: 'Ssms', category: 'Development' },
   // Deployment & Hosting
-  { name: 'AWS Console', process: 'aws', category: 'Deployment & Hosting' },
-  { name: 'Azure CLI', process: 'az', category: 'Deployment & Hosting' },
   { name: 'FileZilla', process: 'filezilla', category: 'Deployment & Hosting' },
-  { name: 'Google Cloud CLI', process: 'gcloud', category: 'Deployment & Hosting' },
-  { name: 'Kubernetes (kubectl)', process: 'kubectl', category: 'Deployment & Hosting' },
   { name: 'PuTTY', process: 'putty', category: 'Deployment & Hosting' },
-  { name: 'Terraform', process: 'terraform', category: 'Deployment & Hosting' },
   { name: 'WinSCP', process: 'WinSCP', category: 'Deployment & Hosting' },
   // Virtualization
   { name: 'Hyper-V Manager', process: 'virtmgmt', category: 'Virtualization' },
