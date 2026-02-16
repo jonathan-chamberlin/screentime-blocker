@@ -3,53 +3,39 @@ const urlParams = new URLSearchParams(window.location.search);
 const reason = urlParams.get('reason');
 
 if (reason === 'reward-expired') {
-  showRewardExpiredScreen();
+  showInfoScreen("Break Time's Up!", "Your earned break time has run out. Back to work!");
 } else if (reason === 'reward-paused') {
-  showRewardPausedScreen();
+  showInfoScreen("Break Ended Early", "Your unused break time has been saved. You can use it later.");
 } else {
   showShameScreen();
 }
 
-function showRewardExpiredScreen() {
+function showInfoScreen(title, subtitle) {
   const container = document.querySelector('.container');
   document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
 
-  container.innerHTML = `
-    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Break Time's Up!</h1>
-    <p class="subtitle fade-in" style="color: rgba(255,255,255,0.7); margin-top: 16px;">
-      Your earned break time has run out. Back to work!
-    </p>
-    <div class="fade-in" style="margin-top: 40px;">
-      <button class="btn-burn-reward" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f;" id="btn-got-it">Got It</button>
-    </div>
-  `;
+  const h1 = document.createElement('h1');
+  h1.className = 'fade-in';
+  h1.style.cssText = 'font-size: 42px; color: #ffaa00;';
+  h1.textContent = title;
 
-  document.getElementById('btn-got-it').addEventListener('click', () => {
-    chrome.tabs.getCurrent((tab) => {
-      if (tab) chrome.tabs.remove(tab.id);
-    });
+  const p = document.createElement('p');
+  p.className = 'subtitle fade-in';
+  p.style.cssText = 'color: rgba(255,255,255,0.7); margin-top: 16px;';
+  p.textContent = subtitle;
+
+  const btn = document.createElement('button');
+  btn.className = 'btn-burn-reward fade-in';
+  btn.style.cssText = 'background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f; margin-top: 40px;';
+  btn.textContent = 'Got It';
+  btn.addEventListener('click', () => {
+    chrome.tabs.getCurrent((tab) => { if (tab) chrome.tabs.remove(tab.id); });
   });
-}
 
-function showRewardPausedScreen() {
-  const container = document.querySelector('.container');
-  document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
-
-  container.innerHTML = `
-    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Break Ended Early</h1>
-    <p class="subtitle fade-in" style="color: rgba(255,255,255,0.7); margin-top: 16px;">
-      Your unused break time has been saved. You can use it later.
-    </p>
-    <div class="fade-in" style="margin-top: 40px;">
-      <button class="btn-burn-reward" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f;" id="btn-got-it-paused">Got It</button>
-    </div>
-  `;
-
-  document.getElementById('btn-got-it-paused').addEventListener('click', () => {
-    chrome.tabs.getCurrent((tab) => {
-      if (tab) chrome.tabs.remove(tab.id);
-    });
-  });
+  container.innerHTML = '';
+  container.appendChild(h1);
+  container.appendChild(p);
+  container.appendChild(btn);
 }
 
 function pickNonRepeating(items, lastIndex, key) {

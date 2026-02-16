@@ -1,7 +1,9 @@
 // Brainrot Blocker Background Service Worker
 importScripts('constants.js', 'storage.js', 'timer.js', 'site-utils.js');
 
-const API_BASE_URL = 'http://localhost:3000';
+// Backend URL — must match CONFIG.API_BASE_URL in config.js
+// Service worker can't load config.js, so this is duplicated here
+const BACKEND_URL = 'http://localhost:3000';
 
 // Session state
 let state = {
@@ -146,16 +148,13 @@ async function checkCurrentTab() {
       const mode = result.productiveMode || DEFAULTS.productiveMode;
 
       if (urlMatchesAllowedPaths(tab.url, allowedPaths)) {
-        console.log('[BrainrotBlocker] Tab productive (allowed path):', tab.url);
         updateProductiveState(true);
       } else if (mode === 'all-except-blocked') {
         const isProductive = !urlMatchesSites(tab.url, blockedSites);
-        console.log('[BrainrotBlocker] mode=all-except-blocked, url:', tab.url, 'productive:', isProductive);
         updateProductiveState(isProductive);
       } else {
         const productiveSites = result.productiveSites || DEFAULTS.productiveSites;
         const isProductive = urlMatchesSites(tab.url, productiveSites);
-        console.log('[BrainrotBlocker] mode=whitelist, url:', tab.url, 'productive:', isProductive, 'sites:', productiveSites);
         updateProductiveState(isProductive);
       }
     }
@@ -628,23 +627,6 @@ async function redirectBlockedTabs(reason) {
   }
 }
 
-async function redirectNonActiveTabs(reason) {
-  try {
-    const { sites, allowedPaths } = await loadSiteConfig();
-    const [activeTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-    const activeTabId = activeTab ? activeTab.id : null;
-    const tabs = await chrome.tabs.query({});
-    const suffix = reason ? `?reason=${reason}` : '';
-    const blockedUrl = chrome.runtime.getURL('blocked.html') + suffix;
-    for (const tab of tabs) {
-      if (tab.id !== activeTabId && tab.url && isBlockedUrl(tab.url, sites, allowedPaths)) {
-        chrome.tabs.update(tab.id, { url: blockedUrl });
-      }
-    }
-  } catch (err) {
-    console.log('[BrainrotBlocker] Error redirecting non-active tabs:', err.message);
-  }
-}
 
 // --- Backend communication ---
 
@@ -664,7 +646,7 @@ async function notifyBackend(type, data) {
         'profile': '/auth/profile',
       };
       const endpoint = endpoints[type] || `/session/${type}`;
-      await fetch(`${API_BASE_URL}${endpoint}`, {
+      await fetch(`${BACKEND_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
