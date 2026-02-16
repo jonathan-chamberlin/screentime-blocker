@@ -8,7 +8,7 @@ async function handleStartSession() {
   state.sessionId = crypto.randomUUID();
   state.sessionActive = true;
   state.sessionStartTime = Date.now();
-  state.productiveSeconds = 0;
+  state.productiveMillis = 0;
   state.lastProductiveTick = Date.now();
   state.isOnProductiveSite = false;
   state.rewardGrantCount = 0;
@@ -21,6 +21,7 @@ async function handleStartSession() {
 
   notifyBackend('start', { session_id: state.sessionId });
   chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+  startRewardCheckInterval();
   // Subscribers: settings.js:173 (lockSiteSections)
   chrome.runtime.sendMessage({ action: 'sessionStarted' }).catch(() => {});
 
@@ -41,12 +42,12 @@ async function handleEndSession(confirmed) {
   if (!confirmed) {
     return {
       needsConfirmation: true,
-      elapsedMinutes: Math.floor(state.productiveSeconds / 60),
+      elapsedMinutes: Math.floor(state.productiveMillis / 1000 / 60),
     };
   }
 
   flushProductive();
-  const minutesCompleted = Math.floor(state.productiveSeconds / 60);
+  const minutesCompleted = Math.floor(state.productiveMillis / 1000 / 60);
 
   const todayResult = await getStorage(['todayMinutes']);
   await setStorage({ todayMinutes: (todayResult.todayMinutes || 0) + minutesCompleted });
@@ -64,6 +65,7 @@ async function handleEndSession(confirmed) {
 
   await unblockSites();
   chrome.alarms.clear('checkSession');
+  stopRewardCheckInterval();
   await setStorage({ shameLevel: 0 });
   chrome.action.setBadgeText({ text: '' });
   // Subscribers: settings.js:174 (lockSiteSections)

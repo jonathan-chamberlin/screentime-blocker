@@ -24,6 +24,7 @@ importScripts(
       blockSites();
       checkCurrentTab();
       chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+      startRewardCheckInterval();
     }
     if (state.rewardActive) {
       unblockSites();
@@ -37,6 +38,29 @@ importScripts(
   }
   connectNativeHost();
 })();
+
+// --- Reward threshold check interval ---
+// Check every 1 second if work threshold crossed (prevents 15-second delay)
+let rewardCheckInterval = null;
+
+function startRewardCheckInterval() {
+  stopRewardCheckInterval();
+  rewardCheckInterval = setInterval(async () => {
+    if (state.sessionActive && !state.rewardActive) {
+      const nextThreshold = state.workMinutes * 60 * 1000 * (state.rewardGrantCount + 1);
+      if (state.productiveMillis >= nextThreshold) {
+        await checkAndGrantReward();
+      }
+    }
+  }, 1000);
+}
+
+function stopRewardCheckInterval() {
+  if (rewardCheckInterval) {
+    clearInterval(rewardCheckInterval);
+    rewardCheckInterval = null;
+  }
+}
 
 // --- Message routing ---
 // Each handler returns true (async response) or false (sync response)
@@ -67,13 +91,13 @@ const messageHandlers = {
       const result = await getStorage(['todayMinutes', 'unusedRewardSeconds']);
 
       const currentProductiveSeconds = state.sessionActive
-        ? snapshotSeconds(state.isOnProductiveSite, state.lastProductiveTick, state.productiveSeconds)
-        : state.productiveSeconds;
+        ? snapshotSeconds(state.isOnProductiveSite, state.lastProductiveTick, state.productiveMillis)
+        : Math.floor(state.productiveMillis / 1000);
 
       let rewardRemainingSeconds = 0;
       if (state.rewardActive) {
-        const burned = snapshotSeconds(state.isOnRewardSite, state.lastRewardTick, state.rewardBurnedSeconds);
-        rewardRemainingSeconds = Math.max(0, state.rewardTotalSeconds - burned);
+        const burned = snapshotSeconds(state.isOnRewardSite, state.lastRewardTick, state.rewardBurnedMillis);
+        rewardRemainingSeconds = Math.max(0, Math.floor(state.rewardTotalMillis / 1000) - burned);
       }
 
       sendResponse({
@@ -170,7 +194,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       flushReward();
       saveState();
 
-      if (state.rewardBurnedSeconds >= state.rewardTotalSeconds) {
+      if (state.rewardBurnedMillis >= state.rewardTotalMillis) {
         await handleRewardExpired();
       }
     }
