@@ -228,28 +228,28 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 
 // --- Message handling ---
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'startSession') {
+const messageHandlers = {
+  startSession: (msg, sender, sendResponse) => {
     handleStartSession().then(sendResponse);
     return true;
-  }
-  if (message.action === 'endSession') {
-    handleEndSession(message.confirmed).then(sendResponse);
+  },
+  endSession: (msg, sender, sendResponse) => {
+    handleEndSession(msg.confirmed).then(sendResponse);
     return true;
-  }
-  if (message.action === 'useReward') {
+  },
+  useReward: (msg, sender, sendResponse) => {
     handleUseReward().then(sendResponse);
     return true;
-  }
-  if (message.action === 'pauseReward') {
+  },
+  pauseReward: (msg, sender, sendResponse) => {
     handlePauseReward().then(sendResponse);
     return true;
-  }
-  if (message.action === 'getNativeHostStatus') {
+  },
+  getNativeHostStatus: (msg, sender, sendResponse) => {
     sendResponse({ available: nativeHostAvailable });
     return false;
-  }
-  if (message.action === 'getStatus') {
+  },
+  getStatus: (msg, sender, sendResponse) => {
     (async () => {
       const result = await getStorage(['todayMinutes', 'unusedRewardSeconds']);
 
@@ -282,15 +282,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
     })();
     return true;
-  }
-  if (message.action === 'updateSettings') {
-    state.workMinutes = message.workMinutes || state.workMinutes;
-    state.rewardMinutes = message.rewardMinutes || state.rewardMinutes;
+  },
+  updateSettings: (msg, sender, sendResponse) => {
+    state.workMinutes = msg.workMinutes || state.workMinutes;
+    state.rewardMinutes = msg.rewardMinutes || state.rewardMinutes;
     saveState();
     sendResponse({ success: true });
     return false;
-  }
-  if (message.action === 'blockedPageLoaded') {
+  },
+  blockedPageLoaded: (msg, sender, sendResponse) => {
     if (state.sessionActive) {
       state.blockedAttempts++;
       saveState();
@@ -298,22 +298,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     sendResponse({ success: true });
     return false;
-  }
-  if (message.action === 'updateRewardSites') {
+  },
+  updateRewardSites: (msg, sender, sendResponse) => {
     if (state.sessionActive) {
       blockSites().then(() => sendResponse({ success: true }));
       return true;
     }
     sendResponse({ success: true });
     return false;
-  }
-  if (message.action === 'addToBlockedSites') {
+  },
+  addToBlockedSites: (msg, sender, sendResponse) => {
     (async () => {
       try {
         const result = await getStorage(['rewardSites']);
         const sites = result.rewardSites || DEFAULTS.rewardSites;
-        if (!sites.includes(message.site)) {
-          sites.push(message.site);
+        if (!sites.includes(msg.site)) {
+          sites.push(msg.site);
           await setStorage({ rewardSites: sites });
         }
         if (state.sessionActive) {
@@ -326,8 +326,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
     return true;
-  }
+  },
+};
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const handler = messageHandlers[message.action];
+  if (!handler) return false;
+  return handler(message, sender, sendResponse);
 });
+
+// --- Session state helpers ---
+
+async function bankActiveReward() {
+  flushReward();
+  const remainingSec = Math.max(0, state.rewardTotalSeconds - state.rewardBurnedSeconds);
+  if (remainingSec > 0) {
+    const cur = await getStorage(['unusedRewardSeconds']);
+    await setStorage({ unusedRewardSeconds: (cur.unusedRewardSeconds || 0) + remainingSec });
+  }
+  state.rewardActive = false;
+  state.rewardTotalSeconds = 0;
+  state.rewardBurnedSeconds = 0;
+  state.isOnRewardSite = false;
+  state.lastRewardTick = null;
+  stopRewardCountdown();
+}
+
+function resetSessionState() {
+  state.sessionActive = false;
+  state.sessionId = null;
+  state.sessionStartTime = null;
+  state.blockedAttempts = 0;
+  state.productiveSeconds = 0;
+  state.lastProductiveTick = null;
+  state.isOnProductiveSite = false;
+  state.rewardGrantCount = 0;
+}
 
 // --- Session handlers ---
 
@@ -348,6 +382,7 @@ async function handleStartSession() {
 
   notifyBackend('start', { session_id: state.sessionId });
   chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+  // Subscribers: settings.js:173 (lockSiteSections)
   chrome.runtime.sendMessage({ action: 'sessionStarted' }).catch(() => {});
 
   return { success: true, sessionId: state.sessionId };
@@ -384,36 +419,15 @@ async function handleEndSession(confirmed) {
     blocked_attempts: state.blockedAttempts,
   });
 
-  // Bank any active reward time
-  if (state.rewardActive) {
-    flushReward();
-    const remainingSec = Math.max(0, state.rewardTotalSeconds - state.rewardBurnedSeconds);
-    if (remainingSec > 0) {
-      const cur = await getStorage(['unusedRewardSeconds']);
-      await setStorage({ unusedRewardSeconds: (cur.unusedRewardSeconds || 0) + remainingSec });
-    }
-    state.rewardActive = false;
-    state.rewardTotalSeconds = 0;
-    state.rewardBurnedSeconds = 0;
-    state.isOnRewardSite = false;
-    state.lastRewardTick = null;
-    stopRewardCountdown();
-  }
-
-  state.sessionActive = false;
-  state.sessionId = null;
-  state.sessionStartTime = null;
-  state.blockedAttempts = 0;
-  state.productiveSeconds = 0;
-  state.lastProductiveTick = null;
-  state.isOnProductiveSite = false;
-  state.rewardGrantCount = 0;
+  if (state.rewardActive) await bankActiveReward();
+  resetSessionState();
   saveState();
 
   await unblockSites();
   chrome.alarms.clear('checkSession');
   await setStorage({ shameLevel: 0 });
   chrome.action.setBadgeText({ text: '' });
+  // Subscribers: settings.js:174 (lockSiteSections)
   chrome.runtime.sendMessage({ action: 'sessionEnded' }).catch(() => {});
 
   return { success: true, endedEarly: true, minutesCompleted };
@@ -433,6 +447,7 @@ async function checkAndGrantReward() {
       unusedRewardSeconds: (result.unusedRewardSeconds || 0) + state.rewardMinutes * 60,
     });
 
+    // Subscribers: popup.js:358 (showConfetti + poll)
     chrome.runtime.sendMessage({ action: 'rewardEarned', grantCount: state.rewardGrantCount }).catch(() => {});
     return true;
   }
@@ -509,6 +524,7 @@ async function handleRewardExpired() {
   chrome.action.setBadgeText({ text: '' });
   await blockSites();
   await redirectBlockedTabs('reward-expired');
+  // Subscribers: popup.js:361 (poll)
   chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
   stopRewardCountdown();
 }
