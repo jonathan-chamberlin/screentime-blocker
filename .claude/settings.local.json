@@ -8,7 +8,8 @@
       "Bash(npm install:*)",
       "Bash(node:*)",
       "Bash(*)",
-      "Skill(browser-test)"
+      "Skill(browser-test)",
+      "Skill(new-branch)"
     ]
   }
 }

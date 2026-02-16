@@ -137,6 +137,43 @@ Always prefer automated tests over manual verification where possible.
 
 ---
 
+## Deep Automated Testing
+
+The three-level checks (existence, substantive, wiring) and anti-pattern scan are the **minimum**. Before handing off to the user for manual testing, maximize automated coverage to minimize what the user must verify by hand. This is especially important when the project has no existing test suite.
+
+### Always Run (every verification)
+
+1. **Syntax validation** — Parse-check every modified file without executing it. Use the language's built-in checker (e.g., `node --check` for JS, `python -m py_compile` for Python, `ruby -c` for Ruby). Use `model: "haiku"` for this — it's mechanical.
+
+2. **Duplicate definition scan** — When files share scope (e.g., `importScripts`, concatenation, global namespace), check for naming conflicts across all files. Two files defining the same function or variable in shared scope is a silent bug.
+
+### Run When Applicable
+
+3. **Cross-module contract checks** — For projects with inter-module communication:
+   - **Message protocol consistency**: Every message action sent by one file must have a handler in the receiving file. Flag orphaned handlers and unhandled messages.
+   - **Storage/state key consistency**: Every key written to a shared store (localStorage, chrome.storage, Redis, database) must be read somewhere. Flag typos, dead keys, and keys read but never written.
+   - **Dependency ordering**: When load order matters (importScripts, script tags, concatenation), verify each file only references symbols defined in files loaded before it.
+
+4. **Manifest/config wiring** — For browser extensions, mobile apps, or any project with a manifest:
+   - Every file referenced in manifests/HTML must exist
+   - Script load order in HTML must respect dependency ordering
+   - Flag orphaned source files not referenced anywhere
+
+5. **Write and run integration tests** — When no test suite exists for the modified code, write a test file that:
+   - Mocks external dependencies (APIs, browser APIs, databases)
+   - Loads the actual project modules
+   - Tests the key interactions between modules (not just unit-level pure functions)
+   - Runs via the project's runtime (e.g., `node test.js`, `python test.py`)
+   - Covers the happy path for every major user-facing flow
+
+### Subagent Model Selection for Verification
+
+Use the right model for the job to save tokens:
+- **haiku**: Syntax checking, file existence, duplicate detection, pattern matching (mechanical tasks with clear pass/fail)
+- **sonnet**: Dependency analysis, protocol consistency, integration test writing (tasks requiring cross-file reasoning)
+
+---
+
 ## Gap Closure
 
 When verification finds issues:

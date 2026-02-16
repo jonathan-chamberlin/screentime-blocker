@@ -82,6 +82,28 @@ The framework uses specialized agents via Claude Code's Task tool:
 
 See [references/agents.md](references/agents.md) for full agent role definitions.
 
+## Parallel Worktree Execution
+
+When multiple independent features or fixes can be built simultaneously, use git worktrees to parallelize development:
+
+### Organization
+- Analyze which files each work item touches and group items into worktrees that minimize merge conflicts (items touching the same lines go in the same worktree)
+- Each worktree branches from the same base commit (usually `main`)
+- Specify file/line boundaries per worktree so subagents stay in their lane
+
+### Worktree Rules
+1. **Unique build artifacts** — When building browser extensions or apps that can be loaded simultaneously, give each worktree's build artifact a unique name (e.g., `Brainrot Blocker [fix-reward-flow]`) so the user can test multiple worktrees in parallel
+2. **Never merge without permission** — Never merge worktree branches to main unless the user explicitly requests it
+3. **Immediate reporting** — Each worktree subagent must end with clear instructions for how to test the result (e.g., file paths to load in the browser), reported immediately upon completion even if other worktrees are still running
+4. **Worktree-specific tests** — Each worktree should include tests that specifically validate only the features/fixes in that worktree
+5. **Revert temporary changes on merge** — When merging a worktree branch that contains temporary identification changes (e.g., renamed manifest.json for coexistence), immediately revert those changes and commit after the merge
+6. **Native messaging registration** — For Chrome extensions with `nativeMessaging`, remind the user after each worktree is loaded to provide the extension ID so the native host manifest's `allowed_origins` can be updated for testing
+
+### Token Efficiency
+- When launching executor subagents for worktrees, paste the full content of files they need to modify into the prompt so they don't need to re-read them
+- When launching verification subagents, paste file contents already in the main agent's context into the subagent prompt instead of having them re-read via tools
+- For trivial changes (single file, <10 lines), the main agent should implement directly instead of launching a subagent
+
 ## Key Principles
 
 1. **Atomic commits** — One commit per completed task, bisect-able and independently revertable
@@ -90,6 +112,7 @@ See [references/agents.md](references/agents.md) for full agent role definitions
 4. **Fresh context per task** — Each task gets its own subagent to prevent context degradation
 5. **Honest reporting** — Mark confidence levels (HIGH/MEDIUM/LOW), document unknowns
 6. **Anti-pattern scanning** — Detect TODOs, placeholders, empty handlers before marking complete
+7. **No fabricated data** — When subagents generate data entries (process names, file paths, API endpoints, etc.), they must validate entries against reality. Never invent plausible-sounding values. For desktop app process names, verify the application has a real Windows desktop installer and a known process name.
 
 ## Reference Documents
 
