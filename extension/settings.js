@@ -109,6 +109,92 @@ async function saveProductiveApps() {
   showConfirmation('productiveAppsConfirmation');
 }
 
+async function loadBlockedApps() {
+  const result = await getStorage(['blockedApps']);
+  const userBlockedApps = result.blockedApps || [];
+
+  const grid = document.getElementById('blockedAppsList');
+  grid.innerHTML = '';
+
+  const defaultBlockedApps = [
+    { name: 'Steam', process: 'steam', checked: true },
+    { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', checked: false },
+    { name: 'Discord', process: 'Discord', checked: false },
+    { name: 'Minecraft', process: 'javaw', checked: false },
+  ];
+
+  defaultBlockedApps.forEach(app => {
+    const item = document.createElement('div');
+    item.className = 'app-checkbox-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'blocked-app-' + app.process;
+    const isChecked = userBlockedApps.some(ua => ua.process === app.process);
+    checkbox.checked = isChecked || (userBlockedApps.length === 0 && app.checked);
+
+    const label = document.createElement('span');
+    label.textContent = app.name;
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    item.addEventListener('click', (e) => {
+      if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+    });
+    grid.appendChild(item);
+  });
+}
+
+async function saveBlockedApps() {
+  const blockedApps = [];
+
+  const defaultBlockedApps = [
+    { name: 'Steam', process: 'steam' },
+    { name: 'Epic Games Launcher', process: 'EpicGamesLauncher' },
+    { name: 'Discord', process: 'Discord' },
+    { name: 'Minecraft', process: 'javaw' },
+  ];
+
+  defaultBlockedApps.forEach(app => {
+    const checkbox = document.getElementById('blocked-app-' + app.process);
+    if (checkbox && checkbox.checked) {
+      blockedApps.push({ name: app.name, process: app.process });
+    }
+  });
+
+  await setStorage({ blockedApps });
+  showConfirmation('blockedAppsConfirmation');
+}
+
+function addCustomBlockedApp() {
+  const nameInput = document.getElementById('custom-blocked-app-name');
+  const processInput = document.getElementById('custom-blocked-app-process');
+
+  const name = nameInput.value.trim();
+  const process = processInput.value.trim();
+
+  if (!name || !process) {
+    alert('Please enter both app name and process name');
+    return;
+  }
+
+  getStorage(['blockedApps']).then(result => {
+    const blockedApps = result.blockedApps || [];
+    if (blockedApps.some(app => app.process === process)) {
+      alert('This app is already in your blocked list');
+      return;
+    }
+
+    blockedApps.push({ name, process });
+    setStorage({ blockedApps }).then(() => {
+      nameInput.value = '';
+      processInput.value = '';
+      loadBlockedApps();
+      showConfirmation('blockedAppsConfirmation');
+    });
+  });
+}
+
 async function saveRewardSites() {
   const sites = document.getElementById('rewardSites').value
     .split('\n').map(s => s.trim()).filter(s => s.length > 0);
@@ -162,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadSettings();
   await loadProductiveApps();
+  await loadBlockedApps();
 
   // Lock sections if session is active
   chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
@@ -195,4 +282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
   });
+
+  document.getElementById('saveBlockedApps').addEventListener('click', saveBlockedApps);
+  document.getElementById('add-blocked-app').addEventListener('click', addCustomBlockedApp);
 });

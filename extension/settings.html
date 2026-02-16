@@ -343,6 +343,34 @@
         </div>
 
         <div class="section" data-lockable>
+            <h2>Blocked Applications</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Apps that will be closed during work sessions (accessible during breaks)</p>
+
+            <div class="form-group">
+                <label>Select apps to block during work</label>
+                <div id="blockedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Add custom blocked app</label>
+                <div class="input-row">
+                    <div class="form-group">
+                        <input type="text" id="custom-blocked-app-name" placeholder="App name (e.g., Steam)">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="custom-blocked-app-process" placeholder="Process name (e.g., steam)">
+                    </div>
+                </div>
+                <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
+            </div>
+
+            <div class="save-button-container">
+                <button id="saveBlockedApps">Save</button>
+                <span class="save-confirmation" id="blockedAppsConfirmation">Saved!</span>
+            </div>
+        </div>
+
+        <div class="section" data-lockable>
             <h2>Strict Mode</h2>
             <div class="form-group">
                 <label>Session commitment level</label>
