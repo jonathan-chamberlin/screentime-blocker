@@ -67,4 +67,17 @@
   - No magic numbers — defaults come from constants.js
   - background.js reduced from ~620 to ~400 lines
 - **Dependencies**: Phase 4
-- **Status**: PLANNING
+- **Status**: COMPLETE
+
+## Phase 6: application-detection
+- **Goal**: Track productive desktop application usage so the work timer counts time spent in apps like VS Code, not just browser tabs
+- **Success Criteria**:
+  - Native messaging host detects focused Windows application and reports to extension
+  - Work timer continues when user is in a productive app (whitelist mode: listed apps only; all-except-blocked: any app)
+  - Work timer pauses with "⏸" badge when user switches to non-productive app
+  - Settings UI shows curated app checkboxes + custom process name field
+  - Extension falls back gracefully to browser-only tracking when native host unavailable
+  - Install/uninstall scripts register native host in Windows registry
+- **Requirements**: REQ-020, REQ-021, REQ-022, REQ-023
+- **Dependencies**: Phase 5
+- **Status**: not-started

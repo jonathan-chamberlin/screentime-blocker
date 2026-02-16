@@ -176,3 +176,44 @@
   - Leaderboard shows total "slack attempts" for each user
   - Higher slack attempts indicate more procrastination
 - **Priority**: Must-have
+
+## Phase: application-detection
+
+### REQ-020: Native Messaging Host
+- **Description**: Node.js native messaging host that detects the focused Windows application and reports it to the Chrome extension
+- **Acceptance Criteria**:
+  - Standalone Node.js script communicating via Chrome's native messaging protocol (length-prefixed JSON on stdin/stdout)
+  - Polls focused window every 1 second using Windows APIs
+  - Sends `{ type: 'app-focus', processName: '...' }` messages
+  - Responds to `ping` with `pong` for health checks
+  - Includes install.bat and uninstall.bat for Windows registry
+- **Priority**: Must-have
+
+### REQ-021: Productive Apps Timer Integration
+- **Description**: Work timer counts time in productive desktop apps, not just browser tabs
+- **Acceptance Criteria**:
+  - Browser loses focus + productive app focused → timer continues
+  - Browser loses focus + non-productive app focused → timer pauses
+  - Whitelist mode: only listed apps count as productive
+  - All-except-blocked mode: any desktop app counts as productive
+  - Badge text "⏸" on extension icon when timer paused during session
+  - Badge cleared when timer running or no session active
+- **Priority**: Must-have
+
+### REQ-022: Productive Apps Settings UI
+- **Description**: Settings UI for configuring which desktop apps count as productive
+- **Acceptance Criteria**:
+  - Checkbox grid of ~20 curated productivity apps grouped by category
+  - Text field for custom process names (one per line)
+  - Warning banner when native host not installed
+  - Section locked during active sessions via data-lockable
+- **Priority**: Must-have
+
+### REQ-023: Graceful Fallback
+- **Description**: Extension works normally when native host is unavailable
+- **Acceptance Criteria**:
+  - Without native host, extension behaves identically to current behavior
+  - Warning shown in settings when native host unavailable
+  - Auto-reconnect attempted every 5 seconds on disconnect
+  - No console errors when native host missing
+- **Priority**: Must-have

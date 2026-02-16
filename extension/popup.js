@@ -171,7 +171,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (status.isOnProductiveSite) {
         timerSection.className = 'timer-section active';
-        timerLabel.textContent = `${remainingMin} min to next reward`;
+        const appSuffix = status.currentAppName ? ` (${status.currentAppName})` : '';
+        timerLabel.textContent = `${remainingMin} min to next reward${appSuffix}`;
       } else {
         timerSection.className = 'timer-section paused';
         timerLabel.textContent = 'paused \u2014 switch to a productive tab';

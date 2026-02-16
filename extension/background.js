@@ -22,6 +22,36 @@ let state = {
   rewardMinutes: DEFAULTS.rewardMinutes,
 };
 
+// Native messaging state
+let nativePort = null;
+let currentAppName = null;
+let nativeHostAvailable = false;
+
+function connectNativeHost() {
+  try {
+    nativePort = chrome.runtime.connectNative(NATIVE_HOST_NAME);
+
+    nativePort.onMessage.addListener((msg) => {
+      if (msg.type === 'app-focus') {
+        currentAppName = msg.processName;
+      } else if (msg.type === 'pong') {
+        nativeHostAvailable = true;
+      }
+    });
+
+    nativePort.onDisconnect.addListener(() => {
+      nativeHostAvailable = false;
+      currentAppName = null;
+      nativePort = null;
+      setTimeout(connectNativeHost, 5000);
+    });
+
+    nativePort.postMessage({ type: 'ping' });
+  } catch (err) {
+    nativeHostAvailable = false;
+  }
+}
+
 // Load persisted state on startup
 (async () => {
   const result = await getStorage(['focusState']);
@@ -41,6 +71,7 @@ let state = {
       unblockSites();
     }
   }
+  connectNativeHost();
 })();
 
 function saveState() {
@@ -70,6 +101,20 @@ function flushReward() {
 }
 
 // --- Tab monitoring ---
+
+async function isProductiveApp(processName) {
+  if (!processName || !nativeHostAvailable) return false;
+
+  const result = await getStorage(['productiveApps', 'productiveMode']);
+  const mode = result.productiveMode || DEFAULTS.productiveMode;
+
+  if (mode === 'all-except-blocked') return true;
+
+  const productiveApps = result.productiveApps || DEFAULTS.productiveApps;
+  return productiveApps.some(app =>
+    app.toLowerCase() === processName.toLowerCase()
+  );
+}
 
 async function checkCurrentTab() {
   if (!state.sessionActive && !state.rewardActive) return;
@@ -112,6 +157,7 @@ function updateProductiveState(isProductive) {
   state.isOnProductiveSite = isProductive;
   state.lastProductiveTick = Date.now();
   saveState();
+  updateBadge(isProductive);
 }
 
 function updateRewardState(isOnReward) {
@@ -119,6 +165,16 @@ function updateRewardState(isOnReward) {
   state.isOnRewardSite = isOnReward;
   state.lastRewardTick = Date.now();
   saveState();
+  updateBadge(isOnReward);
+}
+
+function updateBadge(isActive) {
+  if (!isActive && (state.sessionActive || state.rewardActive)) {
+    chrome.action.setBadgeText({ text: '\u23F8' });
+    chrome.action.setBadgeBackgroundColor({ color: '#ff4757' });
+  } else {
+    chrome.action.setBadgeText({ text: '' });
+  }
 }
 
 chrome.tabs.onActivated.addListener(() => {
@@ -133,11 +189,16 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-chrome.windows.onFocusChanged.addListener((windowId) => {
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (state.sessionActive || state.rewardActive) {
     if (windowId === chrome.windows.WINDOW_ID_NONE) {
-      if (state.sessionActive) updateProductiveState(false);
-      if (state.rewardActive) updateRewardState(false);
+      if (state.sessionActive) {
+        const isProductive = await isProductiveApp(currentAppName);
+        updateProductiveState(isProductive);
+      }
+      if (state.rewardActive) {
+        updateRewardState(false);
+      }
     } else {
       checkCurrentTab();
     }
@@ -162,6 +223,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'pauseReward') {
     handlePauseReward().then(sendResponse);
     return true;
+  }
+  if (message.action === 'getNativeHostStatus') {
+    sendResponse({ available: nativeHostAvailable });
+    return false;
   }
   if (message.action === 'getStatus') {
     (async () => {
@@ -191,6 +256,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         rewardRemainingSeconds,
         isOnProductiveSite: state.isOnProductiveSite,
         isOnRewardSite: state.isOnRewardSite,
+        nativeHostAvailable: nativeHostAvailable,
+        currentAppName: currentAppName,
       });
     })();
     return true;
@@ -302,6 +369,7 @@ async function handleEndSession(confirmed) {
   await unblockSites();
   chrome.alarms.clear('checkSession');
   await setStorage({ shameLevel: 0 });
+  chrome.action.setBadgeText({ text: '' });
 
   return { success: true, endedEarly: true, minutesCompleted };
 }
@@ -404,6 +472,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         state.isOnRewardSite = false;
         state.lastRewardTick = null;
         saveState();
+        chrome.action.setBadgeText({ text: '' });
 
         await blockSites();
         await redirectBlockedTabs('reward-expired');
