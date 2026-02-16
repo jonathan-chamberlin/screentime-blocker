@@ -15,9 +15,9 @@ function showRewardExpiredScreen() {
   document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
 
   container.innerHTML = `
-    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Reward Time's Up!</h1>
+    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Break Time's Up!</h1>
     <p class="subtitle fade-in" style="color: rgba(255,255,255,0.7); margin-top: 16px;">
-      Break's over. Time to get back to work.
+      Your earned break time has run out. Back to work!
     </p>
     <div class="fade-in" style="margin-top: 40px;">
       <button class="btn-burn-reward" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f;" id="btn-got-it">Got It</button>
@@ -36,9 +36,9 @@ function showRewardPausedScreen() {
   document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
 
   container.innerHTML = `
-    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Reward Paused</h1>
+    <h1 class="fade-in" style="font-size: 42px; color: #ffaa00;">Break Ended Early</h1>
     <p class="subtitle fade-in" style="color: rgba(255,255,255,0.7); margin-top: 16px;">
-      Time to get back to work! Your remaining reward time has been banked.
+      Your unused break time has been saved. You can use it later.
     </p>
     <div class="fade-in" style="margin-top: 40px;">
       <button class="btn-burn-reward" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a1a0f;" id="btn-got-it-paused">Got It</button>
@@ -113,7 +113,7 @@ function renderShameScreen(level, attempts, lastIndex) {
     html += `<p class="subtitle ${screen.animClass}">${screen.subtitle}</p>`;
   }
 
-  html += `<p class="visit-count ${screen.animClass}">Slack attempts this session: ${attempts}</p>`;
+  html += `<p class="visit-count ${screen.animClass}">Times you tried to visit blocked sites this session: ${attempts}</p>`;
 
   container.innerHTML = html;
 

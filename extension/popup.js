@@ -159,10 +159,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       timerDisplay.textContent = formatTime(remaining);
       if (status.isOnRewardSite) {
         timerSection.className = 'timer-section reward';
-        timerLabel.textContent = 'burning reward time';
+        timerLabel.textContent = 'break time remaining';
       } else {
         timerSection.className = 'timer-section paused';
-        timerLabel.textContent = 'paused \u2014 switch to a reward site';
+        timerLabel.textContent = 'break paused \u2014 visit a blocked site to use your break';
       }
     } else if (status.sessionActive) {
       const productiveSec = status.productiveSeconds || 0;
@@ -176,10 +176,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (status.isOnProductiveSite) {
         timerSection.className = 'timer-section active';
         const appSuffix = status.currentAppName ? ` (${status.currentAppName})` : '';
-        timerLabel.textContent = `${remainingMin} min to next reward${appSuffix}`;
+        timerLabel.textContent = `${remainingMin} min until you earn a break${appSuffix}`;
       } else {
         timerSection.className = 'timer-section paused';
-        timerLabel.textContent = 'paused \u2014 switch to a productive tab';
+        timerLabel.textContent = 'timer paused \u2014 open a productive site or app to resume';
       }
     } else {
       timerSection.className = 'timer-section';
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnReward.style.display = 'block';
         if ((status.rewardGrantCount || 0) === 0) {
           btnReward.disabled = true;
-          btnReward.title = 'Complete your work threshold first';
+          btnReward.title = 'Finish your first work cycle to unlock break time';
         } else {
           btnReward.disabled = false;
           btnReward.title = '';
@@ -227,11 +227,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = await Auth.getToken();
     if (token) {
       authDot.className = 'auth-dot connected';
-      authText.textContent = 'synced';
+      authText.textContent = 'signed in';
       btnLogin.textContent = 'Sign Out';
     } else {
       authDot.className = 'auth-dot disconnected';
-      authText.textContent = 'offline';
+      authText.textContent = 'not signed in';
       btnLogin.textContent = 'Sign In for Leaderboard';
     }
   }
