@@ -104,6 +104,7 @@ node server.js
 - another judge said that there should be more options of websites that are distracting on the default page.
 - create a info icon , tjat when clicked opens a youtube video tutorial
 - Wyatt said that it would be useful if he could use the steam application as a break. To do this I would have to make it so the extension can block applications, not just track time spent on them.
+- in the settings page, instead of there being a different save button for each setting, there should be one saved button that appears as a banner on the bottom of the screen that scrolls with your window so it stays at the bottom.
 - Make it so when a work session is started, the blocked websites are automatically blocked without any reloading required.
 - Make it so when you are burning reward minutes and you click 'pause reward' it automatically directs you to the 'reward paused' screen, kicking you off the blocked sites.
 - Wire the frontend leaderboard to the live backend API
