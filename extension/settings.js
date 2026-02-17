@@ -51,6 +51,9 @@ async function loadSettings() {
   document.getElementById('productiveSites').value =
     (result.productiveSites || DEFAULTS.productiveSites).join('\n');
 
+  document.getElementById('skipProductivityCheck').value =
+    (result.skipProductivityCheck || DEFAULTS.skipProductivityCheck).join('\n');
+
   const penaltyType = result.penaltyType || DEFAULTS.penaltyType;
   document.querySelectorAll('input[name="penaltyType"]').forEach(radio => {
     if (radio.value === penaltyType) radio.checked = true;
@@ -116,7 +119,10 @@ async function loadProductiveApps() {
       item.appendChild(checkbox);
       item.appendChild(label);
       item.addEventListener('click', (e) => {
-        if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       });
       grid.appendChild(item);
     });
@@ -150,7 +156,6 @@ async function saveProductiveApps() {
   apps.push(...customApps);
 
   await setStorage({ productiveApps: apps });
-  showConfirmation('productiveAppsConfirmation');
 }
 
 async function loadBlockedApps() {
@@ -183,7 +188,10 @@ async function loadBlockedApps() {
     item.appendChild(checkbox);
     item.appendChild(label);
     item.addEventListener('click', (e) => {
-      if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+      if (e.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     });
     grid.appendChild(item);
   });
@@ -207,7 +215,6 @@ async function saveBlockedApps() {
   });
 
   await setStorage({ blockedApps });
-  showConfirmation('blockedAppsConfirmation');
 }
 
 function addCustomBlockedApp() {
@@ -234,7 +241,7 @@ function addCustomBlockedApp() {
       nameInput.value = '';
       processInput.value = '';
       loadBlockedApps();
-      showConfirmation('blockedAppsConfirmation');
+      showSavedIndicator();
     });
   });
 }
@@ -330,6 +337,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('productiveSites').addEventListener('input', (e) => {
     const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
     autoSave('productiveSites', sites);
+  });
+
+  // Auto-save for skip productivity check popup sites
+  document.getElementById('skipProductivityCheck').addEventListener('input', (e) => {
+    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    autoSave('skipProductivityCheck', sites);
   });
 
   // Auto-save for productive apps checkboxes

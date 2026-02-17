@@ -6,9 +6,19 @@
   const THRESHOLD_MS = PRODUCTIVITY_CHECK_MINUTES * 60 * 1000;
   let startTime = Date.now();
   let prompted = false;
+  let skipDomains = [];
+
+  // Load skip list once at injection time
+  chrome.storage.local.get(['skipProductivityCheck'], (result) => {
+    skipDomains = result.skipProductivityCheck || [];
+  });
+
+  const currentDomain = window.location.hostname.replace(/^www\./, '');
 
   function checkTime() {
     if (prompted) return;
+    // Never show popup for approved sites
+    if (skipDomains.includes(currentDomain)) return;
 
     // Defensive check: verify chrome.runtime exists
     if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
@@ -125,13 +135,18 @@
     document.head.appendChild(style);
     document.body.appendChild(overlay);
 
-    // "Yes, I'm working" — dismiss and reset timer
+    // "Yes, I'm working" — add to skip list so popup never shows again on this site
     overlay.querySelector('#brainrot-yes-working').addEventListener('click', (e) => {
       e.stopPropagation();
       overlay.remove();
       style.remove();
-      prompted = false;
-      startTime = Date.now(); // Reset timer
+      skipDomains.push(currentDomain);
+      chrome.storage.local.get(['skipProductivityCheck'], (result) => {
+        const existing = result.skipProductivityCheck || [];
+        if (!existing.includes(currentDomain)) {
+          chrome.storage.local.set({ skipProductivityCheck: [...existing, currentDomain] });
+        }
+      });
     });
 
     // "No, block this site" — add to blocked list

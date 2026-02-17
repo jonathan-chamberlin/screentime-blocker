@@ -98,6 +98,7 @@ const DEFAULTS = {
     'producertech.com',
   ],
   allowedPaths: [],
+  skipProductivityCheck: [],
   productiveMode: 'all-except-blocked',
   productiveApps: [],
   blockedApps: [],

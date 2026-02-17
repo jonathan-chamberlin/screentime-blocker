@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   el.btnLogin = document.getElementById('btn-login');
   el.btnLeaderboard = document.getElementById('btn-leaderboard');
   el.btnSettings = document.getElementById('btn-settings');
-  el.btnSettingsLink = document.getElementById('btn-settings-link');
+  el.btnReportLink = document.getElementById('btn-report-link');
   el.linkedinLink = document.getElementById('linkedin-link');
   el.authDot = document.getElementById('auth-dot');
   el.authText = document.getElementById('auth-text');
@@ -363,7 +363,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const openSettings = () => chrome.tabs.create({ url: 'settings.html' });
   el.btnSettings.addEventListener('click', openSettings);
-  el.btnSettingsLink.addEventListener('click', openSettings);
+
+  el.btnReportLink.addEventListener('click', () => {
+    const subject = 'Brainrot Blocker Report Bug / Suggest Improvement';
+    const body = [
+      'Describe the bug or improvement below:',
+      'Insert here:',
+      '',
+      '',
+      '─────────────────────────────',
+      'Do not delete this diagnostic data:',
+      `Browser: ${navigator.userAgent}`,
+      `Platform: ${navigator.platform}`,
+      `Language: ${navigator.language}`,
+      `Screen: ${screen.width}x${screen.height}`,
+      `Extension version: ${chrome.runtime.getManifest().version}`,
+    ].join('\n');
+
+    chrome.tabs.create({
+      url: `mailto:jcham17x@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    });
+  });
 
   el.linkedinLink.addEventListener('click', (e) => {
     e.preventDefault();
