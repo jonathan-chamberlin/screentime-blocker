@@ -68,6 +68,7 @@ async function loadSettings() {
   document.querySelectorAll('input[name="companionMode"]').forEach(radio => {
     if (radio.value === companionMode) radio.checked = true;
   });
+  toggleAppSections(companionMode);
 
   document.getElementById('penaltyTarget').value = result.penaltyTarget || DEFAULTS.penaltyTarget;
   document.getElementById('penaltyAmount').value = result.penaltyAmount || DEFAULTS.penaltyAmount;
@@ -262,6 +263,12 @@ function toggleProductiveSitesList(mode) {
     mode === 'whitelist' ? 'block' : 'none';
 }
 
+function toggleAppSections(companionMode) {
+  const visible = companionMode === 'on';
+  document.getElementById('section-productive-apps').style.display = visible ? 'block' : 'none';
+  document.getElementById('section-blocked-apps').style.display = visible ? 'block' : 'none';
+}
+
 async function saveProductiveSites() {
   const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
   const sites = document.getElementById('productiveSites').value
@@ -382,6 +389,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="companionMode"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       const mode = e.target.value;
+      toggleAppSections(mode);
       autoSave('companionMode', mode);
       chrome.runtime.sendMessage({ action: 'setCompanionMode', mode }, (response) => {
         if (response && response.success) {
