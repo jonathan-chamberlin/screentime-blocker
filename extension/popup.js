@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const btnInfo = document.getElementById('btn-info');
   btnInfo.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'https://www.youtube.com/watch?v=NeZd0Q4seCI' });
+    chrome.tabs.create({ url: 'how-to.html' });
   });
 
   el.btnLeaderboard.addEventListener('click', () => {

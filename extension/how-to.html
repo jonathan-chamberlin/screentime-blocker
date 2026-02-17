@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brainrot Blocker — How to Use</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            background-color: #0f0f1a;
+            padding: 40px 20px 80px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 40px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 15px;
+        }
+
+        /* Video */
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
+        /* GitHub button */
+        .github-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            color: #e6edf3;
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            margin-bottom: 30px;
+        }
+
+        .github-btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        .github-btn svg {
+            flex-shrink: 0;
+        }
+
+        /* FAQ */
+        .faq-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e0e0e0;
+            margin-bottom: 16px;
+        }
+
+        .faq-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 16px 20px;
+            text-align: left;
+            color: #e0e0e0;
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .faq-question:hover { color: #f093fb; }
+
+        .faq-chevron {
+            flex-shrink: 0;
+            transition: transform 0.2s;
+            color: #888;
+        }
+
+        .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+        .faq-answer {
+            display: none;
+            padding: 0 20px 16px;
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .faq-item.open .faq-answer { display: block; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>How to Use Brainrot Blocker</h1>
+        <p>Watch the demo, explore the repo, or find answers below.</p>
+    </div>
+
+    <div class="video-wrapper">
+        <iframe
+            src="https://www.youtube.com/embed/NeZd0Q4seCI"
+            title="Brainrot Blocker Demo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <a class="github-btn" href="https://github.com/jonathan-chamberlin/screentime-blocker" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#e6edf3" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        View on GitHub
+    </a>
+
+    <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                How do I start a work session?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">Click the Brainrot Blocker icon in your toolbar to open the popup, then click <strong>Lock In</strong>. Your work timer starts immediately and blocked sites become inaccessible.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                How does the work timer work?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">The timer counts time you spend on productive sites or using productive desktop apps. Time spent on blocked or unrelated sites doesn't count. Once you hit your work goal (default: 50 minutes), you earn a break.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                What are blocked sites and how do I add more?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">Blocked sites are sites you can't visit during a work session. Open Settings (⚙ icon) → <strong>Blocked Sites</strong> and add any domain, one per line (e.g. <code>youtube.com</code>). You can also click <strong>No, block this site</strong> on the productivity check popup to add a site instantly.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                What happens when I reach my work goal?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">Confetti fires and you earn break time (default: 10 minutes). During your break, blocked sites become accessible. When break time runs out, they're blocked again automatically.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                What is the "Are you really working?" popup?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">After you've been on a site for a set amount of time during a session, the extension checks in to make sure you're actually working. Click <strong>Yes, I'm working</strong> to approve the site permanently (it won't ask again). Click <strong>No, block this site</strong> to add it to your blocked list.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                What is Strict Mode?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">In Strict Mode, you cannot end your session early or adjust settings while a session is active. It's designed for people who need hard accountability with no escape hatches.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                What is the Penalty feature?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">If you end a session without hitting your work goal, you can be prompted to donate to a charity (or pay someone) as a consequence. Configure the charity, amount, and payment method in Settings → <strong>Penalty Configuration</strong>.</div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                Can I block desktop apps like Steam?
+                <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">Yes. Go to Settings → <strong>Blocked Applications</strong> and check the apps you want blocked during work sessions. If a blocked app is launched, it will be closed automatically and you'll see the blocked screen.</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.faq-question').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const item = btn.closest('.faq-item');
+            item.classList.toggle('open');
+        });
+    });
+</script>
+</body>
+</html>
