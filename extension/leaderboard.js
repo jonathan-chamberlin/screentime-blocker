@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const rankClass = i < 3 ? ` rank-${i + 1}` : '';
       const rankText = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1;
-      const avatarSrc = entry.pictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.displayName)}&background=random&size=32`;
+      const avatarSrc = entry.pictureUrl || buildLocalAvatar(entry.displayName);
 
       const rankTd = document.createElement('td');
       rankTd.className = `rank${rankClass}`;
@@ -91,6 +91,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyState.querySelector('p').textContent = 'Make sure the backend server is running.';
   }
 });
+
+function buildLocalAvatar(displayName) {
+  const raw = (displayName || '?').trim();
+  const initials = raw
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('') || '?';
+
+  // Deterministic color per name to avoid external avatar requests.
+  const hue = Array.from(raw).reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 360;
+  const bg = `hsl(${hue} 55% 38%)`;
+  const fg = '#ffffff';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${bg}"/><text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="${fg}" font-family="Arial, sans-serif" font-size="26" font-weight="700">${initials}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 
 async function loadExampleData() {
   try {

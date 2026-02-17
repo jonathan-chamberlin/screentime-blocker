@@ -5,8 +5,39 @@ let nativePort = null;
 let currentAppName = null;
 let nativeHostAvailable = false;
 let browserHasFocus = true;
+let companionModeEnabled = false;
+
+function disconnectNativeHost() {
+  if (nativePort) {
+    try {
+      nativePort.disconnect();
+    } catch (err) {
+      // Ignore disconnect errors.
+    }
+  }
+  nativePort = null;
+  nativeHostAvailable = false;
+  currentAppName = null;
+}
+
+function setCompanionModeEnabled(enabled) {
+  companionModeEnabled = !!enabled;
+
+  if (!companionModeEnabled) {
+    disconnectNativeHost();
+    return;
+  }
+
+  if (!nativePort) {
+    connectNativeHost();
+  }
+}
 
 function connectNativeHost() {
+  if (!companionModeEnabled) {
+    return;
+  }
+
   try {
     nativePort = chrome.runtime.connectNative(NATIVE_HOST_NAME);
 
@@ -35,7 +66,9 @@ function connectNativeHost() {
       nativeHostAvailable = false;
       currentAppName = null;
       nativePort = null;
-      setTimeout(connectNativeHost, 5000);
+      if (companionModeEnabled) {
+        setTimeout(connectNativeHost, 5000);
+      }
     });
 
     nativePort.postMessage({ type: 'ping' });
@@ -74,7 +107,7 @@ async function isProductiveApp(processName) {
   if (mode === 'all-except-blocked') return true;
 
   // Whitelist mode: need native host and a matching process name
-  if (!processName || !nativeHostAvailable) return false;
+  if (!companionModeEnabled || !processName || !nativeHostAvailable) return false;
 
   const productiveApps = result.productiveApps || DEFAULTS.productiveApps;
   return productiveApps.some(app =>

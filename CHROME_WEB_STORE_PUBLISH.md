@@ -5,7 +5,9 @@ This repo is now set up to package the extension from `extension/` directly.
 ## 1) Prep release config
 
 1. Open `extension/manifest.json` and bump `version` (must be higher than previous upload).
-2. Create `extension/config.js` for production leaderboard/auth (optional):
+2. Decide leaderboard/auth mode:
+   - Safe default for first publish: do not ship local `config.js`; package script injects a blank config.
+   - If you intentionally ship production auth/backend, create `extension/config.js`:
 
 ```js
 window.CONFIG = {
@@ -18,6 +20,12 @@ window.CONFIG = {
 
 If you skip `config.js`, extension still works with leaderboard auth disabled.
 
+3. Run preflight:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\cws-preflight.ps1
+```
+
 ## 2) Build upload zip
 
 Run from repo root:
@@ -27,6 +35,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-extension.ps1
 ```
 
 Output zip is created in `dist/`.
+
+If you intentionally want to include your local `extension/config.js` in the zip:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\package-extension.ps1 -IncludeLocalConfig
+```
 
 ## 3) Create store listing
 
@@ -68,4 +82,4 @@ Because this extension can authenticate users and send session stats to your bac
 3. Backend endpoints are production URLs (if leaderboard enabled).
 4. Privacy policy URL is live and matches actual behavior.
 5. Test install from the exact zip you uploaded.
-
+6. Verify no localhost URLs in shipped config.

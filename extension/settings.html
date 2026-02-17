@@ -270,6 +270,34 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        .muted {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .inline-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            box-shadow: none;
+        }
+
+        .sync-status {
+            font-size: 13px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -332,6 +360,34 @@
                 <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
                 <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
             </div>
+        </div>
+
+        <div class="section" data-lockable>
+            <h2>Companion App</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">
+                Website blocking works with extension-only mode. Turn on Companion App mode only if you also install the desktop app/native host.
+            </p>
+            <div class="form-group">
+                <label>Desktop app integration</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="companionMode" value="off" checked>
+                        <span>Extension-only mode (no desktop install required)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="companionMode" value="on">
+                        <span>Companion App mode (track/block desktop apps)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="inline-actions">
+                <button type="button" id="btn-sync-pull" class="btn-secondary">Pull Cloud Config</button>
+                <button type="button" id="btn-sync-push" class="btn-secondary">Push Cloud Config</button>
+                <span id="sync-status" class="sync-status">Cloud sync idle</span>
+            </div>
+            <p class="muted" style="margin-top: 10px;">
+                Cloud sync requires Sign In in the popup and a reachable backend API.
+            </p>
         </div>
 
         <div class="section" data-lockable>
@@ -402,11 +458,11 @@
         </div>
 
         <div class="section" data-lockable>
-            <h2>Payment Method</h2>
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Payments are honor-system — the extension reminds you to pay but doesn't process transactions automatically.</p>
+            <h2>Penalty Reminder</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Penalty tracking is honor-system. Keep an optional reminder note here. Never enter card or bank numbers.</p>
             <div class="form-group">
-                <label for="paymentMethod">Your payment method</label>
-                <input type="text" id="paymentMethod" placeholder="e.g., Visa ending in 4242">
+                <label for="paymentMethod">Reminder note</label>
+                <input type="text" id="paymentMethod" placeholder="e.g., Donate to my selected cause after failed session">
             </div>
         </div>
     </div>

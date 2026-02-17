@@ -12,6 +12,12 @@ function showSavedIndicator() {
 
 let saveTimeouts = {};
 
+async function setApiBaseUrlFromConfig() {
+  if (CONFIG && typeof CONFIG.API_BASE_URL === 'string' && CONFIG.API_BASE_URL.trim()) {
+    await setStorage({ apiBaseUrl: CONFIG.API_BASE_URL.trim() });
+  }
+}
+
 function autoSave(key, value) {
   if (saveTimeouts[key]) {
     clearTimeout(saveTimeouts[key]);
@@ -55,14 +61,27 @@ async function loadSettings() {
     if (radio.value === strictMode) radio.checked = true;
   });
 
+  const companionMode = result.companionMode || DEFAULTS.companionMode;
+  document.querySelectorAll('input[name="companionMode"]').forEach(radio => {
+    if (radio.value === companionMode) radio.checked = true;
+  });
+
   document.getElementById('penaltyTarget').value = result.penaltyTarget || DEFAULTS.penaltyTarget;
   document.getElementById('penaltyAmount').value = result.penaltyAmount || DEFAULTS.penaltyAmount;
   document.getElementById('paymentMethod').value = result.paymentMethod || DEFAULTS.paymentMethod;
 }
 
+function setSyncStatus(text, isError) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? '#ff6b7a' : '#888';
+}
+
 async function loadProductiveApps() {
-  const result = await getStorage(['productiveApps']);
+  const result = await getStorage(['productiveApps', 'companionMode']);
   const userApps = result.productiveApps || [];
+  const companionMode = result.companionMode || DEFAULTS.companionMode;
 
   const grid = document.getElementById('curatedAppsList');
   grid.innerHTML = '';
@@ -108,8 +127,10 @@ async function loadProductiveApps() {
   document.getElementById('customApps').value = customApps.join('\n');
 
   chrome.runtime.sendMessage({ action: 'getNativeHostStatus' }, (response) => {
-    if (!response || !response.available) {
+    if (companionMode === 'on' && (!response || !response.available)) {
       document.getElementById('nativeHostWarning').style.display = 'block';
+    } else {
+      document.getElementById('nativeHostWarning').style.display = 'none';
     }
   });
 }
@@ -269,6 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.title = APP_NAME + ' Settings';
   document.querySelector('.header h1').textContent = APP_NAME + ' Settings';
 
+  await setApiBaseUrlFromConfig();
   await loadSettings();
   await loadProductiveApps();
   await loadBlockedApps();
@@ -343,6 +365,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Companion mode toggle
+  document.querySelectorAll('input[name="companionMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const mode = e.target.value;
+      autoSave('companionMode', mode);
+      chrome.runtime.sendMessage({ action: 'setCompanionMode', mode }, (response) => {
+        if (response && response.success) {
+          loadProductiveApps();
+          setSyncStatus(
+            mode === 'on'
+              ? 'Companion mode enabled. Install native host/app on this device.'
+              : 'Extension-only mode enabled.',
+            false
+          );
+        } else {
+          setSyncStatus('Could not switch companion mode.', true);
+        }
+      });
+    });
+  });
+
   // Auto-save for penalty type
   document.querySelectorAll('input[name="penaltyType"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
@@ -375,5 +418,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('installInstructions').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
+  });
+
+  document.getElementById('btn-sync-push').addEventListener('click', () => {
+    setSyncStatus('Pushing settings to cloud...', false);
+    chrome.runtime.sendMessage({ action: 'syncSettingsToBackend' }, (response) => {
+      if (response && response.success) {
+        setSyncStatus('Cloud sync push complete.', false);
+      } else if (response && response.skipped) {
+        setSyncStatus('Sign in first to sync cloud config.', true);
+      } else {
+        setSyncStatus('Cloud sync push failed.', true);
+      }
+    });
+  });
+
+  document.getElementById('btn-sync-pull').addEventListener('click', () => {
+    setSyncStatus('Pulling settings from cloud...', false);
+    chrome.runtime.sendMessage({ action: 'pullSettingsFromBackend' }, async (response) => {
+      if (response && response.success) {
+        await loadSettings();
+        await loadProductiveApps();
+        await loadBlockedApps();
+        setSyncStatus('Cloud sync pull complete.', false);
+      } else if (response && response.skipped) {
+        setSyncStatus('Sign in first to sync cloud config.', true);
+      } else {
+        setSyncStatus('Cloud sync pull failed.', true);
+      }
+    });
   });
 });

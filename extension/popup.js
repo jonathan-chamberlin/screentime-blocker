@@ -219,6 +219,10 @@ async function poll() {
 // --- Init: populate DOM refs, load settings, wire event listeners ---
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (CONFIG && typeof CONFIG.API_BASE_URL === 'string' && CONFIG.API_BASE_URL.trim()) {
+    await setStorage({ apiBaseUrl: CONFIG.API_BASE_URL.trim() });
+  }
+
   document.title = APP_NAME;
   document.querySelector('.brand h1').textContent = APP_NAME;
 

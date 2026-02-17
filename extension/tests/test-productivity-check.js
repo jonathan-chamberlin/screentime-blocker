@@ -64,7 +64,7 @@ test('Background.js has addToBlockedSites message handler', () => {
   assert(fs.existsSync(backgroundPath), 'background.js exists');
 
   const content = fs.readFileSync(backgroundPath, 'utf8');
-  assert(content.includes("message.action === 'addToBlockedSites'"), 'Contains addToBlockedSites handler');
+  assert(content.includes('addToBlockedSites:'), 'Contains addToBlockedSites handler');
   assert(content.includes('rewardSites'), 'Handler references rewardSites');
   assert(content.includes('blockSites()'), 'Handler calls blockSites()');
   assert(content.includes('redirectBlockedTabs()'), 'Handler calls redirectBlockedTabs()');
@@ -75,7 +75,7 @@ test('Content script has correct timer configuration', () => {
   const scriptPath = path.join(__dirname, '..', 'productivity-check.js');
   const content = fs.readFileSync(scriptPath, 'utf8');
 
-  assert(content.includes('10 * 60 * 1000'), 'THRESHOLD_MS is set to 10 minutes');
+  assert(content.includes('PRODUCTIVITY_CHECK_MINUTES * 60 * 1000'), 'THRESHOLD_MS uses PRODUCTIVITY_CHECK_MINUTES');
   assert(content.includes('setInterval(checkTime, 30000)'), 'Checks every 30 seconds');
   assert(content.includes('setTimeout(checkTime, THRESHOLD_MS)'), 'Initial check at threshold time');
 });

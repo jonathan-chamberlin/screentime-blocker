@@ -6,3 +6,4 @@ extension/config.js
 .browser-state.json
 .screenshots/
 server/data/
+.build/

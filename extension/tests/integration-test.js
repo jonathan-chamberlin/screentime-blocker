@@ -767,6 +767,7 @@ async function runTests() {
   await test('isProductiveApp: whitelist mode needs match', async () => {
     storageData.productiveMode = 'select-websites';
     storageData.productiveApps = ['Code', 'idea64'];
+    companionModeEnabled = true;
     nativeHostAvailable = true;
     const resultMatch = await isProductiveApp('Code');
     assert(resultMatch, 'Code matches');
@@ -777,6 +778,7 @@ async function runTests() {
   await test('isProductiveApp: case insensitive matching', async () => {
     storageData.productiveMode = 'select-websites';
     storageData.productiveApps = ['Code'];
+    companionModeEnabled = true;
     nativeHostAvailable = true;
     const result = await isProductiveApp('code');
     assert(result, 'case insensitive match');
@@ -785,9 +787,19 @@ async function runTests() {
   await test('isProductiveApp: no native host returns false in whitelist mode', async () => {
     storageData.productiveMode = 'select-websites';
     storageData.productiveApps = ['Code'];
+    companionModeEnabled = true;
     nativeHostAvailable = false;
     const result = await isProductiveApp('Code');
     assert(!result, 'no native host = not productive');
+  });
+
+  await test('isProductiveApp: companion mode off returns false in whitelist mode', async () => {
+    storageData.productiveMode = 'select-websites';
+    storageData.productiveApps = ['Code'];
+    companionModeEnabled = false;
+    nativeHostAvailable = true;
+    const result = await isProductiveApp('Code');
+    assert(!result, 'companion mode off = not productive');
   });
 
   // ═══════════════════════════════════════════════════

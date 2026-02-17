@@ -36,7 +36,9 @@ importScripts(
       unblockSites();
     }
   }
-  connectNativeHost();
+  const companionResult = await getStorage(['companionMode']);
+  const companionMode = companionResult.companionMode || DEFAULTS.companionMode;
+  setCompanionModeEnabled(companionMode === 'on');
 })();
 
 // --- Reward threshold check interval ---
@@ -116,6 +118,7 @@ const messageHandlers = {
         isOnRewardSite: state.isOnRewardSite,
         nativeHostAvailable: nativeHostAvailable,
         currentAppName: currentAppName,
+        companionMode: companionModeEnabled ? 'on' : 'off',
       });
     })();
     return true;
@@ -162,6 +165,28 @@ const messageHandlers = {
         sendResponse({ success: false, error: err.message });
       }
     })();
+    return true;
+  },
+  setCompanionMode: (msg, sender, sendResponse) => {
+    const mode = msg.mode === 'on' ? 'on' : 'off';
+    setStorage({ companionMode: mode }).then(() => {
+      setCompanionModeEnabled(mode === 'on');
+      sendResponse({ success: true, companionMode: mode });
+    }).catch((err) => {
+      sendResponse({ success: false, error: err.message });
+    });
+    return true;
+  },
+  syncSettingsToBackend: (msg, sender, sendResponse) => {
+    pushSettingsToBackend().then(sendResponse).catch((err) => {
+      sendResponse({ success: false, error: err.message });
+    });
+    return true;
+  },
+  pullSettingsFromBackend: (msg, sender, sendResponse) => {
+    pullSettingsFromBackend().then(sendResponse).catch((err) => {
+      sendResponse({ success: false, error: err.message });
+    });
     return true;
   },
   blockedAppDetected: (msg, sender, sendResponse) => {

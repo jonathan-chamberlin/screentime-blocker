@@ -179,6 +179,49 @@ app.post('/auth/profile', requireAuth, async (req, res) => {
   }
 });
 
+// GET /config
+// Returns per-user configuration used by extension + companion app.
+app.get('/config', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth.sub;
+    const db = readDb();
+    const userConfigs = db.userConfigs || {};
+    res.json({ settings: userConfigs[userId] || {} });
+  } catch (err) {
+    console.error('Error loading config:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /config
+// Stores per-user configuration used by extension + companion app.
+app.put('/config', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth.sub;
+    const settings = req.body?.settings;
+
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ error: 'settings object is required' });
+    }
+
+    const db = readDb();
+    if (!db.userConfigs || typeof db.userConfigs !== 'object') {
+      db.userConfigs = {};
+    }
+
+    db.userConfigs[userId] = {
+      ...settings,
+      updatedAt: new Date().toISOString(),
+    };
+    writeDb(db);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error saving config:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

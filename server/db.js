@@ -5,7 +5,8 @@ const DB_PATH = path.join(__dirname, 'data', 'db.json');
 
 const DEFAULT_DB = {
   users: {},
-  sessions: []
+  sessions: [],
+  userConfigs: {}
 };
 
 function ensureDataDir() {

@@ -106,6 +106,7 @@ const DEFAULTS = {
   penaltyTarget: '',
   penaltyAmount: 5,
   paymentMethod: '',
+  companionMode: 'off',
 };
 
 const CURATED_APPS = [
