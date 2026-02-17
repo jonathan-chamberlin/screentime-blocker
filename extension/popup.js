@@ -373,9 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       '',
       '─────────────────────────────',
       'Do not delete this diagnostic data:',
-      `Browser: ${navigator.userAgent}`,
-      `Platform: ${navigator.platform}`,
-      `Language: ${navigator.language}`,
+      `OS: ${navigator.platform}`,
       `Screen: ${screen.width}x${screen.height}`,
       `Extension version: ${chrome.runtime.getManifest().version}`,
     ].join('\n');
