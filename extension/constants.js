@@ -103,6 +103,7 @@ const DEFAULTS = {
   productiveApps: [],
   blockedApps: [],
   strictMode: 'off',
+  penaltyEnabled: 'off',
   penaltyType: 'Charity',
   penaltyTarget: '',
   penaltyAmount: 5,

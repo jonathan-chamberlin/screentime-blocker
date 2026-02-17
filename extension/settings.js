@@ -70,6 +70,12 @@ async function loadSettings() {
   });
   toggleAppSections(companionMode);
 
+  const penaltyEnabled = result.penaltyEnabled || DEFAULTS.penaltyEnabled;
+  document.querySelectorAll('input[name="penaltyEnabled"]').forEach(radio => {
+    if (radio.value === penaltyEnabled) radio.checked = true;
+  });
+  togglePenaltySections(penaltyEnabled);
+
   document.getElementById('penaltyTarget').value = result.penaltyTarget || DEFAULTS.penaltyTarget;
   document.getElementById('penaltyAmount').value = result.penaltyAmount || DEFAULTS.penaltyAmount;
   document.getElementById('paymentMethod').value = result.paymentMethod || DEFAULTS.paymentMethod;
@@ -269,6 +275,12 @@ function toggleAppSections(companionMode) {
   document.getElementById('section-blocked-apps').style.display = visible ? 'block' : 'none';
 }
 
+function togglePenaltySections(penaltyEnabled) {
+  const visible = penaltyEnabled === 'on';
+  document.getElementById('section-penalty-config').style.display = visible ? 'block' : 'none';
+  document.getElementById('section-penalty-reminder').style.display = visible ? 'block' : 'none';
+}
+
 async function saveProductiveSites() {
   const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
   const sites = document.getElementById('productiveSites').value
@@ -382,6 +394,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="strictMode"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       autoSave('strictMode', e.target.value);
+    });
+  });
+
+  // Auto-save for penalty enabled toggle
+  document.querySelectorAll('input[name="penaltyEnabled"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      togglePenaltySections(e.target.value);
+      autoSave('penaltyEnabled', e.target.value);
     });
   });
 

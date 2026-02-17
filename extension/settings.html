@@ -470,6 +470,23 @@
         </div>
 
         <div class="section" data-lockable>
+            <h2>Financial Penalty</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">When off, you'll still see a confirmation popup when quitting early — but with no financial consequence.</p>
+            <div class="form-group">
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="penaltyEnabled" value="off" checked>
+                        <span>Off — confirmation only, no financial penalty</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="penaltyEnabled" value="on">
+                        <span>On — charge me if I quit early</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-penalty-config" class="section" data-lockable>
             <h2>Penalty Configuration</h2>
             <div class="form-group">
                 <label>Penalty Type</label>
@@ -495,7 +512,7 @@
             </div>
         </div>
 
-        <div class="section" data-lockable>
+        <div id="section-penalty-reminder" class="section" data-lockable>
             <h2>Penalty Reminder</h2>
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Penalty tracking is honor-system. Keep an optional reminder note here. Never enter card or bank numbers.</p>
             <div class="form-group">

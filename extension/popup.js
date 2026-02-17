@@ -296,12 +296,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (response && response.needsConfirmation) {
         const elapsed = currentStatus ? Math.floor((currentStatus.productiveSeconds || 0) / 60) : 0;
         el.modalMinutes.textContent = elapsed;
-        const config = await getStorage(['penaltyAmount', 'penaltyTarget', 'penaltyType']);
-        const amount = config.penaltyAmount || 5;
-        const target = config.penaltyTarget || 'charity';
-        const type = config.penaltyType || 'Charity';
-        el.modalPenalty.textContent = `$${amount.toFixed(2)}`;
-        el.modalTarget.textContent = `to ${target} (${type})`;
+        const config = await getStorage(['penaltyAmount', 'penaltyTarget', 'penaltyType', 'penaltyEnabled']);
+        const penaltyOn = (config.penaltyEnabled || 'off') === 'on';
+        const penaltyDetails = el.penaltyModal.querySelectorAll('.penalty-amount, #modal-target, .penalty-cost-line');
+        if (penaltyOn) {
+          const amount = config.penaltyAmount || 5;
+          const target = config.penaltyTarget || 'charity';
+          const type = config.penaltyType || 'Charity';
+          el.modalPenalty.textContent = `$${amount.toFixed(2)}`;
+          el.modalTarget.textContent = `to ${target} (${type})`;
+          penaltyDetails.forEach(el => el.style.display = '');
+        } else {
+          penaltyDetails.forEach(el => el.style.display = 'none');
+        }
         el.penaltyModal.classList.add('visible');
       }
     });
