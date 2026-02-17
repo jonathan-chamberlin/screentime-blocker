@@ -373,6 +373,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       '',
       '─────────────────────────────',
       'Do not delete this diagnostic data:',
+      `Browser: ${(() => {
+        if (navigator.userAgentData) {
+          const brand = navigator.userAgentData.brands.find(
+            b => !b.brand.includes('Not') && b.brand !== 'Chromium'
+          );
+          if (brand) return `${brand.brand} ${brand.version}`;
+        }
+        return 'Unknown';
+      })()}`,
       `OS: ${navigator.platform}`,
       `Screen: ${screen.width}x${screen.height}`,
       `Extension version: ${chrome.runtime.getManifest().version}`,
