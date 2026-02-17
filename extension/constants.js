@@ -111,6 +111,10 @@ const DEFAULTS = {
 };
 
 const CURATED_APPS = [
+  // Commonly Used
+  { name: 'PowerShell', process: 'powershell', category: 'Commonly Used' },
+  { name: 'Visual Studio Code', process: 'Code', category: 'Commonly Used' },
+  { name: 'Windows Terminal', process: 'WindowsTerminal', category: 'Commonly Used' },
   // Communication
   { name: 'Discord', process: 'Discord', category: 'Communication' },
   { name: 'Microsoft Teams', process: 'ms-teams', category: 'Communication' },
@@ -137,6 +141,19 @@ const CURATED_APPS = [
   { name: 'Blender', process: 'blender', category: 'Design' },
   { name: 'Figma', process: 'Figma', category: 'Design' },
   { name: 'Unity', process: 'Unity', category: 'Design' },
+  // Music Production
+  { name: 'Cubase', process: 'cubase', category: 'Music Production' },
+  { name: 'FL Studio (64-bit)', process: 'FL64', category: 'Music Production' },
+  { name: 'Kontakt', process: 'Kontakt', category: 'Music Production' },
+  { name: 'Maschine 2', process: 'Maschine 2', category: 'Music Production' },
+  { name: 'Pro Tools', process: 'Protools', category: 'Music Production' },
+  { name: 'Reaper', process: 'reaper', category: 'Music Production' },
+  { name: 'Reason', process: 'reason', category: 'Music Production' },
+  { name: 'rekordbox', process: 'rekordbox', category: 'Music Production' },
+  { name: 'Serato DJ Pro', process: 'Serato DJ Pro', category: 'Music Production' },
+  { name: 'Splice', process: 'Splice', category: 'Music Production' },
+  { name: 'Studio One', process: 'Studio One', category: 'Music Production' },
+  { name: 'VirtualDJ', process: 'virtualdj_pro', category: 'Music Production' },
   // Development — IDEs & Editors
   { name: 'Android Studio', process: 'studio64', category: 'Development' },
   { name: 'JetBrains IDEs', process: 'idea64', category: 'Development' },
@@ -145,7 +162,6 @@ const CURATED_APPS = [
   { name: 'Sublime Text', process: 'sublime_text', category: 'Development' },
   { name: 'Vim/Neovim', process: 'nvim', category: 'Development' },
   { name: 'Visual Studio', process: 'devenv', category: 'Development' },
-  { name: 'Visual Studio Code', process: 'Code', category: 'Development' },
   { name: 'WebStorm', process: 'webstorm64', category: 'Development' },
   // Development — Terminals & Tools
   { name: 'Command Prompt', process: 'cmd', category: 'Development' },
@@ -153,8 +169,6 @@ const CURATED_APPS = [
   { name: 'Git Bash', process: 'mintty', category: 'Development' },
   { name: 'Insomnia', process: 'Insomnia', category: 'Development' },
   { name: 'Postman', process: 'Postman', category: 'Development' },
-  { name: 'PowerShell', process: 'powershell', category: 'Development' },
-  { name: 'Windows Terminal', process: 'WindowsTerminal', category: 'Development' },
   // Development — Database
   { name: 'Azure Data Studio', process: 'azuredatastudio', category: 'Development' },
   { name: 'DBeaver', process: 'dbeaver', category: 'Development' },

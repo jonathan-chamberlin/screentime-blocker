@@ -193,6 +193,26 @@
             pointer-events: none;
         }
 
+        .section-group-label {
+            margin: 20px 0 0 0;
+            padding: 0 4px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .section-group-label span {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #f093fb;
+        }
+
+        .section-group-label p {
+            font-size: 13px;
+            color: #555;
+            margin-top: 4px;
+        }
+
         .input-row {
             display: flex;
             gap: 15px;
@@ -351,24 +371,9 @@
             </div>
         </div>
 
-        <div class="section" data-lockable>
-            <h2>Productive Applications</h2>
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Desktop apps that count as productive. Your work timer runs while these are in the foreground, even when the browser isn't active.</p>
-
-            <div id="nativeHostWarning" style="display: none; background-color: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #ff6b7a;">
-                Application detection is unavailable. <a href="#" id="installInstructions" style="color: #f093fb; text-decoration: underline; margin-left: 4px;">Install the native host</a> to track desktop apps.
-            </div>
-
-            <div class="form-group">
-                <label>Select apps that count as productive</label>
-                <div id="curatedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label for="customApps">Custom process names (one per line)</label>
-                <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
-                <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
-            </div>
+        <div class="section-group-label">
+            <span>Desktop App Tracking</span>
+            <p>The three sections below require the companion app (native host) to be installed on your computer.</p>
         </div>
 
         <div class="section" data-lockable>
@@ -397,6 +402,26 @@
             <p class="muted" style="margin-top: 10px;">
                 Cloud sync requires Sign In in the popup and a reachable backend API.
             </p>
+        </div>
+
+        <div class="section" data-lockable>
+            <h2>Productive Applications</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Desktop apps that count as productive. Your work timer runs while these are in the foreground, even when the browser isn't active.</p>
+
+            <div id="nativeHostWarning" style="display: none; background-color: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #ff6b7a;">
+                Application detection is unavailable. <a href="#" id="installInstructions" style="color: #f093fb; text-decoration: underline; margin-left: 4px;">Install the native host</a> to track desktop apps.
+            </div>
+
+            <div class="form-group">
+                <label>Select apps that count as productive</label>
+                <div id="curatedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="customApps">Custom process names (one per line)</label>
+                <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
+                <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
+            </div>
         </div>
 
         <div class="section" data-lockable>
