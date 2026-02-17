@@ -324,7 +324,23 @@
     <div class="container">
         <div class="header">
             <h1>Brainrot Blocker Settings</h1>
-            <a href="javascript:window.close()" class="close-link">Close Tab</a>
+        </div>
+
+        <div class="section" data-lockable>
+            <h2>Strict Mode</h2>
+            <div class="form-group">
+                <label>Session commitment level</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="strictMode" value="off" checked>
+                        <span>Normal (can quit early with penalty)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="strictMode" value="on">
+                        <span>Strict (cannot end session early at all)</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -446,23 +462,6 @@
                 <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
             </div>
 
-        </div>
-
-        <div class="section" data-lockable>
-            <h2>Strict Mode</h2>
-            <div class="form-group">
-                <label>Session commitment level</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="strictMode" value="off" checked>
-                        <span>Normal (can quit early with penalty)</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="strictMode" value="on">
-                        <span>Strict (cannot end session early at all)</span>
-                    </label>
-                </div>
-            </div>
         </div>
 
         <div class="section" data-lockable>
