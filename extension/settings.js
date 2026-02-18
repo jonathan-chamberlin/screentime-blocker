@@ -29,6 +29,7 @@ function setEmojiFavicon(emoji) {
 }
 
 let saveTimeouts = {};
+let nativeHostStatusPoll = null;
 
 async function setApiBaseUrlFromConfig() {
   if (CONFIG && typeof CONFIG.API_BASE_URL === 'string' && CONFIG.API_BASE_URL.trim()) {
@@ -106,10 +107,53 @@ function setSyncStatus(text, isError) {
   el.style.color = isError ? '#ff6b7a' : '#888';
 }
 
+function getSelectedCompanionMode() {
+  const selected = document.querySelector('input[name="companionMode"]:checked');
+  return selected ? selected.value : DEFAULTS.companionMode;
+}
+
+function refreshNativeHostWarning() {
+  const warning = document.getElementById('nativeHostWarning');
+  const companionMode = getSelectedCompanionMode();
+
+  if (companionMode !== 'on') {
+    warning.style.display = 'none';
+    return;
+  }
+
+  chrome.runtime.sendMessage({ action: 'getNativeHostStatus' }, (response) => {
+    if (companionMode === 'on' && (!response || !response.available)) {
+      warning.style.display = 'block';
+    } else {
+      warning.style.display = 'none';
+    }
+  });
+}
+
+function scheduleNativeHostStatusChecks() {
+  if (nativeHostStatusPoll) {
+    clearInterval(nativeHostStatusPoll);
+    nativeHostStatusPoll = null;
+  }
+
+  // Immediate check.
+  refreshNativeHostWarning();
+
+  // Re-check for a few seconds to catch startup race with service worker/native ping.
+  let attempts = 0;
+  nativeHostStatusPoll = setInterval(() => {
+    attempts++;
+    refreshNativeHostWarning();
+    if (attempts >= 6 || getSelectedCompanionMode() !== 'on') {
+      clearInterval(nativeHostStatusPoll);
+      nativeHostStatusPoll = null;
+    }
+  }, 1000);
+}
+
 async function loadProductiveApps() {
   const result = await getStorage(['productiveApps', 'companionMode']);
   const userApps = result.productiveApps || [];
-  const companionMode = result.companionMode || DEFAULTS.companionMode;
 
   const grid = document.getElementById('curatedAppsList');
   grid.innerHTML = '';
@@ -157,13 +201,7 @@ async function loadProductiveApps() {
   const customApps = userApps.filter(app => !curatedProcessNames.includes(app));
   document.getElementById('customApps').value = customApps.join('\n');
 
-  chrome.runtime.sendMessage({ action: 'getNativeHostStatus' }, (response) => {
-    if (companionMode === 'on' && (!response || !response.available)) {
-      document.getElementById('nativeHostWarning').style.display = 'block';
-    } else {
-      document.getElementById('nativeHostWarning').style.display = 'none';
-    }
-  });
+  refreshNativeHostWarning();
 }
 
 async function saveProductiveApps() {
@@ -398,6 +436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings();
   await loadProductiveApps();
   await loadBlockedApps();
+  scheduleNativeHostStatusChecks();
 
   // Lock sections if session is active
   chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
@@ -492,6 +531,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       chrome.runtime.sendMessage({ action: 'setCompanionMode', mode }, (response) => {
         if (response && response.success) {
           loadProductiveApps();
+          scheduleNativeHostStatusChecks();
           setSyncStatus(
             mode === 'on'
               ? 'Companion mode enabled. Install native host/app on this device.'
