@@ -967,6 +967,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('btn-add-nuclear').addEventListener('click', addNuclearSiteFromUI);
 
+  const cooldownSelect = document.getElementById('nuclearCooldown');
+  const cooldownWarning = document.getElementById('nuclearCooldownTestWarning');
+  function updateCooldownWarning() {
+    cooldownWarning.style.display = cooldownSelect.value === '10000' ? 'block' : 'none';
+  }
+  cooldownSelect.addEventListener('change', updateCooldownWarning);
+  updateCooldownWarning();
+
   // Refresh nuclear countdowns every minute
   setInterval(() => loadNuclearBlock(), 60 * 1000);
 });

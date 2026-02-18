@@ -788,7 +788,7 @@
                     </label>
                     <label>
                         <input type="radio" name="nuclearSecondCooldown" value="5s">
-                        <span>5 seconds (testing)</span>
+                        <span style="color: #888;">5 seconds <span style="font-size: 11px; background: rgba(255,140,0,0.2); color: #ffaa44; padding: 1px 5px; border-radius: 3px; margin-left: 2px;">TEST</span></span>
                     </label>
                     <label>
                         <input type="radio" name="nuclearSecondCooldown" value="off">
@@ -812,7 +812,7 @@
                     </div>
                     <div class="form-group" style="min-width: 180px;">
                         <select id="nuclearCooldown">
-                            <option value="10000">10 seconds (testing)</option>
+                            <option value="10000">⚠ 10 seconds (testing only)</option>
                             <option value="86400000">24 hours</option>
                             <option value="172800000" selected>48 hours</option>
                             <option value="604800000">1 week</option>
@@ -821,6 +821,7 @@
                             <option value="15552000000">6 months</option>
                             <option value="31536000000">1 year</option>
                         </select>
+                        <div id="nuclearCooldownTestWarning" style="display:none; margin-top:5px; font-size:11px; color:#ffaa44;">⚠ Testing mode — cooldown expires in 10 seconds. Switch to a real duration before using seriously.</div>
                     </div>
                     <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
                 </div>
