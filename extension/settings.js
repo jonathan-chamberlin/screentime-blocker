@@ -549,8 +549,35 @@ function getNuclearCountdownMs(site) {
 }
 
 async function loadNuclearBlock() {
+  // Render presets immediately from static data — no async needed
+  const presetsGrid = document.getElementById('nuclearPresetsList');
+  presetsGrid.innerHTML = '';
+  PRESET_NUCLEAR_SITES.forEach(preset => {
+    const item = document.createElement('div');
+    item.className = 'nuclear-preset-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'nuclear-preset-' + (preset.domain || preset.domains[0]);
+
+    const label = document.createElement('span');
+    label.textContent = preset.name;
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    item.addEventListener('click', (e) => {
+      if (e.target !== checkbox && !checkbox.disabled) {
+        checkbox.checked = !checkbox.checked;
+      }
+    });
+    presetsGrid.appendChild(item);
+  });
+
+  // Load storage data to update sites list, radio, and "already added" preset states
   chrome.runtime.sendMessage({ action: 'getNuclearData' }, (data) => {
-    if (!data) return;
+    if (chrome.runtime.lastError || !data) {
+      data = { sites: [], secondCooldownEnabled: true, secondCooldownMs: 18 * 60 * 60 * 1000 };
+    }
 
     // Render second cooldown radio
     const { secondCooldownEnabled, secondCooldownMs } = data;
@@ -570,7 +597,7 @@ async function loadNuclearBlock() {
     } else {
       data.sites.forEach(site => {
         const stage = getNuclearSiteStage(site);
-        if (stage === 'expired') return; // will be cleaned up by background
+        if (stage === 'expired') return;
 
         const card = document.createElement('div');
         card.className = 'nuclear-site-card';
@@ -616,39 +643,22 @@ async function loadNuclearBlock() {
       });
     }
 
-    // Render preset checkboxes
-    const presetsGrid = document.getElementById('nuclearPresetsList');
+    // Update preset "already added" states now that we have storage data
     const existingDomains = new Set();
     (data.sites || []).forEach(site => {
       if (site.domains) site.domains.forEach(d => existingDomains.add(d));
       else if (site.domain) existingDomains.add(site.domain);
     });
 
-    presetsGrid.innerHTML = '';
     PRESET_NUCLEAR_SITES.forEach(preset => {
       const presetDomains = preset.domains || (preset.domain ? [preset.domain] : []);
       const alreadyAdded = presetDomains.every(d => existingDomains.has(d));
-
-      const item = document.createElement('div');
-      item.className = 'nuclear-preset-item';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = 'nuclear-preset-' + (preset.domain || preset.domains[0]);
+      const checkbox = document.getElementById('nuclear-preset-' + (preset.domain || preset.domains[0]));
+      if (!checkbox) return;
       checkbox.disabled = alreadyAdded;
       checkbox.title = alreadyAdded ? 'Already in Nuclear Block' : '';
-
-      const label = document.createElement('span');
-      label.textContent = preset.name + (alreadyAdded ? ' ✓' : '');
-
-      item.appendChild(checkbox);
-      item.appendChild(label);
-      item.addEventListener('click', (e) => {
-        if (e.target !== checkbox && !checkbox.disabled) {
-          checkbox.checked = !checkbox.checked;
-        }
-      });
-      presetsGrid.appendChild(item);
+      const labelEl = checkbox.nextElementSibling;
+      if (labelEl) labelEl.textContent = preset.name + (alreadyAdded ? ' ✓' : '');
     });
   });
 }
@@ -925,35 +935,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('installInstructions').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
-  });
-
-  document.getElementById('btn-sync-push').addEventListener('click', () => {
-    setSyncStatus('Pushing settings to cloud...', false);
-    chrome.runtime.sendMessage({ action: 'syncSettingsToBackend' }, (response) => {
-      if (response && response.success) {
-        setSyncStatus('Cloud sync push complete.', false);
-      } else if (response && response.skipped) {
-        setSyncStatus('Sign in first to sync cloud config.', true);
-      } else {
-        setSyncStatus('Cloud sync push failed.', true);
-      }
-    });
-  });
-
-  document.getElementById('btn-sync-pull').addEventListener('click', () => {
-    setSyncStatus('Pulling settings from cloud...', false);
-    chrome.runtime.sendMessage({ action: 'pullSettingsFromBackend' }, async (response) => {
-      if (response && response.success) {
-        await loadSettings();
-        await loadProductiveApps();
-        await loadBlockedApps();
-        setSyncStatus('Cloud sync pull complete.', false);
-      } else if (response && response.skipped) {
-        setSyncStatus('Sign in first to sync cloud config.', true);
-      } else {
-        setSyncStatus('Cloud sync pull failed.', true);
-      }
-    });
   });
 
   document.getElementById('btn-delete-all-data').addEventListener('click', handleDeleteAllData);
