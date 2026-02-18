@@ -58,13 +58,40 @@
             overflow: hidden;
             margin-bottom: 24px;
             border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
         }
 
-        .video-wrapper iframe {
+        .video-wrapper img {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            border: none;
+            object-fit: cover;
+        }
+
+        .video-play-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 72px; height: 72px;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .video-play-btn svg {
+            width: 28px; height: 28px;
+            fill: #fff;
+            margin-left: 4px;
+        }
+
+        .video-wrapper:hover .video-play-btn {
+            background: #ff0000;
+            transform: translate(-50%, -50%) scale(1.08);
         }
 
         /* GitHub button */
@@ -159,14 +186,12 @@
         <p>Watch the demo, explore the repo, or find answers below.</p>
     </div>
 
-    <div class="video-wrapper">
-        <iframe
-            src="https://www.youtube.com/embed/NeZd0Q4seCI"
-            title="Brainrot Blocker Demo"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen>
-        </iframe>
-    </div>
+    <a class="video-wrapper" id="video-link" href="#">
+        <img src="https://img.youtube.com/vi/NeZd0Q4seCI/maxresdefault.jpg" alt="Brainrot Blocker Demo Video">
+        <div class="video-play-btn">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+    </a>
 
     <a class="github-btn" href="https://github.com/jonathan-chamberlin/screentime-blocker" target="_blank">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#e6edf3" xmlns="http://www.w3.org/2000/svg">
@@ -245,13 +270,6 @@
     </div>
 </div>
 
-<script>
-    document.querySelectorAll('.faq-question').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const item = btn.closest('.faq-item');
-            item.classList.toggle('open');
-        });
-    });
-</script>
+<script src="how-to.js"></script>
 </body>
 </html>
