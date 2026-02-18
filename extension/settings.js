@@ -616,9 +616,12 @@ async function loadNuclearBlock() {
     const { secondCooldownEnabled, secondCooldownMs } = data;
     let radioVal = 'off';
     if (secondCooldownEnabled) {
-      if (secondCooldownMs <= 3000) radioVal = '3s';
-      else if (secondCooldownMs <= 10000) radioVal = '10s';
-      else radioVal = '18h';
+      if (secondCooldownMs <= 1200000) radioVal = '20m';
+      else if (secondCooldownMs <= 64800000) radioVal = '18h';
+      else if (secondCooldownMs <= 129600000) radioVal = '36h';
+      else if (secondCooldownMs <= 432000000) radioVal = '5d';
+      else if (secondCooldownMs <= 1209600000) radioVal = '14d';
+      else radioVal = '30d';
     }
     document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(r => {
       r.checked = r.value === radioVal;
@@ -729,9 +732,15 @@ async function loadNuclearBlock() {
 function getNuclearSecondCooldown() {
   const val = document.querySelector('input[name="nuclearSecondCooldown"]:checked')?.value || '18h';
   if (val === 'off') return { enabled: false, ms: 0 };
-  if (val === '3s') return { enabled: true, ms: 3000 };
-  if (val === '10s') return { enabled: true, ms: 10000 };
-  return { enabled: true, ms: 18 * 60 * 60 * 1000 };
+  const MS = {
+    '20m':  20 * 60 * 1000,
+    '18h':  18 * 60 * 60 * 1000,
+    '36h':  36 * 60 * 60 * 1000,
+    '5d':    5 * 24 * 60 * 60 * 1000,
+    '14d':  14 * 24 * 60 * 60 * 1000,
+    '30d':  30 * 24 * 60 * 60 * 1000,
+  };
+  return { enabled: true, ms: MS[val] ?? MS['18h'] };
 }
 
 function saveNuclearSettings() {
