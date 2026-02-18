@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -171,25 +171,34 @@
             <ul style="list-style: none; margin-left: 0;">
                 <li>
                     <span class="step-number">1</span>
-                    <strong>Find the <code>native-host</code> folder</strong> inside the extension files you downloaded
-                    <span class="helper-text">If you downloaded from GitHub, paste <code>%USERPROFILE%\Downloads</code> into File Explorer's address bar to jump straight to your Downloads folder, then open the unzipped extension folder and look for <code>native-host</code> inside it</span>
+                    <strong>Open File Explorer</strong>
+                    <span class="helper-text">Press <code>Win + E</code>.</span>
                 </li>
                 <li>
                     <span class="step-number">2</span>
-                    <strong>Double-click <code>install.bat</code></strong>
+                    <strong>In File Explorer's address bar, paste <code>%USERPROFILE%\Downloads\screentime-blocker\native-host</code> and press <code>Enter</code>.</strong>
                 </li>
                 <li>
                     <span class="step-number">3</span>
-                    <strong>When prompted, paste your Chrome extension ID</strong>
-                    <span class="helper-text">Go to <code>chrome://extensions</code>, turn on 'Developer mode' in the top-right corner, and copy the ID shown under the extension name</span>
+                    <strong>If that path doesn't exist, use the GitHub ZIP folder name</strong>
+                    <span class="helper-text">Paste <code>%USERPROFILE%\Downloads\screentime-blocker-main\native-host</code> instead.</span>
                 </li>
                 <li>
                     <span class="step-number">4</span>
-                    <strong>Restart Chrome completely</strong> (close all windows)
+                    <strong>Double-click <code>install.bat</code>.</strong>
                 </li>
                 <li>
                     <span class="step-number">5</span>
-                    <strong>Open Brainrot Blocker's Settings page</strong> — the 'Application detection is unavailable' warning should be gone
+                    <strong>Wait for auto-detection</strong>
+                    <span class="helper-text">The installer should detect your extension ID automatically. If prompted, manually paste the ID from <code>chrome://extensions</code>.</span>
+                </li>
+                <li>
+                    <span class="step-number">6</span>
+                    <strong>Restart Chrome completely</strong>
+                </li>
+                <li>
+                    <span class="step-number">7</span>
+                    <strong>Open Brainrot Blocker Settings</strong>
                 </li>
             </ul>
         </div>
@@ -201,8 +210,8 @@
                 Try right-clicking <code>install.bat</code> and selecting "Run as administrator".
             </div>
             <div class="troubleshooting-item">
-                <strong>"Extension ID mismatch"</strong><br>
-                Make sure you copied the full ID from <code>chrome://extensions</code>. It's a 32-character string of lowercase letters, shown below the extension name when Developer mode is on.
+                <strong>"Could not auto-detect extension ID"</strong><br>
+                Open <code>chrome://extensions</code>, turn on Developer mode, copy the 32-character ID under Brainrot Blocker, and paste it when prompted by the installer.
             </div>
             <div class="troubleshooting-item">
                 <strong>"Still seeing warning"</strong><br>
@@ -218,3 +227,4 @@
     <script>document.title = 'Enable App Detection - ' + APP_NAME;</script>
 </body>
 </html>
+

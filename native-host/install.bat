@@ -6,18 +6,47 @@ echo Brainrot Blocker - Native Host Installer
 echo ========================================
 echo.
 
-set /p EXTENSION_ID="Enter your Chrome extension ID (from chrome://extensions): "
-
-if "%EXTENSION_ID%"=="" (
-    echo Error: Extension ID cannot be empty
-    pause
-    exit /b 1
-)
-
 set "SCRIPT_DIR=%~dp0"
+set "DETECT_SCRIPT=%SCRIPT_DIR%detect-extension-ids.ps1"
+set "MANIFEST_PATH=%SCRIPT_DIR%com.brainrotblocker.native.json"
 set "WRAPPER_PATH=%SCRIPT_DIR%host_wrapper.bat"
 set "WRAPPER_PATH_JSON=%WRAPPER_PATH:\=\\%"
-set "MANIFEST_PATH=%SCRIPT_DIR%com.brainrotblocker.native.json"
+
+set "EXTENSION_IDS="
+set "ORIGIN_JSON="
+set "DETECTED_COUNT=0"
+
+if exist "%DETECT_SCRIPT%" (
+    echo Detecting installed Brainrot Blocker extension ID...
+    for /f "usebackq delims=" %%I in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%DETECT_SCRIPT%"`) do (
+        set /a DETECTED_COUNT+=1
+        if defined EXTENSION_IDS (
+            set "EXTENSION_IDS=!EXTENSION_IDS! %%I"
+        ) else (
+            set "EXTENSION_IDS=%%I"
+        )
+        if defined ORIGIN_JSON (
+            set "ORIGIN_JSON=!ORIGIN_JSON!, ""chrome-extension://%%I/"""
+        ) else (
+            set "ORIGIN_JSON=""chrome-extension://%%I/"""
+        )
+    )
+)
+
+if not defined EXTENSION_IDS (
+    echo.
+    echo Could not auto-detect extension ID.
+    set /p MANUAL_EXTENSION_ID="Paste your extension ID (from chrome://extensions): "
+    if "!MANUAL_EXTENSION_ID!"=="" (
+        echo Error: Extension ID cannot be empty
+        pause
+        exit /b 1
+    )
+    set "EXTENSION_IDS=!MANUAL_EXTENSION_ID!"
+    set "ORIGIN_JSON=""chrome-extension://!MANUAL_EXTENSION_ID!/"""
+) else (
+    echo Found !DETECTED_COUNT! extension ID(s): !EXTENSION_IDS!
+)
 
 echo.
 echo Creating manifest file...
@@ -28,7 +57,7 @@ echo   "name": "com.brainrotblocker.native",
 echo   "description": "Brainrot Blocker - Desktop App Detection",
 echo   "path": "!WRAPPER_PATH_JSON!",
 echo   "type": "stdio",
-echo   "allowed_origins": ["chrome-extension://%EXTENSION_ID%/"]
+echo   "allowed_origins": [!ORIGIN_JSON!]
 echo }
 ) > "%MANIFEST_PATH%"
 
@@ -77,7 +106,7 @@ if "!REG_SUCCESS!"=="1" (
     echo ========================================
     echo Installation successful!
     echo ========================================
-    echo Extension ID: %EXTENSION_ID%
+    echo Allowed extension IDs: !EXTENSION_IDS!
     echo Manifest path: %MANIFEST_PATH%
     echo.
     echo The native messaging host is now registered.
