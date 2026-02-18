@@ -196,6 +196,11 @@ server/
 - Behavioral analytics dashboard showing distraction patterns over time
 - Chrome Web Store deployment
 
+## What's Next?
+- Implement leaderboards
+- Ensure that data is retained between accounts when signing in.
+- Make UI easier to use.
+
 ---
 
 *Built solo at HackBeanpot (Northeastern University) in 36 hours. Significantly expanded since.*

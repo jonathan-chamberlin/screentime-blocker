@@ -684,9 +684,46 @@
             <div class="section-body">
             <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it. These sites will remain blocked even if you delete your data or uninstall and reinstall the extension.</p>
 
-            <div class="nuclear-second-cooldown">
+            <p class="section-desc" style="margin-top: -6px; font-size: 13px; color: #999;"><strong>How it works:</strong> Nuclear Block is for sites you've decided have no place in your life. Adding a site blocks it instantly — the hard part is getting it back. To remove a site, you click "Remove" and wait through the removal cooldown you chose when you added it. During that wait, you can easily re-block it if you change your mind. If a second confirmation cooldown is enabled, you'll need to confirm your decision again and wait a second time — giving you even more space to reconsider whether unblocking is really what you want.</p>
+
+            <div class="form-group">
+                <label>Currently nuclear-blocked sites</label>
+                <div id="nuclearSitesList"><p class="nuclear-empty">No sites added yet.</p></div>
+            </div>
+
+            <div class="nuclear-add-section">
+                <label>Add sites to Nuclear Block</label>
+                <div id="nuclearPresetsList" class="nuclear-presets"></div>
+
+                <div class="nuclear-add-row">
+                    <div class="form-group">
+                        <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
+                    </div>
+                    <div class="form-group" style="min-width: 180px;">
+                        <label style="font-size: 11px; margin-bottom: 5px;">Removal cooldown</label>
+                        <select id="nuclearCooldown">
+                            <option value="10000">⚠ 10 seconds (testing only)</option>
+                            <option value="86400000">24 hours</option>
+                            <option value="172800000" selected>48 hours</option>
+                            <option value="604800000">1 week</option>
+                            <option value="2592000000">1 month</option>
+                            <option value="7776000000">3 months</option>
+                            <option value="15552000000">6 months</option>
+                            <option value="31536000000">1 year</option>
+                        </select>
+                        <div id="nuclearCooldownTestWarning" style="display:none; margin-top:5px; font-size:11px; color:#ffaa44;">⚠ Testing mode — cooldown expires in 10 seconds. Switch to a real duration before using seriously.</div>
+                    </div>
+                    <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
+                </div>
+            </div>
+
+            <div class="nuclear-second-cooldown" style="margin-top: 20px; margin-bottom: 0; padding-top: 20px; padding-bottom: 0; border-top: 1px solid rgba(255, 140, 0, 0.15); border-bottom: none;">
                 <label>Second confirmation cooldown (applies to new sites only)</label>
                 <div class="nuclear-radio-group">
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="5s">
+                        <span>⚠ 5 seconds (testing only)</span>
+                    </label>
                     <label>
                         <input type="radio" name="nuclearSecondCooldown" value="20m">
                         <span>20 minutes</span>
@@ -715,36 +752,6 @@
                         <input type="radio" name="nuclearSecondCooldown" value="off">
                         <span>Off</span>
                     </label>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Currently nuclear-blocked sites</label>
-                <div id="nuclearSitesList"><p class="nuclear-empty">No sites added yet.</p></div>
-            </div>
-
-            <div class="nuclear-add-section">
-                <label>Add sites to Nuclear Block</label>
-                <div id="nuclearPresetsList" class="nuclear-presets"></div>
-
-                <div class="nuclear-add-row">
-                    <div class="form-group">
-                        <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
-                    </div>
-                    <div class="form-group" style="min-width: 180px;">
-                        <select id="nuclearCooldown">
-                            <option value="10000">⚠ 10 seconds (testing only)</option>
-                            <option value="86400000">24 hours</option>
-                            <option value="172800000" selected>48 hours</option>
-                            <option value="604800000">1 week</option>
-                            <option value="2592000000">1 month</option>
-                            <option value="7776000000">3 months</option>
-                            <option value="15552000000">6 months</option>
-                            <option value="31536000000">1 year</option>
-                        </select>
-                        <div id="nuclearCooldownTestWarning" style="display:none; margin-top:5px; font-size:11px; color:#ffaa44;">⚠ Testing mode — cooldown expires in 10 seconds. Switch to a real duration before using seriously.</div>
-                    </div>
-                    <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
                 </div>
             </div>
             </div>

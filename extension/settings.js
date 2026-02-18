@@ -551,11 +551,14 @@ function scheduleNuclearTransition(sites) {
 function fuzzyTimeLeft(ms) {
   const MONTH = 30 * 24 * 60 * 60 * 1000;
   const DAY = 24 * 60 * 60 * 1000;
+  const HOUR = 60 * 60 * 1000;
   if (ms <= 0) return null; // signal "ready"
   if (ms >= MONTH) return Math.ceil(ms / MONTH) + ' months';
   if (ms >= 2 * DAY) return Math.ceil(ms / DAY) + ' days';
   if (ms >= DAY) return '1 day';
-  return 'Less than 1 day';
+  if (ms >= 2 * HOUR) return Math.floor(ms / HOUR) + ' hours';
+  if (ms >= HOUR) return '1 hour';
+  return 'Less than 1 hour';
 }
 
 function getNuclearSiteStage(site) {
@@ -616,7 +619,8 @@ async function loadNuclearBlock() {
     const { secondCooldownEnabled, secondCooldownMs } = data;
     let radioVal = 'off';
     if (secondCooldownEnabled) {
-      if (secondCooldownMs <= 1200000) radioVal = '20m';
+      if (secondCooldownMs <= 5000) radioVal = '5s';
+      else if (secondCooldownMs <= 1200000) radioVal = '20m';
       else if (secondCooldownMs <= 64800000) radioVal = '18h';
       else if (secondCooldownMs <= 129600000) radioVal = '36h';
       else if (secondCooldownMs <= 432000000) radioVal = '5d';
@@ -733,6 +737,7 @@ function getNuclearSecondCooldown() {
   const val = document.querySelector('input[name="nuclearSecondCooldown"]:checked')?.value || '18h';
   if (val === 'off') return { enabled: false, ms: 0 };
   const MS = {
+    '5s':    5 * 1000,
     '20m':  20 * 60 * 1000,
     '18h':  18 * 60 * 60 * 1000,
     '36h':  36 * 60 * 60 * 1000,

@@ -16,10 +16,14 @@ const MOTIVATIONAL_QUOTES = [
 function fuzzyTimeLeft(ms) {
   const MONTH = 30 * 24 * 60 * 60 * 1000;
   const DAY = 24 * 60 * 60 * 1000;
+  const HOUR = 60 * 60 * 1000;
   if (ms <= 0) return null; // signal "ready"
   if (ms >= MONTH) return Math.ceil(ms / MONTH) + ' months';
-  if (ms >= DAY) return Math.ceil(ms / DAY) + ' days';
-  return '1 day';
+  if (ms >= 2 * DAY) return Math.ceil(ms / DAY) + ' days';
+  if (ms >= DAY) return '1 day';
+  if (ms >= 2 * HOUR) return Math.floor(ms / HOUR) + ' hours';
+  if (ms >= HOUR) return '1 hour';
+  return 'Less than 1 hour';
 }
 
 function getNuclearSiteStage(site) {
