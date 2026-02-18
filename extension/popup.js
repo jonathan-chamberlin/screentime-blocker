@@ -26,6 +26,25 @@ function getStatus() {
   });
 }
 
+function setEmojiFavicon(emoji) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '48px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+  ctx.fillText(emoji, 32, 34);
+
+  const icon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+  icon.rel = 'icon';
+  icon.href = canvas.toDataURL('image/png');
+  document.head.appendChild(icon);
+}
+
 function showConfetti() {
   const container = document.createElement('div');
   container.className = 'confetti-container';
@@ -219,6 +238,8 @@ async function poll() {
 // --- Init: populate DOM refs, load settings, wire event listeners ---
 
 document.addEventListener('DOMContentLoaded', async () => {
+  setEmojiFavicon('🔥');
+
   if (CONFIG && typeof CONFIG.API_BASE_URL === 'string' && CONFIG.API_BASE_URL.trim()) {
     await setStorage({ apiBaseUrl: CONFIG.API_BASE_URL.trim() });
   }
