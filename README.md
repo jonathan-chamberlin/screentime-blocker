@@ -93,11 +93,15 @@ Enable Companion App mode (requires native host installation) to extend blocking
 - Blocked desktop apps: Specify apps that get closed during work sessions (Steam, games, etc.).
 - Custom entries: Add any app by process name.
 
+![Productive Applications](screenshots_for_readme/settings_productive_apps_screenshot.png)
+
 ---
 
 ### Settings
 
 All settings are organized into collapsible sections. Click any heading to expand it.
+
+![Settings page](screenshots_for_readme/settings_screenshot.png)
 
 Sessions
 - Work duration (1 to 180 min, default 50)
@@ -121,6 +125,8 @@ Desktop App Tracking (Companion App mode)
 Penalty
 - Financial Penalty toggle (on/off)
 - Penalty type, target organization, amount, reminder note
+
+![Settings autosave](screenshots_for_readme/settings_autosave_screenshot.png)
 
 ---
 
