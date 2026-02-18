@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="icon16.png" type="image/png">
     <title>Brainrot Blocker Settings</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -319,6 +319,32 @@
             font-size: 13px;
             color: #888;
         }
+
+        .danger-zone {
+            border-color: rgba(255, 71, 87, 0.45);
+            background: rgba(255, 71, 87, 0.08);
+        }
+
+        .danger-zone h2 {
+            color: #ff6b7a;
+        }
+
+        .danger-zone p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757, #d63031);
+            color: #fff;
+            border: 1px solid rgba(255, 71, 87, 0.8);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ff6b7a, #e84142);
+            box-shadow: 0 4px 14px rgba(255, 71, 87, 0.35);
+        }
     </style>
 </head>
 <body>
@@ -467,7 +493,7 @@
 
         <div class="section-group-label">
             <span>Penalty</span>
-            <p>If you quit a session early without hitting your goal, you can be held financially accountable.</p>
+            <p>(COMING SOON) If you quit a session early without hitting your goal, you can be held financially accountable.</p>
         </div>
 
         <div class="section" data-lockable>
@@ -520,6 +546,12 @@
                 <label for="paymentMethod">Reminder note</label>
                 <input type="text" id="paymentMethod" placeholder="e.g., Donate to my selected cause after failed session">
             </div>
+        </div>
+
+        <div class="section danger-zone">
+            <h2>Danger Zone</h2>
+            <p>Delete all extension data from this browser, including settings, local session stats, and sign-in token.</p>
+            <button type="button" id="btn-delete-all-data" class="btn-danger">Delete All Data</button>
         </div>
     </div>
 
