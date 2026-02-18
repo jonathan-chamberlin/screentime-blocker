@@ -260,7 +260,7 @@ const PRESET_BLOCKED_SITES = [
   // Adult Sites
   { name: 'OnlyFans', domain: 'onlyfans.com', category: 'Adult Sites', checked: false },
   {
-    name: 'Most Adult Websites',
+    name: 'Adult Websites',
     domains: [
       'pornhub.com', 'xvideos.com', 'xnxx.com', 'redtube.com', 'youporn.com',
       'xhamster.com', 'tube8.com', 'spankbang.com', 'beeg.com', 'eporner.com',
