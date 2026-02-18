@@ -259,6 +259,10 @@ const messageHandlers = {
     clickUnblockNuclear(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   },
+  blockAgainNuclear: (msg, sender, sendResponse) => {
+    blockAgainNuclear(msg.id, msg.cooldown1Ms).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
   removeNuclearSite: (msg, sender, sendResponse) => {
     removeNuclearSite(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;

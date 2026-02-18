@@ -101,6 +101,17 @@ async function clickUnblockNuclear(id) {
   await applyNuclearRules();
 }
 
+async function blockAgainNuclear(id, cooldown1Ms) {
+  const data = await getNuclearData();
+  const site = data.sites.find(s => s.id === id);
+  if (!site) return;
+  site.addedAt = Date.now();
+  site.cooldown1Ms = cooldown1Ms;
+  site.unblockClickedAt = null;
+  await saveNuclearData(data);
+  await applyNuclearRules();
+}
+
 async function removeNuclearSite(id) {
   const data = await getNuclearData();
   data.sites = data.sites.filter(s => s.id !== id);

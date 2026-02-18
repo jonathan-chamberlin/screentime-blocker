@@ -669,6 +669,32 @@ async function loadNuclearBlock() {
           btn.dataset.siteId = site.id;
           btn.addEventListener('click', () => handleUnblockNuclear(site.id));
           card.appendChild(btn);
+
+          const blockAgainSelect = document.createElement('select');
+          blockAgainSelect.className = 'select-block-again';
+          [
+            { label: 'Block Again ▾', value: '' },
+            { label: '⚠ 10 seconds (testing)', value: '10000' },
+            { label: '24 hours', value: '86400000' },
+            { label: '48 hours', value: '172800000' },
+            { label: '1 week', value: '604800000' },
+            { label: '1 month', value: '2592000000' },
+            { label: '3 months', value: '7776000000' },
+            { label: '6 months', value: '15552000000' },
+            { label: '1 year', value: '31536000000' },
+          ].forEach(({ label, value }) => {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = label;
+            if (!value) opt.disabled = true;
+            blockAgainSelect.appendChild(opt);
+          });
+          blockAgainSelect.value = '';
+          blockAgainSelect.addEventListener('change', () => {
+            const ms = parseInt(blockAgainSelect.value, 10);
+            if (ms) handleBlockAgainNuclear(site.id, ms);
+          });
+          card.appendChild(blockAgainSelect);
         }
 
         list.appendChild(card);
@@ -773,6 +799,13 @@ function addNuclearSiteFromUI() {
 
 function handleUnblockNuclear(id) {
   chrome.runtime.sendMessage({ action: 'clickUnblockNuclear', id }, () => {
+    loadNuclearBlock();
+    showSavedIndicator();
+  });
+}
+
+function handleBlockAgainNuclear(id, cooldown1Ms) {
+  chrome.runtime.sendMessage({ action: 'blockAgainNuclear', id, cooldown1Ms }, () => {
     loadNuclearBlock();
     showSavedIndicator();
   });
