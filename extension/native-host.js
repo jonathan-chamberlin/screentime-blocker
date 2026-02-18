@@ -86,14 +86,15 @@ async function processAppUpdate(appName) {
   const blockedApps = result.blockedApps || [];
 
   const appNameLower = (appName || '').toLowerCase();
-  const blockedApp = blockedApps.find(app => (app.process || '').toLowerCase() === appNameLower);
-  if (blockedApp) {
-    if (nativePort) {
-      nativePort.postMessage({
-        command: 'closeApp',
-        processName: appName
-      });
-    }
+  const blockedApp = blockedApps.find(app => {
+    const detects = app.detectProcesses || [app.process];
+    return detects.some(p => (p || '').toLowerCase() === appNameLower);
+  });
+  if (blockedApp && nativePort) {
+    const toKill = blockedApp.killProcesses || [blockedApp.process];
+    toKill.forEach(proc => {
+      nativePort.postMessage({ command: 'closeApp', processName: proc });
+    });
     chrome.runtime.sendMessage({ action: 'blockedAppDetected', appName: blockedApp.name });
   }
 }

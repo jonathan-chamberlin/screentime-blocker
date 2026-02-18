@@ -184,7 +184,9 @@ async function saveProductiveApps() {
 }
 
 const PRESET_BLOCKED_APPS = [
-  { name: 'Steam', process: 'steam', checked: true },
+  // detectProcesses: process names the foreground window may report (Steam UI runs under steamwebhelper)
+  // killProcesses: all processes to kill when blocked
+  { name: 'Steam', process: 'steam', detectProcesses: ['steam', 'steamwebhelper'], killProcesses: ['steam', 'steamwebhelper'], checked: true },
   { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', checked: false },
   { name: 'Discord', process: 'Discord', checked: false },
   { name: 'Minecraft', process: 'javaw', checked: false },
@@ -197,9 +199,28 @@ async function loadBlockedApps() {
   if (result.blockedApps === undefined) {
     const defaults = PRESET_BLOCKED_APPS
       .filter(app => app.checked)
-      .map(({ name, process }) => ({ name, process }));
+      .map(({ name, process, detectProcesses, killProcesses }) => ({
+        name, process,
+        ...(detectProcesses && { detectProcesses }),
+        ...(killProcesses && { killProcesses }),
+      }));
     await setStorage({ blockedApps: defaults });
     result.blockedApps = defaults;
+  }
+
+  // Migrate: merge any new preset fields (detectProcesses, killProcesses) into existing stored entries
+  let needsMigration = false;
+  const migrated = result.blockedApps.map(stored => {
+    const preset = PRESET_BLOCKED_APPS.find(p => p.process === stored.process);
+    if (!preset) return stored;
+    const merged = { ...stored };
+    if (preset.detectProcesses && !stored.detectProcesses) { merged.detectProcesses = preset.detectProcesses; needsMigration = true; }
+    if (preset.killProcesses && !stored.killProcesses) { merged.killProcesses = preset.killProcesses; needsMigration = true; }
+    return merged;
+  });
+  if (needsMigration) {
+    await setStorage({ blockedApps: migrated });
+    result.blockedApps = migrated;
   }
 
   const userBlockedApps = result.blockedApps;
@@ -243,7 +264,10 @@ async function saveBlockedApps() {
   PRESET_BLOCKED_APPS.forEach(app => {
     const checkbox = document.getElementById('blocked-app-' + app.process);
     if (checkbox && checkbox.checked) {
-      presetApps.push({ name: app.name, process: app.process });
+      const entry = { name: app.name, process: app.process };
+      if (app.detectProcesses) entry.detectProcesses = app.detectProcesses;
+      if (app.killProcesses) entry.killProcesses = app.killProcesses;
+      presetApps.push(entry);
     }
   });
 
