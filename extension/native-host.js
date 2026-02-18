@@ -83,7 +83,8 @@ async function processAppUpdate(appName) {
 
   // During work session: close blocked apps
   if (result.sessionActive && !result.rewardActive) {
-    const blockedApp = blockedApps.find(app => app.process === appName);
+    const appNameLower = (appName || '').toLowerCase();
+    const blockedApp = blockedApps.find(app => (app.process || '').toLowerCase() === appNameLower);
     if (blockedApp) {
       // Send closeApp command to native host
       if (nativePort) {

@@ -10,6 +10,24 @@ function showSavedIndicator() {
   setTimeout(() => indicator.classList.remove('show'), 2000);
 }
 
+function setEmojiFavicon(emoji) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '52px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  ctx.fillText(emoji, 32, 35);
+
+  const icon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+  icon.rel = 'icon';
+  icon.href = canvas.toDataURL('image/png');
+  document.head.appendChild(icon);
+}
+
 let saveTimeouts = {};
 
 async function setApiBaseUrlFromConfig() {
@@ -165,29 +183,39 @@ async function saveProductiveApps() {
   await setStorage({ productiveApps: apps });
 }
 
+const PRESET_BLOCKED_APPS = [
+  { name: 'Steam', process: 'steam', checked: true },
+  { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', checked: false },
+  { name: 'Discord', process: 'Discord', checked: false },
+  { name: 'Minecraft', process: 'javaw', checked: false },
+];
+
 async function loadBlockedApps() {
   const result = await getStorage(['blockedApps']);
-  const userBlockedApps = result.blockedApps || [];
+
+  // First-time init: blockedApps was never explicitly saved — persist visual defaults now
+  if (result.blockedApps === undefined) {
+    const defaults = PRESET_BLOCKED_APPS
+      .filter(app => app.checked)
+      .map(({ name, process }) => ({ name, process }));
+    await setStorage({ blockedApps: defaults });
+    result.blockedApps = defaults;
+  }
+
+  const userBlockedApps = result.blockedApps;
+  const presetProcessNames = new Set(PRESET_BLOCKED_APPS.map(a => a.process));
 
   const grid = document.getElementById('blockedAppsList');
   grid.innerHTML = '';
 
-  const defaultBlockedApps = [
-    { name: 'Steam', process: 'steam', checked: true },
-    { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', checked: false },
-    { name: 'Discord', process: 'Discord', checked: false },
-    { name: 'Minecraft', process: 'javaw', checked: false },
-  ];
-
-  defaultBlockedApps.forEach(app => {
+  PRESET_BLOCKED_APPS.forEach(app => {
     const item = document.createElement('div');
     item.className = 'app-checkbox-item';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.id = 'blocked-app-' + app.process;
-    const isChecked = userBlockedApps.some(ua => ua.process === app.process);
-    checkbox.checked = isChecked || (userBlockedApps.length === 0 && app.checked);
+    checkbox.checked = userBlockedApps.some(ua => ua.process === app.process);
 
     const label = document.createElement('span');
     label.textContent = app.name;
@@ -205,23 +233,21 @@ async function loadBlockedApps() {
 }
 
 async function saveBlockedApps() {
-  const blockedApps = [];
+  // Read current storage to preserve any custom apps (not in preset list)
+  const result = await getStorage(['blockedApps']);
+  const existing = result.blockedApps || [];
+  const presetProcessNames = new Set(PRESET_BLOCKED_APPS.map(a => a.process));
+  const customApps = existing.filter(app => !presetProcessNames.has(app.process));
 
-  const defaultBlockedApps = [
-    { name: 'Steam', process: 'steam' },
-    { name: 'Epic Games Launcher', process: 'EpicGamesLauncher' },
-    { name: 'Discord', process: 'Discord' },
-    { name: 'Minecraft', process: 'javaw' },
-  ];
-
-  defaultBlockedApps.forEach(app => {
+  const presetApps = [];
+  PRESET_BLOCKED_APPS.forEach(app => {
     const checkbox = document.getElementById('blocked-app-' + app.process);
     if (checkbox && checkbox.checked) {
-      blockedApps.push({ name: app.name, process: app.process });
+      presetApps.push({ name: app.name, process: app.process });
     }
   });
 
-  await setStorage({ blockedApps });
+  await setStorage({ blockedApps: [...presetApps, ...customApps] });
 }
 
 function addCustomBlockedApp() {
@@ -312,6 +338,8 @@ function lockSiteSections(locked) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  setEmojiFavicon('⚙️');
+
   // Apply app name from constants
   document.title = APP_NAME + ' Settings';
   document.querySelector('.header h1').textContent = APP_NAME + ' Settings';
