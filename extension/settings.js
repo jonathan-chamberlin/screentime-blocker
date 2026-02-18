@@ -337,6 +337,25 @@ function lockSiteSections(locked) {
   });
 }
 
+async function handleDeleteAllData() {
+  const confirmed = window.confirm(
+    'Delete all Brainrot Blocker data on this browser?\n\nThis cannot be undone.'
+  );
+  if (!confirmed) return;
+
+  chrome.runtime.sendMessage({ action: 'deleteAllData' }, async (response) => {
+    if (response && response.success) {
+      await loadSettings();
+      await loadProductiveApps();
+      await loadBlockedApps();
+      showSavedIndicator();
+      alert('All Brainrot Blocker data was deleted.');
+    } else {
+      alert('Failed to delete data. Please try again.');
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   setEmojiFavicon('⚙️');
 
@@ -517,4 +536,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
+
+  document.getElementById('btn-delete-all-data').addEventListener('click', handleDeleteAllData);
 });

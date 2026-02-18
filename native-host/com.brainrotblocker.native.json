@@ -3,13 +3,5 @@
   "description": "Brainrot Blocker - Desktop App Detection",
   "path": "C:\\Repositories for Git\\screen-time-blocker\\screentime-blocker\\native-host\\host_wrapper.bat",
   "type": "stdio",
-  "allowed_origins": [
-    "chrome-extension://gcdcgllblcliemjjppecfknjdeaglmao/",
-    "chrome-extension://giinpmohnajeillpmjmdnjimaalpoeem/",
-    "chrome-extension://haepbmhejdnekmdjgddlcbcdfihjdcbi/",
-    "chrome-extension://kfjkomdnnlljmcnnekdmdeinckngdkkl/",
-    "chrome-extension://pdmpnlbjklllbpjcpphnalnbmcfjhfhb/",
-    "chrome-extension://flpbpopplfinomolokndgfipfehdaomk/",
-    "chrome-extension://hopmfdlbpapkmhljplmgjnpjnekifjnp/"
-  ]
+  "allowed_origins": ["chrome-extension://gcdcgllblcliemjjppecfknjdeaglmao/"]
 }

@@ -3,7 +3,28 @@ const urlParams = new URLSearchParams(window.location.search);
 const reason = urlParams.get('reason');
 const blockedApp = urlParams.get('app');
 
+function setEmojiFavicon(emoji) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '52px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  ctx.fillText(emoji, 32, 35);
+
+  const icon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+  icon.rel = 'icon';
+  icon.href = canvas.toDataURL('image/png');
+  document.head.appendChild(icon);
+}
+
+setEmojiFavicon('🤡');
+
 if (reason === 'reward-expired') {
+  setEmojiFavicon('🙂‍↕️');
   showInfoScreen("Break Time's Up!", "Your earned break time has run out. Back to work!");
 } else if (reason === 'reward-paused') {
   showInfoScreen("Break Ended Early", "Your unused break time has been saved. You can use it later.");

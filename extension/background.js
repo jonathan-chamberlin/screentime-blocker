@@ -189,6 +189,43 @@ const messageHandlers = {
     });
     return true;
   },
+  deleteAllData: (msg, sender, sendResponse) => {
+    (async () => {
+      try {
+        stopRewardCheckInterval();
+        stopRewardCountdown();
+        await chrome.alarms.clear('checkSession');
+        await unblockSites();
+        setCompanionModeEnabled(false);
+
+        state = {
+          sessionActive: false,
+          sessionId: null,
+          sessionStartTime: null,
+          rewardActive: false,
+          blockedAttempts: 0,
+          productiveMillis: 0,
+          lastProductiveTick: null,
+          isOnProductiveSite: false,
+          rewardGrantCount: 0,
+          rewardTotalMillis: 0,
+          rewardBurnedMillis: 0,
+          isOnRewardSite: false,
+          lastRewardTick: null,
+          workMinutes: DEFAULTS.workMinutes,
+          rewardMinutes: DEFAULTS.rewardMinutes,
+        };
+
+        await new Promise((resolve) => chrome.storage.local.clear(resolve));
+        await setStorage({ focusState: state });
+        chrome.action.setBadgeText({ text: '' });
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  },
   blockedAppDetected: (msg, sender, sendResponse) => {
     if (state.sessionActive) {
       state.blockedAttempts++;
