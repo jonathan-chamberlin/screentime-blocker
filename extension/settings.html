@@ -76,7 +76,40 @@
             color: #e0e0e0;
             font-size: 20px;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section h2::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid #555;
+            border-bottom: 2px solid #555;
+            transform: rotate(-45deg);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-left: 12px;
+            margin-bottom: 2px;
+        }
+
+        .section.expanded h2::after {
+            transform: rotate(45deg);
+            margin-bottom: 6px;
+        }
+
+        .section-body {
+            display: none;
+            padding-top: 20px;
+        }
+
+        .section.expanded .section-body {
+            display: block;
         }
 
         .form-group {
@@ -605,6 +638,7 @@
 
         <div class="section" data-lockable>
             <h2>Strict Mode</h2>
+            <div class="section-body">
             <div class="form-group">
                 <label>Session commitment level</label>
                 <div class="radio-group">
@@ -618,6 +652,7 @@
                     </label>
                 </div>
             </div>
+            </div>
         </div>
 
         <div class="section-group-label">
@@ -627,6 +662,7 @@
 
         <div class="section" data-lockable>
             <h2>Break Only Sites</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">These sites are blocked during work sessions. After completing a work cycle, you earn break time to visit them.</p>
             <div class="form-group">
                 <label>Select sites to block</label>
@@ -640,10 +676,12 @@
                 <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
                 <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
             </div>
+            </div>
         </div>
 
         <div class="section nuclear-zone">
             <h2>☢️ Nuclear Block</h2>
+            <div class="section-body">
             <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it.</p>
 
             <div class="nuclear-second-cooldown">
@@ -697,10 +735,12 @@
                     <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
                 </div>
             </div>
+            </div>
         </div>
 
         <div id="section-blocked-apps" class="section" data-lockable style="display: none;">
             <h2>Blocked Applications</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Apps that will be closed during work sessions (accessible during breaks)</p>
 
             <div class="form-group">
@@ -720,6 +760,7 @@
                 </div>
                 <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
             </div>
+            </div>
         </div>
 
         <div class="section-group-label">
@@ -729,6 +770,7 @@
 
         <div class="section" data-lockable>
             <h2>Productive Sites</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Your work timer only counts when you're on a productive site or app. Choose what counts as productive below.</p>
             <div class="form-group">
                 <label>What counts as productive?</label>
@@ -749,19 +791,23 @@
                 <label for="customProductiveSites" style="margin-top: 8px;">Custom sites (one per line)</label>
                 <textarea id="customProductiveSites" style="min-height: 80px;" placeholder="docs.google.com&#10;notion.so"></textarea>
             </div>
+            </div>
         </div>
 
         <div class="section">
             <h2>Skip Productivity Check Popup</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Sites listed here will never trigger the "Are you really working?" popup. Sites are added automatically when you click "Yes, I'm working" — or add them manually below.</p>
             <div class="form-group">
                 <label for="skipProductivityCheck">Approved sites (one per line)</label>
                 <textarea id="skipProductivityCheck" placeholder="github.com&#10;docs.google.com&#10;notion.so"></textarea>
             </div>
+            </div>
         </div>
 
         <div id="section-productive-apps" class="section" data-lockable style="display: none;">
             <h2>Productive Applications</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Desktop apps that count as productive. Your work timer runs while these are in the foreground, even when the browser isn't active.</p>
 
             <div id="nativeHostWarning" style="display: none; background-color: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #ff6b7a;">
@@ -778,6 +824,7 @@
                 <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
                 <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
             </div>
+            </div>
         </div>
 
         <div class="section-group-label">
@@ -787,6 +834,7 @@
 
         <div class="section" data-lockable>
             <h2>Companion App</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">
                 Website blocking works with extension-only mode. Turn on Companion App mode only if you also install the desktop app/native host.
             </p>
@@ -803,6 +851,7 @@
                     </label>
                 </div>
             </div>
+            </div>
         </div>
 
         <div class="section-group-label">
@@ -812,6 +861,7 @@
 
         <div class="section" data-lockable>
             <h2>Financial Penalty</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">When off, you'll still see a confirmation popup when quitting early — but with no financial consequence.</p>
             <div class="form-group">
                 <div class="radio-group">
@@ -825,10 +875,12 @@
                     </label>
                 </div>
             </div>
+            </div>
         </div>
 
         <div id="section-penalty-config" class="section" data-lockable>
             <h2>Penalty Configuration</h2>
+            <div class="section-body">
             <div class="form-group">
                 <label>Penalty Type</label>
                 <div class="radio-group">
@@ -851,21 +903,26 @@
                 <label for="penaltyAmount">Donation Amount per Failed Session ($)</label>
                 <input type="number" id="penaltyAmount" min="1" max="1000" value="5">
             </div>
+            </div>
         </div>
 
         <div id="section-penalty-reminder" class="section" data-lockable>
             <h2>Penalty Reminder</h2>
+            <div class="section-body">
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Penalty tracking is honor-system. Keep an optional reminder note here. Never enter card or bank numbers.</p>
             <div class="form-group">
                 <label for="paymentMethod">Reminder note</label>
                 <input type="text" id="paymentMethod" placeholder="e.g., Donate to my selected cause after failed session">
             </div>
+            </div>
         </div>
 
         <div class="section danger-zone">
             <h2>Danger Zone</h2>
+            <div class="section-body">
             <p>Delete all extension data from this browser, including settings, local session stats, and sign-in token. Nuclear Block data is preserved.</p>
             <button type="button" id="btn-delete-all-data" class="btn-danger">Delete All Data</button>
+            </div>
         </div>
     </div>
 

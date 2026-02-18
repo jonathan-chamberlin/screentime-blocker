@@ -1029,4 +1029,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Refresh nuclear countdowns every minute
   setInterval(() => loadNuclearBlock(), 60 * 1000);
+
+  // Collapsible sections — all start collapsed, click h2 to expand/collapse
+  document.querySelectorAll('.section h2').forEach(h2 => {
+    h2.addEventListener('click', () => {
+      h2.closest('.section').classList.toggle('expanded');
+    });
+  });
 });
