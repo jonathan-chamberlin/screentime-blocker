@@ -673,7 +673,7 @@ async function loadNuclearBlock() {
           const blockAgainSelect = document.createElement('select');
           blockAgainSelect.className = 'select-block-again';
           [
-            { label: 'Block Again ▾', value: '' },
+            { label: 'Block Again', value: '' },
             { label: '⚠ 10 seconds (testing)', value: '10000' },
             { label: '24 hours', value: '86400000' },
             { label: '48 hours', value: '172800000' },
