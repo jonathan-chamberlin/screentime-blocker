@@ -78,25 +78,23 @@ function connectNativeHost() {
 }
 
 async function processAppUpdate(appName) {
-  const result = await getStorage(['blockedApps', 'sessionActive', 'rewardActive']);
+  // Use in-memory state — sessionActive/rewardActive are stored under focusState,
+  // not as top-level storage keys, so reading them from storage always returns undefined
+  if (!state.sessionActive || state.rewardActive) return;
+
+  const result = await getStorage(['blockedApps']);
   const blockedApps = result.blockedApps || [];
 
-  // During work session: close blocked apps
-  if (result.sessionActive && !result.rewardActive) {
-    const appNameLower = (appName || '').toLowerCase();
-    const blockedApp = blockedApps.find(app => (app.process || '').toLowerCase() === appNameLower);
-    if (blockedApp) {
-      // Send closeApp command to native host
-      if (nativePort) {
-        nativePort.postMessage({
-          command: 'closeApp',
-          processName: appName
-        });
-      }
-
-      // Trigger shame redirect in browser
-      chrome.runtime.sendMessage({ action: 'blockedAppDetected', appName: blockedApp.name });
+  const appNameLower = (appName || '').toLowerCase();
+  const blockedApp = blockedApps.find(app => (app.process || '').toLowerCase() === appNameLower);
+  if (blockedApp) {
+    if (nativePort) {
+      nativePort.postMessage({
+        command: 'closeApp',
+        processName: appName
+      });
     }
+    chrome.runtime.sendMessage({ action: 'blockedAppDetected', appName: blockedApp.name });
   }
 }
 
