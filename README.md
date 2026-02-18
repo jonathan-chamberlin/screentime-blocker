@@ -62,6 +62,8 @@ These sites will remain blocked even if you delete your data or uninstall and re
 
 Preset nuclear sites included: OnlyFans, Adult Websites (35+ domains), Gambling Sites (26+ domains), Steam, Epic Games, League of Legends, World of Warcraft, Valorant.
 
+![Nuclear Block](screenshots_for_readme/nuclear_block_screenshot.png)
+
 ---
 
 ### Productivity Check Popup
@@ -99,7 +101,7 @@ Enable Companion App mode (requires native host installation) to extend blocking
 
 All settings are organized into collapsible sections. Click any heading to expand it.
 
-![Settings page](screenshots_for_readme/settings_screenshot.png)
+![Settings overview](screenshots_for_readme/settings_overview_screenshot.png)
 
 Sessions
 - Work duration (1 to 180 min, default 50)
@@ -111,16 +113,18 @@ What is Distracting?
 - Custom blocked domains and allowed path exceptions
 - Nuclear Block: permanent blocking with staged cooldown removal
 
+![Break Only Sites](screenshots_for_readme/break_only_sites_screenshot.png)
+
 What is Productive?
 - Productive Sites: whitelist mode or "everything except blocked" mode
 - Custom productive domains
 - Skip Productivity Check: approved sites that never trigger the popup
 
+![Productive Sites](screenshots_for_readme/productive_sites_screenshot.png)
+
 Desktop App Tracking (Companion App mode)
 - Productive Applications: desktop apps that count as work time
 - Blocked Applications: apps closed during sessions
-
-![Productive Applications](screenshots_for_readme/settings_productive_apps_screenshot.png)
 
 Penalty
 - Financial Penalty toggle (on/off)
