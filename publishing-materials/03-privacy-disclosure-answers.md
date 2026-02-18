@@ -1,51 +1,79 @@
 ﻿# Privacy Disclosure Answers (Draft)
 
-Use this as draft text for Chrome Web Store privacy/data-use prompts.
+Use this file to fill the Chrome Web Store Data usage questionnaire.
 
-## Data Collection Summary
+## Data Usage Checkboxes (recommended for current build)
 
-Brainrot Blocker processes settings and browsing/app context needed to run focus sessions and blocking logic.
+Select:
 
-## Data Types Potentially Processed
+- Personally identifiable information
+- Authentication information
+- Web history
+- User activity
 
-1. Local settings and extension state
-- blocked sites
-- allowed paths
-- productive sites and optional productive apps
-- session preferences (work/reward duration, strict mode, penalty reminders)
-- session state and counters
+Do not select:
 
-2. Optional account data (if signed in)
-- auth token data
-- display name
-- profile image URL
+- Health information
+- Financial and payment information
+- Personal communications
+- Location
+- Website content
 
-3. Optional activity/usage metrics (if backend features are enabled)
-- session start/end events
-- minutes completed
-- blocked-attempt counts
-- optional reminder note text
+## Why these are selected
 
-## Data Not Requested
+`Personally identifiable information`
+- Optional sign-in can involve profile identifiers (for example display name/profile image).
 
-- card numbers
-- bank account numbers
-- payment credentials
+`Authentication information`
+- Optional sign-in uses authentication tokens/credentials flow.
 
-## Data Use
+`Web history`
+- The extension evaluates visited domains/URLs to enforce blocking and productivity logic.
 
-- core extension functionality (blocking, timers, settings)
-- optional leaderboard/account features
-- reliability and abuse prevention for backend-connected features
+`User activity`
+- The extension tracks focus-session state, timer progression, and blocked-attempt/session metrics.
 
-## Data Sharing
+## Why these are not selected
 
-- no sale of personal data
-- no ad-targeting data sharing
-- data is shared only with infrastructure/auth providers needed to run the service
+`Health information`
+- Not collected.
+
+`Financial and payment information`
+- Not collected. Penalty features are reminder-only and do not process payments.
+
+`Personal communications`
+- Not collected.
+
+`Location`
+- Not collected.
+
+`Website content`
+- The extension does not collect page content (text/images/video bodies) as a product data category.
+
+## Remote Code Question
+
+Answer:
+
+- `No, I am not using remote code`
+
+Reason:
+
+- Chrome defines remote hosted code as executable JS/Wasm loaded from outside the extension package.
+- Current extension logic is packaged locally (Manifest V3), and release preflight validates no remote JS references.
+- External data/API calls are not remote executable code.
+
+## Data Use Summary Text (for free-form fields)
+
+Brainrot Blocker uses user-configured settings plus browsing/session context to block distracting sites during focus sessions, run timers, and unlock earned break time. Optional sign-in enables leaderboard/account features, and optional companion mode reads local desktop process names for app tracking/blocking. The extension does not collect payment data, health data, personal communications, website content, or location data.
 
 ## User Controls
 
-- extension-only mode works without companion app install
-- users can sign out to disable account-linked features
-- users can clear local extension data from Settings or by removing extension data
+- Extension-only mode works without companion app install.
+- Users can sign out to disable account-linked features.
+- Users can clear local extension data from Settings (Delete All Data) or by removing extension data.
+- Delete All Data intentionally preserves Nuclear Block entries.
+
+## Final Verify Before Submit
+
+- Keep these answers aligned with `PRIVACY_POLICY.md`.
+- If you add new backend fields or tracking later, update this file and the CWS form immediately.

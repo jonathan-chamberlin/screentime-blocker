@@ -58,7 +58,7 @@ Nuclear Block is a permanent, hard-to-reverse layer of blocking with a staged co
 4. Second cooldown. Clicking Unblock starts a second confirmation wait (20 minutes to 30 days, default 18 hours).
 5. Site removed. The site unblocks only after both cooldowns pass.
 
-These sites will remain blocked even if you delete your data or uninstall and reinstall the extension.
+These sites remain blocked if you use **Delete All Data** in Settings (Nuclear Block entries are intentionally preserved by that action).
 
 Preset nuclear sites included: OnlyFans, Adult Websites (35+ domains), Gambling Sites (26+ domains), Steam, Epic Games, League of Legends, World of Warcraft, Valorant.
 
