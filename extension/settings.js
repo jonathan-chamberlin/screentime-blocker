@@ -523,6 +523,31 @@ function lockSiteSections(locked) {
 
 // --- Nuclear Block ---
 
+let nuclearTransitionTimer = null;
+
+function scheduleNuclearTransition(sites) {
+  if (nuclearTransitionTimer) {
+    clearTimeout(nuclearTransitionTimer);
+    nuclearTransitionTimer = null;
+  }
+
+  // Find the smallest countdown across all active sites
+  let minMs = Infinity;
+  for (const site of sites) {
+    const stage = getNuclearSiteStage(site);
+    if (stage === 'locked' || stage === 'unblocking') {
+      minMs = Math.min(minMs, getNuclearCountdownMs(site));
+    }
+  }
+
+  if (minMs !== Infinity && minMs > 0) {
+    nuclearTransitionTimer = setTimeout(() => {
+      nuclearTransitionTimer = null;
+      loadNuclearBlock();
+    }, minMs + 50); // +50ms buffer so stage check resolves cleanly
+  }
+}
+
 function fuzzyTimeLeft(ms) {
   const MONTH = 30 * 24 * 60 * 60 * 1000;
   const DAY = 24 * 60 * 60 * 1000;
@@ -668,6 +693,9 @@ async function loadNuclearBlock() {
       const labelEl = checkbox.nextElementSibling;
       if (labelEl) labelEl.textContent = preset.name + (alreadyAdded ? ' ✓' : '');
     });
+
+    // Schedule a precise re-render at the next state transition
+    scheduleNuclearTransition(data.sites || []);
   });
 }
 
