@@ -1,4 +1,4 @@
-# Listing Assets Checklist
+﻿# Listing Assets Checklist
 
 Use this checklist before final submission.
 
@@ -9,28 +9,37 @@ Use this checklist before final submission.
 - `extension/icon48.png`
 - `extension/icon128.png`
 
-2. Screenshots
-- Provide clear screenshots of popup, settings, and blocked-page behavior.
-- Suggested sources in repo: `screenshots_for_readme/`
+2. Screenshots (current UI)
+- popup default state
+- active Lock In session
+- blocked/shame screen
+- settings page overview
 
 3. Privacy policy URL
-- Publish `PRIVACY_POLICY.md` at a public URL and paste it into listing.
+- Public URL to `PRIVACY_POLICY.md`
 
 ## Recommended
 
-1. Screenshot set
-- default popup state
-- active focus session
-- blocked-site redirect page
-- settings page
+1. Additional screenshots
+- reward earned state
+- reward burn state
+- nuclear block settings
+- productive sites settings
+- break-only sites settings
+- strict mode/penalty settings
 - optional leaderboard view
 
-2. Branding consistency
-- Listing name matches `extension/manifest.json` name.
-- Description wording matches actual behavior (no payment processing claims).
+2. Suggested local screenshot sources
+- `screenshots_for_readme/default_screenshot.png`
+- `screenshots_for_readme/work_mode_screenshot.png`
+- `screenshots_for_readme/reward_earned_screenshot.png`
+- `screenshots_for_readme/reward_burn_screenshot.png`
+- `screenshots_for_readme/shame_level_4_screenshot.png`
+- `screenshots_for_readme/nuclear_block_screenshot.png`
+- `screenshots_for_readme/settings_overview_screenshot.png`
 
-## Final validation
+## Final Validation
 
-1. Upload zip from `dist/`.
-2. Confirm current Chrome Web Store image dimensions in dashboard before final upload.
-
+1. Upload the release zip from `dist/`.
+2. Confirm image dimensions/requirements in the live dashboard before final upload.
+3. Ensure listing claims match actual behavior (especially companion app and payment reminders).

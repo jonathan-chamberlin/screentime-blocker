@@ -1,20 +1,20 @@
-# Support And Links Template
+﻿# Support And Links Template
 
 Fill these values and paste into Chrome Web Store listing fields.
 
 ## Support URL
 
-`https://github.com/<your-org-or-user>/<repo>/issues`
+`https://github.com/jonathan-chamberlin/screentime-blocker/issues`
 
 ## Homepage URL
 
-`https://github.com/<your-org-or-user>/<repo>`
+`https://github.com/jonathan-chamberlin/screentime-blocker`
 
 ## Privacy Policy URL
 
-Host `PRIVACY_POLICY.md` publicly and paste URL here:
+Use a public/raw URL for policy text. Example:
 
-`https://github.com/<your-org-or-user>/<repo>/blob/main/PRIVACY_POLICY.md`
+`https://raw.githubusercontent.com/jonathan-chamberlin/screentime-blocker/main/PRIVACY_POLICY.md`
 
 ## Contact Email
 
@@ -22,5 +22,4 @@ Host `PRIVACY_POLICY.md` publicly and paste URL here:
 
 ## Optional FAQ URL
 
-`https://github.com/<your-org-or-user>/<repo>#readme`
-
+`https://github.com/jonathan-chamberlin/screentime-blocker#readme`

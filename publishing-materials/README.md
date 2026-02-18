@@ -1,6 +1,6 @@
-# Publishing Materials
+﻿# Publishing Materials
 
-This folder contains copy/paste materials for Chrome Web Store submission.
+Copy/paste templates for Chrome Web Store submission.
 
 ## Files
 
@@ -12,7 +12,7 @@ This folder contains copy/paste materials for Chrome Web Store submission.
 6. `06-launch-morning-checklist.md`
 7. `07-support-and-links-template.md`
 
-## How to use
+## How To Use
 
 1. Run preflight:
 
@@ -20,11 +20,10 @@ This folder contains copy/paste materials for Chrome Web Store submission.
 powershell -ExecutionPolicy Bypass -File .\scripts\cws-preflight.ps1
 ```
 
-2. Build release zip (sanitized config by default):
+2. Build release zip:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\package-extension.ps1
 ```
 
-3. In Chrome Web Store Dashboard, copy text from files in this folder.
-
+3. In Chrome Web Store Dashboard, fill each section using the corresponding file above.

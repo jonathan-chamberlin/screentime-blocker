@@ -1,4 +1,4 @@
-# Store Listing Copy
+﻿# Store Listing Copy
 
 ## Extension Name
 
@@ -6,35 +6,37 @@
 
 ## Short Description
 
-`Block distracting sites, run focused work sessions, and earn break time through real productivity.`
+`Block distracting sites, run Lock In sessions, and earn break time through real productivity.`
 
 ## Detailed Description
 
-Brainrot Blocker helps you stay focused by turning distraction blocking into a structured workflow.
+Brainrot Blocker is a focus extension that adds friction to distraction.
 
-Core flow:
+How it works:
 
-1. 🔒 Start a focus session.
-2. 🚫 Selected distracting websites are blocked.
-3. ⏱️ Your timer progresses while you are on productive work.
-4. 🏆 Completing work thresholds earns break minutes.
-5. ☕ You can spend earned break time and then return to focus mode.
+1. Start a Lock In session.
+2. Your blocked sites are locked.
+3. The work timer runs only while you are on productive sites (or productive desktop apps in companion mode).
+4. Completing a work cycle earns break time.
+5. You can spend earned break time on distracting sites, then return to focus mode.
 
-What is included:
+Included features:
 
-- 🌐 configurable blocked sites
-- 🛤️ configurable allowed paths
-- 📊 productive-site tracking
-- 🔐 strict mode for high-commitment sessions
-- ❓ optional productivity check prompts
-- 🏅 optional sign-in for leaderboard and cloud config sync
-- 🖥️ optional companion app mode for desktop application tracking/blocking
+- Session-based website blocking
+- Reward time system (earn and burn)
+- Escalating shame screens on blocked attempts
+- Nuclear Block with staged cooldown-based unblocking
+- Productivity check popup (approve site or block it)
+- Strict mode (no early exit until threshold is met)
+- Early exit penalty reminders (no payment processing)
+- Optional sign-in for leaderboard features
+- Optional companion app mode for desktop app tracking/blocking
 
 Important notes:
 
-- ✅ The extension works in extension-only mode out of the box.
-- ⚙️ Desktop app blocking/tracking is optional and requires the companion/native host install.
-- 💸 Penalty tracking features are reminder-based and do not process payments.
+- Extension-only website blocking works out of the box.
+- Companion app mode is optional and requires native host installation.
+- Payment penalties are reminder-only and do not process payments.
 
 ## Suggested Category
 
@@ -46,5 +48,4 @@ Important notes:
 
 ## Suggested Support Blurb
 
-If you encounter setup issues, check the install guide in Settings and contact support using the Support URL in the listing.
-
+If setup fails, open the install guide from Settings and use the support link in this listing.

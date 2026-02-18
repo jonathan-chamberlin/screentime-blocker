@@ -1,29 +1,28 @@
-# Single Purpose And Permissions
+﻿# Single Purpose And Permissions
 
 ## Single Purpose Statement
 
-Brainrot Blocker is a productivity extension that helps users reduce distraction by blocking selected websites during focus sessions, tracking session progress, and unlocking earned break time.
+Brainrot Blocker helps users stay focused by blocking distracting websites during timed sessions, tracking productive time, and unlocking earned break time.
 
 ## Permission Justifications
 
 `declarativeNetRequest`
-- Used to block user-selected distracting domains during focus sessions and unblock them during break mode.
+- Creates and updates blocking rules for user-selected sites during sessions, reward mode, and Nuclear Block.
 
 `storage`
-- Stores settings and local state such as blocked sites, focus timers, and user preferences.
+- Stores local settings and state such as blocked sites, productive sites, timers, strict mode, and preferences.
 
 `tabs`
-- Reads active tab URL to determine productivity state and redirect blocked pages during active sessions.
+- Reads active tab URL to determine whether timer should run and to redirect blocked requests to extension pages.
 
 `alarms`
-- Runs background timer updates and reward checks while sessions are active.
+- Runs background timer ticks and scheduled checks while sessions/reward windows are active.
 
 `identity`
-- Optional sign-in flow for leaderboard and cloud sync features.
+- Optional sign-in for account-linked features such as leaderboard functionality.
 
 `nativeMessaging`
-- Optional companion mode only. Allows communication with a locally installed native host for desktop app tracking/blocking.
+- Optional companion app mode only; communicates with a locally installed native host for desktop app tracking/blocking.
 
 `host_permissions: <all_urls>`
-- Required because users can choose any domain to block or allow. Rules are applied only to user-configured targets.
-
+- Required because users can choose any domain to block/allow, and rules must be enforceable across arbitrary websites.

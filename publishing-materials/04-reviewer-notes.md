@@ -1,31 +1,32 @@
-# Reviewer Notes
+﻿# Reviewer Notes
 
 ## Overview
 
-Brainrot Blocker is a focus/session extension. Its default mode is extension-only website blocking.
+Brainrot Blocker is primarily a website focus/session extension. Core behavior works without backend auth and without native host installation.
 
 ## Default Test Path (No Extra Install)
 
-1. Open popup.
+1. Open the extension popup.
 2. Click `Lock In`.
-3. Navigate to a blocked site (example: youtube.com).
-4. Confirm redirect to `blocked.html`.
-5. Open Settings and adjust blocked/productive lists.
+3. Visit a known blocked site (example: `youtube.com`).
+4. Confirm redirect to `blocked.html` and escalating behavior on repeated attempts.
+5. Open Settings and verify blocked/productive configuration updates.
+6. End session and verify normal browsing resumes.
 
 ## Optional Features
 
 `Sign-in / Leaderboard`
-- Requires valid Auth0 + backend config.
-- If not configured, extension remains functional and sign-in is disabled gracefully.
+- Requires Auth0/backend configuration.
+- If not configured, extension remains functional and sign-in UI is non-blocking.
 
 `Companion App Mode`
 - Optional toggle in Settings.
-- Requires user-installed native host on local device.
-- Not required for core website-blocking behavior.
+- Requires local native host installation.
+- Not required for core website-blocking features.
 
 ## Security Notes
 
-- No remote JavaScript execution is used.
-- Release packaging uses a sanitized `config.js` by default.
-- Core permissions are used only for blocking/session functionality.
-
+- Manifest V3 extension.
+- No remote JS script execution for extension logic.
+- Native messaging is optional and local-only.
+- Permissions are scoped to blocking/session functionality described above.
