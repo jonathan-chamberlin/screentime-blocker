@@ -490,11 +490,16 @@
         .nuclear-add-row select {
             width: 100%;
             padding: 10px 12px;
-            background-color: rgba(255, 255, 255, 0.06);
+            background-color: #1e1e30;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             font-size: 14px;
             font-family: inherit;
+            color: #e0e0e0;
+        }
+
+        .nuclear-add-row select option {
+            background-color: #1e1e30;
             color: #e0e0e0;
         }
 
@@ -591,6 +596,11 @@
             </div>
         </div>
 
+        <div class="section-group-label">
+            <span>What is Distracting?</span>
+            <p>Sites blocked during work sessions or permanently.</p>
+        </div>
+
         <div class="section" data-lockable>
             <h2>Break Only Sites</h2>
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">These sites are blocked during work sessions. After completing a work cycle, you earn break time to visit them.</p>
@@ -606,6 +616,87 @@
                 <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
                 <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
             </div>
+        </div>
+
+        <div class="section nuclear-zone">
+            <h2>☢️ Nuclear Block</h2>
+            <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it.</p>
+
+            <div class="nuclear-second-cooldown">
+                <label>Second confirmation cooldown (applies to new sites only)</label>
+                <div class="nuclear-radio-group">
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="18h" checked>
+                        <span>18 hours (default)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="5s">
+                        <span style="color: #888;">5 seconds <span style="font-size: 11px; background: rgba(255,140,0,0.2); color: #ffaa44; padding: 1px 5px; border-radius: 3px; margin-left: 2px;">TEST</span></span>
+                    </label>
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="off">
+                        <span>Off</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Currently nuclear-blocked sites</label>
+                <div id="nuclearSitesList"><p class="nuclear-empty">No sites added yet.</p></div>
+            </div>
+
+            <div class="nuclear-add-section">
+                <label>Add sites to Nuclear Block</label>
+                <div id="nuclearPresetsList" class="nuclear-presets"></div>
+
+                <div class="nuclear-add-row">
+                    <div class="form-group">
+                        <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
+                    </div>
+                    <div class="form-group" style="min-width: 180px;">
+                        <select id="nuclearCooldown">
+                            <option value="10000">⚠ 10 seconds (testing only)</option>
+                            <option value="86400000">24 hours</option>
+                            <option value="172800000" selected>48 hours</option>
+                            <option value="604800000">1 week</option>
+                            <option value="2592000000">1 month</option>
+                            <option value="7776000000">3 months</option>
+                            <option value="15552000000">6 months</option>
+                            <option value="31536000000">1 year</option>
+                        </select>
+                        <div id="nuclearCooldownTestWarning" style="display:none; margin-top:5px; font-size:11px; color:#ffaa44;">⚠ Testing mode — cooldown expires in 10 seconds. Switch to a real duration before using seriously.</div>
+                    </div>
+                    <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-blocked-apps" class="section" data-lockable style="display: none;">
+            <h2>Blocked Applications</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Apps that will be closed during work sessions (accessible during breaks)</p>
+
+            <div class="form-group">
+                <label>Select apps to block during work</label>
+                <div id="blockedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Add custom blocked app</label>
+                <div class="input-row">
+                    <div class="form-group">
+                        <input type="text" id="custom-blocked-app-name" placeholder="App name (e.g., Steam)">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="custom-blocked-app-process" placeholder="Process name (e.g., steam)">
+                    </div>
+                </div>
+                <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
+            </div>
+        </div>
+
+        <div class="section-group-label">
+            <span>What is Productive?</span>
+            <p>Control what counts as productive and which sites trigger the productivity check popup.</p>
         </div>
 
         <div class="section" data-lockable>
@@ -641,40 +732,7 @@
             </div>
         </div>
 
-        <div class="section-group-label">
-            <span>Desktop App Tracking</span>
-            <p>Enable Companion App mode below to configure productive and blocked desktop applications.</p>
-        </div>
-
-        <div class="section" data-lockable>
-            <h2>Companion App</h2>
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">
-                Website blocking works with extension-only mode. Turn on Companion App mode only if you also install the desktop app/native host.
-            </p>
-            <div class="form-group">
-                <label>Desktop app integration</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="companionMode" value="off" checked>
-                        <span>Extension-only mode (no desktop install required)</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="companionMode" value="on">
-                        <span>Companion App mode (track/block desktop apps)</span>
-                    </label>
-                </div>
-            </div>
-            <div class="inline-actions">
-                <button type="button" id="btn-sync-pull" class="btn-secondary">Pull Cloud Config</button>
-                <button type="button" id="btn-sync-push" class="btn-secondary">Push Cloud Config</button>
-                <span id="sync-status" class="sync-status">Cloud sync idle</span>
-            </div>
-            <p class="muted" style="margin-top: 10px;">
-                Cloud sync requires Sign In in the popup and a reachable backend API.
-            </p>
-        </div>
-
-        <div id="section-productive-apps" class="section" data-lockable>
+        <div id="section-productive-apps" class="section" data-lockable style="display: none;">
             <h2>Productive Applications</h2>
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Desktop apps that count as productive. Your work timer runs while these are in the foreground, even when the browser isn't active.</p>
 
@@ -694,28 +752,29 @@
             </div>
         </div>
 
-        <div id="section-blocked-apps" class="section" data-lockable>
-            <h2>Blocked Applications</h2>
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Apps that will be closed during work sessions (accessible during breaks)</p>
+        <div class="section-group-label">
+            <span>Desktop App Tracking</span>
+            <p>Enable Companion App mode below to configure productive and blocked desktop applications.</p>
+        </div>
 
+        <div class="section" data-lockable>
+            <h2>Companion App</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">
+                Website blocking works with extension-only mode. Turn on Companion App mode only if you also install the desktop app/native host.
+            </p>
             <div class="form-group">
-                <label>Select apps to block during work</label>
-                <div id="blockedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Add custom blocked app</label>
-                <div class="input-row">
-                    <div class="form-group">
-                        <input type="text" id="custom-blocked-app-name" placeholder="App name (e.g., Steam)">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="custom-blocked-app-process" placeholder="Process name (e.g., steam)">
-                    </div>
+                <label>Web &amp; Application Tracking</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="companionMode" value="off" checked>
+                        <span>Web Tracking Only</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="companionMode" value="on">
+                        <span>Companion App mode (track/block desktop apps)</span>
+                    </label>
                 </div>
-                <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
             </div>
-
         </div>
 
         <div class="section-group-label">
@@ -772,59 +831,6 @@
             <div class="form-group">
                 <label for="paymentMethod">Reminder note</label>
                 <input type="text" id="paymentMethod" placeholder="e.g., Donate to my selected cause after failed session">
-            </div>
-        </div>
-
-        <div class="section nuclear-zone">
-            <h2>☢️ Nuclear Block</h2>
-            <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it.</p>
-
-            <div class="nuclear-second-cooldown">
-                <label>Second confirmation cooldown (applies to new sites only)</label>
-                <div class="nuclear-radio-group">
-                    <label>
-                        <input type="radio" name="nuclearSecondCooldown" value="18h" checked>
-                        <span>18 hours (default)</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="nuclearSecondCooldown" value="5s">
-                        <span style="color: #888;">5 seconds <span style="font-size: 11px; background: rgba(255,140,0,0.2); color: #ffaa44; padding: 1px 5px; border-radius: 3px; margin-left: 2px;">TEST</span></span>
-                    </label>
-                    <label>
-                        <input type="radio" name="nuclearSecondCooldown" value="off">
-                        <span>Off</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Currently nuclear-blocked sites</label>
-                <div id="nuclearSitesList"><p class="nuclear-empty">No sites added yet.</p></div>
-            </div>
-
-            <div class="nuclear-add-section">
-                <label>Add sites to Nuclear Block</label>
-                <div id="nuclearPresetsList" class="nuclear-presets"></div>
-
-                <div class="nuclear-add-row">
-                    <div class="form-group">
-                        <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
-                    </div>
-                    <div class="form-group" style="min-width: 180px;">
-                        <select id="nuclearCooldown">
-                            <option value="10000">⚠ 10 seconds (testing only)</option>
-                            <option value="86400000">24 hours</option>
-                            <option value="172800000" selected>48 hours</option>
-                            <option value="604800000">1 week</option>
-                            <option value="2592000000">1 month</option>
-                            <option value="7776000000">3 months</option>
-                            <option value="15552000000">6 months</option>
-                            <option value="31536000000">1 year</option>
-                        </select>
-                        <div id="nuclearCooldownTestWarning" style="display:none; margin-top:5px; font-size:11px; color:#ffaa44;">⚠ Testing mode — cooldown expires in 10 seconds. Switch to a real duration before using seriously.</div>
-                    </div>
-                    <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
-                </div>
             </div>
         </div>
 
