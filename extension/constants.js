@@ -188,6 +188,102 @@ const CURATED_APPS = [
   { name: 'VMware Workstation', process: 'vmware', category: 'Virtualization' },
 ];
 
+const PRESET_BLOCKED_SITES = [
+  // Social Media
+  { name: 'Facebook', domain: 'facebook.com', category: 'Social Media', checked: true },
+  { name: 'Instagram', domain: 'instagram.com', category: 'Social Media', checked: true },
+  { name: 'Twitter / X', domains: ['twitter.com', 'x.com'], category: 'Social Media', checked: true },
+  { name: 'TikTok', domain: 'tiktok.com', category: 'Social Media', checked: true },
+  { name: 'Snapchat', domain: 'snapchat.com', category: 'Social Media', checked: true },
+  { name: 'Reddit', domain: 'reddit.com', category: 'Social Media', checked: true },
+  { name: 'Discord', domain: 'discord.com', category: 'Social Media', checked: false },
+  { name: 'LinkedIn', domain: 'linkedin.com', category: 'Social Media', checked: false },
+  { name: 'Pinterest', domain: 'pinterest.com', category: 'Social Media', checked: false },
+  { name: 'Tumblr', domain: 'tumblr.com', category: 'Social Media', checked: false },
+  { name: 'Telegram', domain: 'telegram.org', category: 'Social Media', checked: false },
+  { name: 'WhatsApp', domain: 'whatsapp.com', category: 'Social Media', checked: false },
+  { name: 'Messenger', domain: 'messenger.com', category: 'Social Media', checked: false },
+  // Video & Streaming
+  { name: 'YouTube', domain: 'youtube.com', category: 'Video & Streaming', checked: true },
+  { name: 'Twitch', domain: 'twitch.tv', category: 'Video & Streaming', checked: true },
+  { name: 'Netflix', domain: 'netflix.com', category: 'Video & Streaming', checked: true },
+  { name: 'Hulu', domain: 'hulu.com', category: 'Video & Streaming', checked: false },
+  { name: 'Disney+', domain: 'disneyplus.com', category: 'Video & Streaming', checked: false },
+  { name: 'Prime Video', domain: 'primevideo.com', category: 'Video & Streaming', checked: false },
+  { name: 'HBO Max', domain: 'hbomax.com', category: 'Video & Streaming', checked: false },
+  { name: 'Peacock', domain: 'peacocktv.com', category: 'Video & Streaming', checked: false },
+  { name: 'Paramount+', domain: 'paramountplus.com', category: 'Video & Streaming', checked: false },
+  { name: 'Crunchyroll', domain: 'crunchyroll.com', category: 'Video & Streaming', checked: false },
+  { name: 'Vimeo', domain: 'vimeo.com', category: 'Video & Streaming', checked: false },
+  { name: 'Dailymotion', domain: 'dailymotion.com', category: 'Video & Streaming', checked: false },
+  // News
+  { name: 'CNN', domain: 'cnn.com', category: 'News', checked: false },
+  { name: 'BBC', domain: 'bbc.com', category: 'News', checked: false },
+  { name: 'NY Times', domain: 'nytimes.com', category: 'News', checked: false },
+  { name: 'The Guardian', domain: 'theguardian.com', category: 'News', checked: false },
+  { name: 'Washington Post', domain: 'washingtonpost.com', category: 'News', checked: false },
+  { name: 'Fox News', domain: 'foxnews.com', category: 'News', checked: false },
+  { name: 'Reuters', domain: 'reuters.com', category: 'News', checked: false },
+  { name: 'AP News', domain: 'apnews.com', category: 'News', checked: false },
+  { name: 'NBC News', domain: 'nbcnews.com', category: 'News', checked: false },
+  { name: 'Bloomberg', domain: 'bloomberg.com', category: 'News', checked: false },
+  { name: 'WSJ', domain: 'wsj.com', category: 'News', checked: false },
+  { name: 'USA Today', domain: 'usatoday.com', category: 'News', checked: false },
+  // Shopping
+  { name: 'Amazon', domain: 'amazon.com', category: 'Shopping', checked: false },
+  { name: 'eBay', domain: 'ebay.com', category: 'Shopping', checked: false },
+  { name: 'Etsy', domain: 'etsy.com', category: 'Shopping', checked: false },
+  { name: 'Walmart', domain: 'walmart.com', category: 'Shopping', checked: false },
+  { name: 'Target', domain: 'target.com', category: 'Shopping', checked: false },
+  { name: 'Best Buy', domain: 'bestbuy.com', category: 'Shopping', checked: false },
+  { name: 'AliExpress', domain: 'aliexpress.com', category: 'Shopping', checked: false },
+  { name: 'SHEIN', domain: 'shein.com', category: 'Shopping', checked: false },
+  { name: 'Wayfair', domain: 'wayfair.com', category: 'Shopping', checked: false },
+  // Gaming
+  { name: 'Steam', domain: 'steampowered.com', category: 'Gaming', checked: false },
+  { name: 'Epic Games', domain: 'epicgames.com', category: 'Gaming', checked: false },
+  { name: 'Roblox', domain: 'roblox.com', category: 'Gaming', checked: false },
+  { name: 'Minecraft', domain: 'minecraft.net', category: 'Gaming', checked: false },
+  { name: 'IGN', domain: 'ign.com', category: 'Gaming', checked: false },
+  { name: 'GameSpot', domain: 'gamespot.com', category: 'Gaming', checked: false },
+  { name: 'Polygon', domain: 'polygon.com', category: 'Gaming', checked: false },
+  { name: 'Kotaku', domain: 'kotaku.com', category: 'Gaming', checked: false },
+  { name: 'PC Gamer', domain: 'pcgamer.com', category: 'Gaming', checked: false },
+  { name: 'EA', domain: 'ea.com', category: 'Gaming', checked: false },
+  { name: 'Ubisoft', domain: 'ubisoft.com', category: 'Gaming', checked: false },
+];
+
+const PRESET_PRODUCTIVE_SITES = [
+  // Productivity
+  { name: 'Google Docs', domain: 'docs.google.com', category: 'Productivity', checked: true },
+  { name: 'Google Drive', domain: 'drive.google.com', category: 'Productivity', checked: true },
+  { name: 'Google Sheets', domain: 'sheets.google.com', category: 'Productivity', checked: true },
+  { name: 'Notion', domain: 'notion.so', category: 'Productivity', checked: true },
+  { name: 'Trello', domain: 'trello.com', category: 'Productivity', checked: false },
+  { name: 'Asana', domain: 'asana.com', category: 'Productivity', checked: false },
+  { name: 'ClickUp', domain: 'app.clickup.com', category: 'Productivity', checked: false },
+  { name: 'Linear', domain: 'linear.app', category: 'Productivity', checked: false },
+  // Development
+  { name: 'GitHub', domain: 'github.com', category: 'Development', checked: true },
+  { name: 'Stack Overflow', domain: 'stackoverflow.com', category: 'Development', checked: true },
+  { name: 'MDN Web Docs', domain: 'developer.mozilla.org', category: 'Development', checked: false },
+  { name: 'GitLab', domain: 'gitlab.com', category: 'Development', checked: false },
+  { name: 'CodePen', domain: 'codepen.io', category: 'Development', checked: false },
+  // AI Tools
+  { name: 'Claude', domain: 'claude.ai', category: 'AI Tools', checked: false },
+  { name: 'ChatGPT', domain: 'chat.openai.com', category: 'AI Tools', checked: false },
+  { name: 'Gemini', domain: 'gemini.google.com', category: 'AI Tools', checked: false },
+  { name: 'Perplexity', domain: 'perplexity.ai', category: 'AI Tools', checked: false },
+  // Music Production
+  { name: 'Splice', domain: 'splice.com', category: 'Music Production', checked: false },
+  { name: 'Bandcamp', domain: 'bandcamp.com', category: 'Music Production', checked: false },
+  { name: 'SoundCloud', domain: 'soundcloud.com', category: 'Music Production', checked: false },
+  { name: 'Beatport', domain: 'beatport.com', category: 'Music Production', checked: false },
+  { name: 'Sonic Academy', domain: 'sonicacademy.com', category: 'Music Production', checked: false },
+  { name: 'Point Blank School', domain: 'pointblankmusicschool.com', category: 'Music Production', checked: false },
+  { name: 'ProducerTech', domain: 'producertech.com', category: 'Music Production', checked: false },
+];
+
 const PRODUCTIVITY_CHECK_MINUTES = 10; // minutes before "Are you really working?" popup
 
 const NATIVE_HOST_NAME = 'com.brainrotblocker.native';

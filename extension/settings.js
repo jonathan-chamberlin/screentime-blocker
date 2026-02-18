@@ -55,9 +55,6 @@ function autoSave(key, value) {
 async function loadSettings() {
   const result = await getStorage(Object.keys(DEFAULTS));
 
-  document.getElementById('rewardSites').value =
-    (result.rewardSites || DEFAULTS.rewardSites).join('\n');
-
   document.getElementById('allowedPaths').value =
     (result.allowedPaths || DEFAULTS.allowedPaths).join('\n');
 
@@ -66,9 +63,6 @@ async function loadSettings() {
     if (radio.value === productiveMode) radio.checked = true;
   });
   toggleProductiveSitesList(productiveMode);
-
-  document.getElementById('productiveSites').value =
-    (result.productiveSites || DEFAULTS.productiveSites).join('\n');
 
   document.getElementById('skipProductivityCheck').value =
     (result.skipProductivityCheck || DEFAULTS.skipProductivityCheck).join('\n');
@@ -348,15 +342,145 @@ function addCustomBlockedApp() {
   });
 }
 
-async function saveRewardSites() {
-  const sites = document.getElementById('rewardSites').value
-    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
-  const allowedPaths = document.getElementById('allowedPaths').value
-    .split('\n').map(p => p.trim()).filter(p => p.length > 0);
+function getSitePresetDomains(site) {
+  return site.domains || [site.domain];
+}
 
-  await setStorage({ rewardSites: sites, allowedPaths });
+function getSitePresetId(site) {
+  return 'site-' + (site.domain || site.domains[0]);
+}
+
+async function loadBlockedSites() {
+  const result = await getStorage(['rewardSites']);
+  let storedSites = result.rewardSites;
+
+  // First-time init: persist defaults from preset checked values
+  if (storedSites === undefined) {
+    storedSites = [];
+    PRESET_BLOCKED_SITES.forEach(site => {
+      if (site.checked) storedSites.push(...getSitePresetDomains(site));
+    });
+    await setStorage({ rewardSites: storedSites });
+  }
+
+  const allPresetDomains = new Set();
+  PRESET_BLOCKED_SITES.forEach(site => getSitePresetDomains(site).forEach(d => allPresetDomains.add(d)));
+  const customSites = storedSites.filter(d => !allPresetDomains.has(d));
+
+  const grid = document.getElementById('blockedSitesList');
+  grid.innerHTML = '';
+
+  const categories = [...new Set(PRESET_BLOCKED_SITES.map(s => s.category))];
+  categories.forEach(category => {
+    const header = document.createElement('div');
+    header.className = 'app-category-header';
+    header.textContent = category;
+    grid.appendChild(header);
+
+    PRESET_BLOCKED_SITES.filter(s => s.category === category).forEach(site => {
+      const domains = getSitePresetDomains(site);
+      const item = document.createElement('div');
+      item.className = 'app-checkbox-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = getSitePresetId(site);
+      checkbox.checked = domains.some(d => storedSites.includes(d));
+
+      const label = document.createElement('span');
+      label.textContent = site.name;
+
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      item.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      grid.appendChild(item);
+    });
+  });
+
+  document.getElementById('customBlockedSites').value = customSites.join('\n');
+}
+
+async function saveBlockedSites() {
+  const sites = [];
+  PRESET_BLOCKED_SITES.forEach(site => {
+    const checkbox = document.getElementById(getSitePresetId(site));
+    if (checkbox && checkbox.checked) sites.push(...getSitePresetDomains(site));
+  });
+  const customText = document.getElementById('customBlockedSites').value;
+  sites.push(...customText.split('\n').map(s => s.trim()).filter(s => s.length > 0));
+
+  await setStorage({ rewardSites: sites });
   chrome.runtime.sendMessage({ action: 'updateRewardSites', sites });
-  showConfirmation('rewardSitesConfirmation');
+  showSavedIndicator();
+}
+
+async function loadProductiveSites() {
+  const result = await getStorage(['productiveSites']);
+  let storedSites = result.productiveSites;
+
+  // First-time init: persist defaults from preset checked values
+  if (storedSites === undefined) {
+    storedSites = PRESET_PRODUCTIVE_SITES.filter(s => s.checked).map(s => s.domain);
+    await setStorage({ productiveSites: storedSites });
+  }
+
+  const presetDomains = new Set(PRESET_PRODUCTIVE_SITES.map(s => s.domain));
+  const customSites = storedSites.filter(d => !presetDomains.has(d));
+
+  const grid = document.getElementById('productiveSitesList');
+  grid.innerHTML = '';
+
+  const categories = [...new Set(PRESET_PRODUCTIVE_SITES.map(s => s.category))];
+  categories.forEach(category => {
+    const header = document.createElement('div');
+    header.className = 'app-category-header';
+    header.textContent = category;
+    grid.appendChild(header);
+
+    PRESET_PRODUCTIVE_SITES.filter(s => s.category === category).forEach(site => {
+      const item = document.createElement('div');
+      item.className = 'app-checkbox-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'productive-site-' + site.domain;
+      checkbox.checked = storedSites.includes(site.domain);
+
+      const label = document.createElement('span');
+      label.textContent = site.name;
+
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      item.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      grid.appendChild(item);
+    });
+  });
+
+  document.getElementById('customProductiveSites').value = customSites.join('\n');
+}
+
+async function saveProductiveSites() {
+  const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
+  const sites = [];
+  PRESET_PRODUCTIVE_SITES.forEach(site => {
+    const checkbox = document.getElementById('productive-site-' + site.domain);
+    if (checkbox && checkbox.checked) sites.push(site.domain);
+  });
+  const customText = document.getElementById('customProductiveSites').value;
+  sites.push(...customText.split('\n').map(s => s.trim()).filter(s => s.length > 0));
+
+  await setStorage({ productiveMode, productiveSites: sites });
+  showSavedIndicator();
 }
 
 function toggleProductiveSitesList(mode) {
@@ -374,15 +498,6 @@ function togglePenaltySections(penaltyEnabled) {
   const visible = penaltyEnabled === 'on';
   document.getElementById('section-penalty-config').style.display = visible ? 'block' : 'none';
   document.getElementById('section-penalty-reminder').style.display = visible ? 'block' : 'none';
-}
-
-async function saveProductiveSites() {
-  const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
-  const sites = document.getElementById('productiveSites').value
-    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
-
-  await setStorage({ productiveMode, productiveSites: sites });
-  showConfirmation('productiveSitesConfirmation');
 }
 
 async function savePenalty() {
@@ -415,6 +530,8 @@ async function handleDeleteAllData() {
   chrome.runtime.sendMessage({ action: 'deleteAllData' }, async (response) => {
     if (response && response.success) {
       await loadSettings();
+      await loadBlockedSites();
+      await loadProductiveSites();
       await loadProductiveApps();
       await loadBlockedApps();
       showSavedIndicator();
@@ -434,6 +551,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await setApiBaseUrlFromConfig();
   await loadSettings();
+  await loadBlockedSites();
+  await loadProductiveSites();
   await loadProductiveApps();
   await loadBlockedApps();
   scheduleNativeHostStatusChecks();
@@ -449,10 +568,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (message.action === 'sessionEnded') lockSiteSections(false);
   });
 
-  // Auto-save for reward sites
-  document.getElementById('rewardSites').addEventListener('input', (e) => {
-    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-    autoSave('rewardSites', sites);
+  // Auto-save for blocked sites checkboxes
+  document.getElementById('blockedSitesList').addEventListener('change', async (e) => {
+    if (e.target.type === 'checkbox') {
+      await saveBlockedSites();
+    }
+  });
+
+  // Auto-save for custom blocked sites textarea
+  let customBlockedSitesTimeout;
+  document.getElementById('customBlockedSites').addEventListener('input', () => {
+    if (customBlockedSitesTimeout) clearTimeout(customBlockedSitesTimeout);
+    customBlockedSitesTimeout = setTimeout(() => saveBlockedSites(), 500);
   });
 
   // Auto-save for allowed paths
@@ -465,14 +592,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       toggleProductiveSitesList(e.target.value);
-      autoSave('productiveMode', e.target.value);
+      saveProductiveSites();
     });
   });
 
-  // Auto-save for productive sites
-  document.getElementById('productiveSites').addEventListener('input', (e) => {
-    const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-    autoSave('productiveSites', sites);
+  // Auto-save for productive sites checkboxes
+  document.getElementById('productiveSitesList').addEventListener('change', async (e) => {
+    if (e.target.type === 'checkbox') {
+      await saveProductiveSites();
+    }
+  });
+
+  // Auto-save for custom productive sites textarea
+  let customProductiveSitesTimeout;
+  document.getElementById('customProductiveSites').addEventListener('input', () => {
+    if (customProductiveSitesTimeout) clearTimeout(customProductiveSitesTimeout);
+    customProductiveSitesTimeout = setTimeout(() => saveProductiveSites(), 500);
   });
 
   // Auto-save for skip productivity check popup sites

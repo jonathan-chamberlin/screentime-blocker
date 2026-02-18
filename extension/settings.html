@@ -374,8 +374,12 @@
             <h2>Blocked Sites</h2>
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">These sites are blocked during work sessions. After completing a work cycle, you earn break time to visit them.</p>
             <div class="form-group">
-                <label for="rewardSites">Blocked sites (one per line)</label>
-                <textarea id="rewardSites" placeholder="youtube.com&#10;instagram.com&#10;reddit.com"></textarea>
+                <label>Select sites to block</label>
+                <div id="blockedSitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px;"></div>
+            </div>
+            <div class="form-group" style="margin-top: 12px;">
+                <label for="customBlockedSites">Custom blocked sites (one per line)</label>
+                <textarea id="customBlockedSites" style="min-height: 80px;" placeholder="mysite.com&#10;othersite.com"></textarea>
             </div>
             <div class="form-group" style="margin-top: 18px;">
                 <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
@@ -400,8 +404,10 @@
                 </div>
             </div>
             <div id="productiveSitesGroup" class="form-group">
-                <label for="productiveSites">Productive sites (one per line) — your timer only runs on these</label>
-                <textarea id="productiveSites" placeholder="docs.google.com&#10;notion.so&#10;github.com"></textarea>
+                <label>Select productive sites — your timer only runs on these</label>
+                <div id="productiveSitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 12px;"></div>
+                <label for="customProductiveSites" style="margin-top: 8px;">Custom sites (one per line)</label>
+                <textarea id="customProductiveSites" style="min-height: 80px;" placeholder="docs.google.com&#10;notion.so"></textarea>
             </div>
         </div>
 
