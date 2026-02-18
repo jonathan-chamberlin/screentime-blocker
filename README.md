@@ -2,7 +2,7 @@
 
 **A site blocker that fights back.**
 
-Brainrot Blocker is a Chrome extension that locks distracting sites during timed "Lock In" sessions, earns you reward minutes for real work, and roasts every cheat attempt with escalating shame GIFs — then ranks your focus streak on a competitive leaderboard.
+Brainrot Blocker is a Chrome extension that locks distracting sites during timed "Lock In" sessions, earns you reward minutes for real work, roasts every cheat attempt with escalating shame GIFs, and gives you a nuclear option for sites you never want to visit again.
 
 Built for students, founders, and anyone who swears they'll work but doomscrolls instead.
 
@@ -14,62 +14,138 @@ Built for students, founders, and anyone who swears they'll work but doomscrolls
 
 One "quick" YouTube video turns into 30–60 minutes, twice a day. Over a year, that's **700+ hours** — 18 full-time workweeks — gone to distraction.
 
-Most site blockers are passive. They show a polite message you dismiss in seconds. Brainrot Blocker creates real emotional friction: escalating shame, public accountability, and sessions you literally can't quit early.
+Most site blockers are passive. They show a polite message you dismiss in seconds. Brainrot Blocker creates real emotional friction: escalating shame, sessions you literally can't quit early, and a permanent nuclear option for your worst habits.
 
 ---
 
-## How It Works
+## Features
 
-1. **Lock In** — Click the button to start a work session. Reward sites (YouTube, Reddit, Instagram, etc.) are instantly blocked.
-2. **Earn reward time** — The work timer only counts when you're on a productive tab. Every 50 minutes of real work earns 10 minutes of reward time (configurable).
+### Lock In Sessions
+
+Click **Lock In** to start a work session. Every site on your blocked list is instantly locked. The work timer **only counts when you're on a productive tab** — navigate away and it pauses automatically.
 
 ![Work mode](screenshots_for_readme/work_mode_screenshot.png)
 
-3. **Burn reward time** — Spend your banked minutes on reward sites. The countdown only ticks while you're actually on those sites. Pause it, save it, use it later.
+### Earn & Burn Reward Time
+
+Every completed work cycle (default: 50 minutes) earns break time (default: 10 minutes). Hit **Use Break Time** to unlock reward sites for exactly that long. The countdown only ticks while you're actually on those sites — pause it, save it, use it later.
+
+![Reward earned](screenshots_for_readme/reward_earned_screenshot.png)
 
 ![Reward burn mode](screenshots_for_readme/reward_burn_screenshot.png)
 
-4. **Get shamed** — Try to visit a blocked site and the extension escalates through 4 levels of shame, from *"Hey. Focus."* all the way to *"DEFCON 1: TOTAL SHAME MELTDOWN"* complete with dramatic chipmunk GIFs and asteroids hitting Earth.
+### Escalating Shame System
+
+Try to visit a blocked site and the extension escalates through 4 levels of shame — from a gentle nudge to total meltdown.
 
 | ![Shame Level 1](screenshots_for_readme/shame_level_1_screenshot.png) | ![Shame Level 2](screenshots_for_readme/shame_level_2_screenshot.png) | ![Shame Level 3](screenshots_for_readme/shame_level_3_screenshot.png) | ![Shame Level 4](screenshots_for_readme/shame_level_4_screenshot.png) |
 |:---:|:---:|:---:|:---:|
-| Level 1: Low | Level 2: Medium | Level 3: High | Level 4: Maximum |
-5. **Compete** — A leaderboard ranks users by productive minutes and how many times they tried to slack off.
+| **Level 1** — "Hey. Focus." | **Level 2** — Getting dramatic | **Level 3** — Full meme mode | **Level 4** — DEFCON 1 |
+
+Each visit attempt is counted. Level 4 features dramatic chipmunk GIFs, asteroids, and the message: *"TOTAL SHAME MELTDOWN."*
+
+---
+
+### ☢️ Nuclear Block
+
+For sites you genuinely never want to visit — not during breaks, not ever.
+
+Nuclear Block is a permanent, hard-to-reverse layer of blocking with a **staged cooldown system** designed to make impulsive unblocking impossible:
+
+1. **Add a site** — choose how long you need to wait before you can even *request* unblocking (10 seconds for testing, up to 1 year)
+2. **First cooldown** — the site is locked for the duration you chose. Waiting is the point.
+3. **Request unblock** — once the first cooldown expires, an Unblock button appears alongside a **Block Again** dropdown if you change your mind
+4. **Second cooldown** — clicking Unblock starts a second confirmation wait (20 minutes to 30 days, default 18 hours)
+5. **Site removed** — only after both cooldowns pass is the site unblocked
+
+Nuclear Block rules survive deleting your settings, uninstalling, and reinstalling the extension. The sites will remain blocked.
+
+**Preset nuclear sites included:** OnlyFans, Adult Websites (35+ domains), Gambling Sites (26+ domains), Steam, Epic Games, League of Legends, World of Warcraft, Valorant.
+
+---
+
+### Productivity Check Popup
+
+Spend more than 10 minutes on the same site during a session? A popup appears: *"Are you really working right now?"*
+
+- **"Yes, I'm working"** → site is approved and the popup never shows again for it
+- **"No, block this site"** → site is added to your blocked list automatically
+
+---
 
 ### Strict Mode
 
-Toggle Strict Mode on and you **cannot** end your session until you hit the work threshold. No override, no escape hatch.
+Toggle Strict Mode and you **cannot** end your session until you hit the work threshold. No override. No escape hatch. The End button is disabled until you've earned at least one reward cycle.
+
+---
 
 ### Early Exit Penalty
 
-Want to quit early? Configure a donation to a charity you love — or one you hate — to make walking away cost something real.
+Quitting early? Configure a financial penalty — donate to a cause you support, or one you oppose for stronger motivation. Penalty amount and target organization are fully configurable. Currently honor-system; real payment integration is on the roadmap.
 
-### Productivity Check
+---
 
-Spend too long on one site during a work session? After 10 minutes on the same website, a popup asks: *"Are you really working right now?"* Answer honestly — if you say no, that site gets added to your blocked list automatically.
+### Companion App — Desktop App Tracking
+
+Enable Companion App mode (requires native host installation) to extend blocking and time tracking beyond the browser:
+
+- **Productive desktop apps**: Visual Studio Code, Figma, Ableton, FL Studio, and 100+ others — your work timer runs while these are in the foreground
+- **Blocked desktop apps**: Specify apps that get closed during work sessions (Steam, games, etc.)
+- **Custom entries**: Add any app by process name
+
+---
+
+### Settings
+
+All settings are organized into collapsible sections — click any heading to expand it.
+
+**Sessions**
+- Work duration (1–180 min, default 50)
+- Break duration (1–60 min, default 10)
+- Strict Mode toggle
+
+**What is Distracting?**
+- Break Only Sites — blocked during sessions, accessible during breaks (50+ presets by category)
+- Custom blocked domains and allowed path exceptions
+- Nuclear Block — permanent blocking with staged cooldown removal
+
+**What is Productive?**
+- Productive Sites — whitelist mode or "everything except blocked" mode
+- Custom productive domains
+- Skip Productivity Check — approved sites that never trigger the popup
+
+**Desktop App Tracking** *(Companion App mode)*
+- Productive Applications — desktop apps that count as work time
+- Blocked Applications — apps closed during sessions
+
+**Penalty**
+- Financial Penalty toggle (on/off)
+- Penalty type, target organization, amount, reminder note
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Extension | Chrome Manifest V3, vanilla JS/CSS |
-| Blocking | `declarativeNetRequest` API with rule priorities |
+|-------|------------|
+| Extension | Chrome Manifest V3, vanilla JS |
+| Blocking | `declarativeNetRequest` API (rule priority system) |
+| Background | Service worker with modular importScripts |
+| Desktop tracking | Chrome Native Messaging |
 | Backend | Node.js + Express |
 | Auth | Auth0 (Google OAuth) |
-| Leaderboard API | JWT-secured REST endpoints |
-| Data | JSON file storage |
+| Leaderboard | JWT-secured REST endpoints |
+| Storage | chrome.storage.local + JSON |
 
-The UI was built from scratch — dark theme, Space Grotesk font, neon green and orange accents, animated confetti on reward grants, and a settings page that locks itself mid-session so you can't cheat.
+Blocking uses three priority tiers: session blocks (1) < allow-path rules (2) < Nuclear Block (3). Nuclear rules always win.
 
 ---
 
 ## Install
 
 1. Clone this repo
-2. Open `chrome://extensions` and enable Developer Mode
-3. Click **Load unpacked** and select the project root
+2. Open `chrome://extensions` and enable **Developer Mode**
+3. Click **Load unpacked** and select the `extension/` folder
 4. Click the Brainrot Blocker icon and hit **Lock In**
 
 For the leaderboard backend:
@@ -86,36 +162,41 @@ node server.js
 ## Project Structure
 
 ```
-├── manifest.json          # Chrome extension manifest (V3)
-├── background.js          # Service worker: session state, timers, blocking rules
-├── popup.html/js/css      # Main extension popup UI
-├── settings.html/js/css   # Configuration page
-├── blocked.html/js/css    # Shame escalation page
-├── leaderboard.html/js    # Competitive rankings
-├── overview/              # Project narrative and pitch
-│   ├── project_story.md
-│   └── pitch.md
-└── server/                # Backend API
-    ├── server.js
-    └── data/db.json
+extension/
+├── manifest.json           # Chrome MV3 manifest
+├── background.js           # Service worker orchestrator
+├── constants.js            # Preset sites, app lists, defaults
+├── session.js              # Session start/end/quit logic
+├── session-state.js        # State object and flush functions
+├── timer.js                # Millisecond-precision timer utilities
+├── blocking.js             # declarativeNetRequest rule management
+├── nuclear-block.js        # Nuclear Block rules and cooldown logic
+├── reward.js               # Reward grant and countdown logic
+├── tab-monitor.js          # Active tab and app focus tracking
+├── native-host.js          # Desktop app communication
+├── productivity-check.js   # Content script — "Are you working?" popup
+├── popup.html/js           # Main extension popup
+├── settings.html/js        # Settings page
+├── blocked.html/js         # Shame escalation page
+├── nuclear-blocked.html/js # Nuclear Block redirect page
+└── leaderboard.html/js     # Competitive rankings
+
+server/
+├── server.js               # Express API
+└── data/db.json            # User and session data
 ```
 
 ---
 
-## What's Next
+## Roadmap
 
-- another judge said that there should be more options of websites that are distracting on the default page.
-- Wyatt said that it would be useful if he could use the steam application as a break. To do this I would have to make it so the extension can block applications, not just track time spent on them.
-- in the settings page, instead of there being a different save button for each setting, there should be one saved button that appears as a banner on the bottom of the screen that scrolls with your window so it stays at the bottom.
-- add a category on productive sites for music and music production
-- Chrome Web Store deployment
-
-- Wire the frontend leaderboard to the live backend API
-- Streak tracking — consecutive days hitting your work target
-- Team competitions so friend groups can shame each other
-- Behavioral analytics dashboard showing distraction patterns over time
 - Real payment integration for early-exit penalties
+- Wire frontend leaderboard to live backend
+- Streak tracking — consecutive days hitting your work target
+- Team competitions — friend groups that shame each other
+- Behavioral analytics dashboard showing distraction patterns over time
+- Chrome Web Store deployment
 
 ---
 
-*Built solo at HackBeanpot (Northeastern University) in 36 hours.*
+*Built solo at HackBeanpot (Northeastern University) in 36 hours. Significantly expanded since.*
