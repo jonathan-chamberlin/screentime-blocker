@@ -616,7 +616,9 @@ async function loadNuclearBlock() {
     const { secondCooldownEnabled, secondCooldownMs } = data;
     let radioVal = 'off';
     if (secondCooldownEnabled) {
-      radioVal = secondCooldownMs <= 10000 ? '5s' : '18h';
+      if (secondCooldownMs <= 3000) radioVal = '3s';
+      else if (secondCooldownMs <= 10000) radioVal = '10s';
+      else radioVal = '18h';
     }
     document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(r => {
       r.checked = r.value === radioVal;
@@ -727,7 +729,8 @@ async function loadNuclearBlock() {
 function getNuclearSecondCooldown() {
   const val = document.querySelector('input[name="nuclearSecondCooldown"]:checked')?.value || '18h';
   if (val === 'off') return { enabled: false, ms: 0 };
-  if (val === '5s') return { enabled: true, ms: 5000 };
+  if (val === '3s') return { enabled: true, ms: 3000 };
+  if (val === '10s') return { enabled: true, ms: 10000 };
   return { enabled: true, ms: 18 * 60 * 60 * 1000 };
 }
 
