@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=440, initial-scale=1.0">
+  <title>Brainrot Blocker Small Tile</title>
+  <style>
+    :root {
+      --bg-1: #0f0f1a;
+      --bg-2: #16213e;
+      --card: #181928;
+      --pink: #f093fb;
+      --red: #f5576c;
+      --green: #00ff88;
+      --text: #e0e0e0;
+      --muted: #bcc4d6;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 440px;
+      height: 280px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      color: var(--text);
+    }
+
+    .canvas {
+      position: relative;
+      width: 440px;
+      height: 280px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 10px;
+    }
+
+    .glow-a, .glow-b {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(5px);
+      pointer-events: none;
+    }
+    .glow-a {
+      width: 180px;
+      height: 110px;
+      left: -55px;
+      bottom: -35px;
+      background: rgba(240, 147, 251, 0.16);
+    }
+    .glow-b {
+      width: 190px;
+      height: 110px;
+      right: -60px;
+      top: -50px;
+      background: rgba(245, 87, 108, 0.18);
+    }
+
+    .top {
+      position: relative;
+      z-index: 1;
+      border-radius: 12px;
+      background: rgba(24, 25, 40, 0.95);
+      border: 1px solid rgba(255,255,255,0.14);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .emoji { font-size: 28px; line-height: 1; }
+    .brand {
+      font-size: 36px;
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      white-space: nowrap;
+    }
+    .brand .pink { color: var(--pink); }
+    .brand .red { color: var(--red); }
+
+    .bottom {
+      position: relative;
+      z-index: 1;
+      border-radius: 14px;
+      background: rgba(24, 25, 40, 0.95);
+      border: 1px solid rgba(255,255,255,0.14);
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto auto;
+      gap: 8px 10px;
+      align-content: start;
+    }
+    .lockin {
+      font-size: 15px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .time {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 44px;
+      line-height: 1;
+      color: var(--green);
+      font-weight: 700;
+      align-self: end;
+    }
+    .pill {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+      border: 1px solid rgba(0,255,136,0.55);
+      background: rgba(0,255,136,0.15);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 14px;
+      color: var(--green);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .copy {
+      grid-column: 1 / -1;
+      font-size: 20px;
+      line-height: 1.15;
+      color: var(--muted);
+    }
+
+    .frame {
+      position: absolute;
+      inset: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 14px;
+      pointer-events: none;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="glow-a"></div>
+    <div class="glow-b"></div>
+
+    <section class="top">
+      <div class="emoji">🔥</div>
+      <div class="brand"><span class="pink">Brainrot</span> <span class="red">Blocker</span></div>
+    </section>
+
+    <section class="bottom">
+      <div class="lockin">LOCK IN</div>
+      <div class="time">50:00</div>
+      <div class="pill">EARN BREAK TIME</div>
+      <div class="copy">Block distractions, earn rewards.</div>
+    </section>
+
+    <div class="frame"></div>
+  </div>
+</body>
+</html>

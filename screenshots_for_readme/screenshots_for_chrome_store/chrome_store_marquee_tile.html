@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1400, initial-scale=1.0">
+  <title>Brainrot Blocker Marquee Tile</title>
+  <style>
+    :root {
+      --bg-1: #0f0f1a;
+      --bg-2: #16213e;
+      --card: #181928;
+      --card-2: #1a1a2e;
+      --pink: #f093fb;
+      --red: #f5576c;
+      --green: #00ff88;
+      --text: #e0e0e0;
+      --muted: #bcc4d6;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 1400px;
+      height: 560px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      color: var(--text);
+    }
+
+    .canvas {
+      position: relative;
+      width: 1400px;
+      height: 560px;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 0;
+    }
+
+    .glow-a, .glow-b {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(8px);
+      pointer-events: none;
+    }
+    .glow-a {
+      width: 460px;
+      height: 260px;
+      left: -140px;
+      bottom: -90px;
+      background: rgba(240, 147, 251, 0.14);
+    }
+    .glow-b {
+      width: 500px;
+      height: 260px;
+      right: -140px;
+      top: -110px;
+      background: rgba(245, 87, 108, 0.16);
+    }
+
+    .left {
+      position: relative;
+      z-index: 1;
+      border-right: 1px solid rgba(255,255,255,0.16);
+      background: rgba(24, 25, 40, 0.96);
+      padding: 32px 34px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 18px;
+    }
+
+    .brand {
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--card-2) 0%, #16213e 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-emoji { font-size: 48px; line-height: 1; }
+    .brand-text {
+      font-size: 64px;
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -1px;
+      white-space: nowrap;
+    }
+    .brand-text .pink { color: var(--pink); }
+    .brand-text .red { color: var(--red); }
+
+    .session {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      align-items: center;
+      gap: 18px;
+      padding: 8px 4px;
+    }
+    .session-label {
+      font-size: 24px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .session-time {
+      margin-top: 6px;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      color: var(--green);
+      font-size: 76px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .pill {
+      justify-self: start;
+      border: 2px solid rgba(0,255,136,0.5);
+      background: rgba(0,255,136,0.16);
+      border-radius: 999px;
+      padding: 16px 24px;
+      color: var(--green);
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .copy {
+      align-self: end;
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 32px;
+      line-height: 1.2;
+    }
+
+    .right {
+      position: relative;
+      z-index: 1;
+      border-left: 1px solid rgba(245,87,108,0.45);
+      background: rgba(20, 21, 34, 0.98);
+      padding: 34px 26px;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+    .mini-title {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.6px;
+    }
+    .mini-title .pink { color: var(--pink); }
+    .mini-title .red { color: var(--red); }
+    .mini-sub {
+      font-size: 27px;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+    .mini-time {
+      margin-top: 4px;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 58px;
+      line-height: 1;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="glow-a"></div>
+    <div class="glow-b"></div>
+
+    <section class="left">
+      <header class="brand">
+        <div class="brand-emoji">🔥</div>
+        <div class="brand-text"><span class="pink">Brainrot</span> <span class="red">Blocker</span></div>
+      </header>
+
+      <div class="session">
+        <div>
+          <div class="session-label">LOCK IN</div>
+          <div class="session-time">50:00</div>
+        </div>
+        <div class="pill">EARN BREAK TIME</div>
+      </div>
+
+      <div class="copy">
+        <div>Block distractions, earn rewards, and stay in control.</div>
+        <div>Shame screens + strict mode + nuclear block</div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <div class="mini-title"><span class="pink">🔥 Focus Session</span> <span class="red">Active</span></div>
+      <div class="mini-time">00:37:42</div>
+      <div class="mini-sub">Reward in 12 min</div>
+      <div class="mini-sub">Strict mode ON</div>
+    </aside>
+
+  </div>
+</body>
+</html>
