@@ -28,7 +28,7 @@
     "run_at": "document_idle"
   }],
   "web_accessible_resources": [{
-    "resources": ["blocked.html", "example-leaderboard.csv", "install-guide.html"],
+    "resources": ["blocked.html", "nuclear-blocked.html", "example-leaderboard.csv", "install-guide.html"],
     "matches": ["<all_urls>"]
   }]
 }

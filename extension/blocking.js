@@ -1,11 +1,12 @@
 // Site blocking — declarativeNetRequest rule management and tab redirects
-// Depends on: session-state.js (loadSiteConfig), site-utils.js (isBlockedUrl), constants.js (ALLOW_RULE_ID_OFFSET)
+// Depends on: session-state.js (loadSiteConfig), site-utils.js (isBlockedUrl), constants.js (ALLOW_RULE_ID_OFFSET, NUCLEAR_RULE_ID_OFFSET)
 
 async function blockSites() {
   const { sites, allowedPaths } = await loadSiteConfig();
 
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-  const removeIds = existingRules.map(r => r.id);
+  // Only remove session/allow rules (IDs < NUCLEAR_RULE_ID_OFFSET) — preserve nuclear block rules
+  const removeIds = existingRules.filter(r => r.id < NUCLEAR_RULE_ID_OFFSET).map(r => r.id);
 
   const blockRules = sites
     .map(s => s.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, ''))
@@ -35,7 +36,8 @@ async function blockSites() {
 
 async function unblockSites() {
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-  const removeIds = existingRules.map(r => r.id);
+  // Only remove session/allow rules (IDs < NUCLEAR_RULE_ID_OFFSET) — preserve nuclear block rules
+  const removeIds = existingRules.filter(r => r.id < NUCLEAR_RULE_ID_OFFSET).map(r => r.id);
   await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: removeIds, addRules: [] });
 }
 

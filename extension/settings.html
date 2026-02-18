@@ -345,6 +345,227 @@
             background: linear-gradient(135deg, #ff6b7a, #e84142);
             box-shadow: 0 4px 14px rgba(255, 71, 87, 0.35);
         }
+
+        /* Nuclear Block section */
+        .nuclear-zone {
+            border-color: rgba(255, 140, 0, 0.35);
+            background: rgba(255, 100, 0, 0.05);
+        }
+
+        .nuclear-zone h2 {
+            color: #ffaa44;
+        }
+
+        .nuclear-zone p.section-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .nuclear-site-card {
+            background: rgba(255, 140, 0, 0.07);
+            border: 1px solid rgba(255, 140, 0, 0.2);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nuclear-site-card .site-info {
+            flex: 1;
+        }
+
+        .nuclear-site-card .site-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .nuclear-site-card .site-countdown {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 3px;
+        }
+
+        .nuclear-site-card .site-countdown.ready {
+            color: #00ff88;
+        }
+
+        .nuclear-site-card .site-countdown.unblocking {
+            color: #ffaa44;
+        }
+
+        .btn-unblock {
+            background: rgba(255, 140, 0, 0.15);
+            color: #ffaa44;
+            border: 1px solid rgba(255, 140, 0, 0.35);
+            padding: 6px 14px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-unblock:hover {
+            background: rgba(255, 140, 0, 0.25);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .nuclear-add-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 140, 0, 0.15);
+        }
+
+        .nuclear-add-section label {
+            display: block;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nuclear-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .nuclear-preset-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background-color: rgba(255, 140, 0, 0.06);
+            border: 1px solid rgba(255, 140, 0, 0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nuclear-preset-item:hover {
+            background-color: rgba(255, 140, 0, 0.1);
+            border-color: rgba(255, 140, 0, 0.25);
+        }
+
+        .nuclear-preset-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: #ffaa44;
+            flex-shrink: 0;
+        }
+
+        .nuclear-preset-item span {
+            font-size: 13px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .nuclear-add-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .nuclear-add-row .form-group {
+            flex: 1;
+            min-width: 160px;
+            margin-bottom: 0;
+        }
+
+        .nuclear-add-row select {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #e0e0e0;
+        }
+
+        .btn-nuclear-add {
+            background: linear-gradient(135deg, #ff8c00, #e65c00);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-nuclear-add:hover {
+            background: linear-gradient(135deg, #ffa020, #ff6600);
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .nuclear-second-cooldown {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 140, 0, 0.15);
+        }
+
+        .nuclear-second-cooldown label {
+            display: block;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nuclear-radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nuclear-radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: #e0e0e0;
+            font-size: 14px;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .nuclear-radio-group input[type="radio"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: #ffaa44;
+        }
+
+        .nuclear-empty {
+            color: #555;
+            font-size: 14px;
+            font-style: italic;
+            padding: 12px 0;
+        }
     </style>
 </head>
 <body>
@@ -371,7 +592,7 @@
         </div>
 
         <div class="section" data-lockable>
-            <h2>Blocked Sites</h2>
+            <h2>Break Only Sites</h2>
             <p style="color: #888; font-size: 14px; margin-bottom: 16px;">These sites are blocked during work sessions. After completing a work cycle, you earn break time to visit them.</p>
             <div class="form-group">
                 <label>Select sites to block</label>
@@ -554,9 +775,61 @@
             </div>
         </div>
 
+        <div class="section nuclear-zone">
+            <h2>☢️ Nuclear Block</h2>
+            <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it.</p>
+
+            <div class="nuclear-second-cooldown">
+                <label>Second confirmation cooldown (applies to new sites only)</label>
+                <div class="nuclear-radio-group">
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="18h" checked>
+                        <span>18 hours (default)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="5s">
+                        <span>5 seconds (testing)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="nuclearSecondCooldown" value="off">
+                        <span>Off</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Currently nuclear-blocked sites</label>
+                <div id="nuclearSitesList"><p class="nuclear-empty">No sites added yet.</p></div>
+            </div>
+
+            <div class="nuclear-add-section">
+                <label>Add sites to Nuclear Block</label>
+                <div id="nuclearPresetsList" class="nuclear-presets"></div>
+
+                <div class="nuclear-add-row">
+                    <div class="form-group">
+                        <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
+                    </div>
+                    <div class="form-group" style="min-width: 180px;">
+                        <select id="nuclearCooldown">
+                            <option value="10000">10 seconds (testing)</option>
+                            <option value="86400000">24 hours</option>
+                            <option value="172800000" selected>48 hours</option>
+                            <option value="604800000">1 week</option>
+                            <option value="2592000000">1 month</option>
+                            <option value="7776000000">3 months</option>
+                            <option value="15552000000">6 months</option>
+                            <option value="31536000000">1 year</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btn-add-nuclear" class="btn-nuclear-add">Add to Nuclear Block</button>
+                </div>
+            </div>
+        </div>
+
         <div class="section danger-zone">
             <h2>Danger Zone</h2>
-            <p>Delete all extension data from this browser, including settings, local session stats, and sign-in token.</p>
+            <p>Delete all extension data from this browser, including settings, local session stats, and sign-in token. Nuclear Block data is preserved.</p>
             <button type="button" id="btn-delete-all-data" class="btn-danger">Delete All Data</button>
         </div>
     </div>

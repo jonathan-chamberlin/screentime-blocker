@@ -521,6 +521,218 @@ function lockSiteSections(locked) {
   });
 }
 
+// --- Nuclear Block ---
+
+function fuzzyTimeLeft(ms) {
+  const MONTH = 30 * 24 * 60 * 60 * 1000;
+  const DAY = 24 * 60 * 60 * 1000;
+  if (ms <= 0) return null; // signal "ready"
+  if (ms >= MONTH) return Math.ceil(ms / MONTH) + ' months';
+  if (ms >= DAY) return Math.ceil(ms / DAY) + ' days';
+  return '1 day';
+}
+
+function getNuclearSiteStage(site) {
+  const now = Date.now();
+  if (now - site.addedAt < site.cooldown1Ms) return 'locked';
+  if (!site.unblockClickedAt) return 'ready';
+  if (now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
+  return 'expired';
+}
+
+function getNuclearCountdownMs(site) {
+  const now = Date.now();
+  const stage = getNuclearSiteStage(site);
+  if (stage === 'locked') return site.cooldown1Ms - (now - site.addedAt);
+  if (stage === 'unblocking') return site.cooldown2Ms - (now - site.unblockClickedAt);
+  return 0;
+}
+
+async function loadNuclearBlock() {
+  chrome.runtime.sendMessage({ action: 'getNuclearData' }, (data) => {
+    if (!data) return;
+
+    // Render second cooldown radio
+    const { secondCooldownEnabled, secondCooldownMs } = data;
+    let radioVal = 'off';
+    if (secondCooldownEnabled) {
+      radioVal = secondCooldownMs <= 10000 ? '5s' : '18h';
+    }
+    document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(r => {
+      r.checked = r.value === radioVal;
+    });
+
+    // Render current nuclear sites
+    const list = document.getElementById('nuclearSitesList');
+    list.innerHTML = '';
+    if (!data.sites || data.sites.length === 0) {
+      list.innerHTML = '<p class="nuclear-empty">No sites added yet.</p>';
+    } else {
+      data.sites.forEach(site => {
+        const stage = getNuclearSiteStage(site);
+        if (stage === 'expired') return; // will be cleaned up by background
+
+        const card = document.createElement('div');
+        card.className = 'nuclear-site-card';
+
+        const info = document.createElement('div');
+        info.className = 'site-info';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'site-name';
+        nameEl.textContent = site.name;
+
+        const countdownEl = document.createElement('div');
+        countdownEl.className = 'site-countdown';
+
+        if (stage === 'locked') {
+          const ms = getNuclearCountdownMs(site);
+          const fuzzy = fuzzyTimeLeft(ms) || '1 day';
+          countdownEl.textContent = fuzzy + ' until you can request unblock';
+        } else if (stage === 'ready') {
+          countdownEl.textContent = 'Ready — click Unblock to start removal process';
+          countdownEl.className = 'site-countdown ready';
+        } else if (stage === 'unblocking') {
+          const ms = getNuclearCountdownMs(site);
+          const fuzzy = fuzzyTimeLeft(ms) || '1 day';
+          countdownEl.textContent = fuzzy + ' until site is removed';
+          countdownEl.className = 'site-countdown unblocking';
+        }
+
+        info.appendChild(nameEl);
+        info.appendChild(countdownEl);
+        card.appendChild(info);
+
+        if (stage === 'ready') {
+          const btn = document.createElement('button');
+          btn.className = 'btn-unblock';
+          btn.textContent = 'Unblock';
+          btn.dataset.siteId = site.id;
+          btn.addEventListener('click', () => handleUnblockNuclear(site.id));
+          card.appendChild(btn);
+        }
+
+        list.appendChild(card);
+      });
+    }
+
+    // Render preset checkboxes
+    const presetsGrid = document.getElementById('nuclearPresetsList');
+    const existingDomains = new Set();
+    (data.sites || []).forEach(site => {
+      if (site.domains) site.domains.forEach(d => existingDomains.add(d));
+      else if (site.domain) existingDomains.add(site.domain);
+    });
+
+    presetsGrid.innerHTML = '';
+    PRESET_NUCLEAR_SITES.forEach(preset => {
+      const presetDomains = preset.domains || (preset.domain ? [preset.domain] : []);
+      const alreadyAdded = presetDomains.every(d => existingDomains.has(d));
+
+      const item = document.createElement('div');
+      item.className = 'nuclear-preset-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'nuclear-preset-' + (preset.domain || preset.domains[0]);
+      checkbox.disabled = alreadyAdded;
+      checkbox.title = alreadyAdded ? 'Already in Nuclear Block' : '';
+
+      const label = document.createElement('span');
+      label.textContent = preset.name + (alreadyAdded ? ' ✓' : '');
+
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      item.addEventListener('click', (e) => {
+        if (e.target !== checkbox && !checkbox.disabled) {
+          checkbox.checked = !checkbox.checked;
+        }
+      });
+      presetsGrid.appendChild(item);
+    });
+  });
+}
+
+function getNuclearSecondCooldown() {
+  const val = document.querySelector('input[name="nuclearSecondCooldown"]:checked')?.value || '18h';
+  if (val === 'off') return { enabled: false, ms: 0 };
+  if (val === '5s') return { enabled: true, ms: 5000 };
+  return { enabled: true, ms: 18 * 60 * 60 * 1000 };
+}
+
+function saveNuclearSettings() {
+  const { enabled, ms } = getNuclearSecondCooldown();
+  // Update only the second-cooldown settings fields; preserve the sites list
+  chrome.storage.local.get(['nbData'], (result) => {
+    const nbData = result.nbData || { sites: [] };
+    nbData.secondCooldownEnabled = enabled;
+    nbData.secondCooldownMs = ms;
+    chrome.storage.local.set({ nbData }, () => showSavedIndicator());
+  });
+}
+
+function addNuclearSiteFromUI() {
+  const cooldown1Ms = parseInt(document.getElementById('nuclearCooldown').value, 10);
+  const { enabled, ms: cooldown2Ms } = getNuclearSecondCooldown();
+
+  const entries = [];
+
+  // Collect checked presets
+  PRESET_NUCLEAR_SITES.forEach(preset => {
+    const checkbox = document.getElementById('nuclear-preset-' + (preset.domain || preset.domains[0]));
+    if (checkbox && checkbox.checked && !checkbox.disabled) {
+      entries.push({
+        id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        name: preset.name,
+        ...(preset.domain ? { domain: preset.domain } : { domains: preset.domains }),
+        addedAt: Date.now(),
+        cooldown1Ms,
+        cooldown2Ms: enabled ? cooldown2Ms : 0,
+        unblockClickedAt: null,
+      });
+    }
+  });
+
+  // Collect custom domain
+  const customInput = document.getElementById('nuclearCustomDomain');
+  const customDomain = customInput.value.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '');
+  if (customDomain.length > 0) {
+    entries.push({
+      id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+      name: customDomain,
+      domain: customDomain,
+      addedAt: Date.now(),
+      cooldown1Ms,
+      cooldown2Ms: enabled ? cooldown2Ms : 0,
+      unblockClickedAt: null,
+    });
+  }
+
+  if (entries.length === 0) {
+    alert('Select at least one preset or enter a domain to add.');
+    return;
+  }
+
+  let pending = entries.length;
+  entries.forEach(entry => {
+    chrome.runtime.sendMessage({ action: 'addNuclearSite', entry }, () => {
+      pending--;
+      if (pending === 0) {
+        customInput.value = '';
+        loadNuclearBlock();
+        showSavedIndicator();
+      }
+    });
+  });
+}
+
+function handleUnblockNuclear(id) {
+  chrome.runtime.sendMessage({ action: 'clickUnblockNuclear', id }, () => {
+    loadNuclearBlock();
+    showSavedIndicator();
+  });
+}
+
 async function handleDeleteAllData() {
   const confirmed = window.confirm(
     'Delete all Brainrot Blocker data on this browser?\n\nThis cannot be undone.'
@@ -534,8 +746,9 @@ async function handleDeleteAllData() {
       await loadProductiveSites();
       await loadProductiveApps();
       await loadBlockedApps();
+      await loadNuclearBlock();
       showSavedIndicator();
-      alert('All Brainrot Blocker data was deleted.');
+      alert('All Brainrot Blocker data was deleted. Nuclear Block data was preserved.');
     } else {
       alert('Failed to delete data. Please try again.');
     }
@@ -744,4 +957,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('btn-delete-all-data').addEventListener('click', handleDeleteAllData);
+
+  // Nuclear Block
+  await loadNuclearBlock();
+
+  document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(radio => {
+    radio.addEventListener('change', () => saveNuclearSettings());
+  });
+
+  document.getElementById('btn-add-nuclear').addEventListener('click', addNuclearSiteFromUI);
+
+  // Refresh nuclear countdowns every minute
+  setInterval(() => loadNuclearBlock(), 60 * 1000);
 });

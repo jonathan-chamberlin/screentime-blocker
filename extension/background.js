@@ -7,6 +7,7 @@ importScripts(
   'site-utils.js',
   'session-state.js',
   'blocking.js',
+  'nuclear-block.js',
   'native-host.js',
   'backend-api.js',
   'tab-monitor.js',
@@ -39,6 +40,9 @@ importScripts(
   const companionResult = await getStorage(['companionMode']);
   const companionMode = companionResult.companionMode || DEFAULTS.companionMode;
   setCompanionModeEnabled(companionMode === 'on');
+
+  // Always apply nuclear block rules on startup
+  await applyNuclearRules();
 })();
 
 // --- Reward threshold check interval ---
@@ -198,6 +202,9 @@ const messageHandlers = {
         await unblockSites();
         setCompanionModeEnabled(false);
 
+        // Preserve nuclear block data — it survives Delete All Data intentionally
+        const savedNbData = await getNuclearData();
+
         state = {
           sessionActive: false,
           sessionId: null,
@@ -218,6 +225,13 @@ const messageHandlers = {
 
         await new Promise((resolve) => chrome.storage.local.clear(resolve));
         await setStorage({ focusState: state });
+
+        // Restore nuclear block data and re-apply rules
+        if (savedNbData && savedNbData.sites && savedNbData.sites.length > 0) {
+          await setStorage({ nbData: savedNbData });
+          await applyNuclearRules();
+        }
+
         chrome.action.setBadgeText({ text: '' });
         sendResponse({ success: true });
       } catch (err) {
@@ -225,6 +239,27 @@ const messageHandlers = {
       }
     })();
     return true;
+  },
+  getNuclearData: (msg, sender, sendResponse) => {
+    getNuclearData().then(sendResponse);
+    return true;
+  },
+  addNuclearSite: (msg, sender, sendResponse) => {
+    addNuclearSite(msg.entry).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
+  clickUnblockNuclear: (msg, sender, sendResponse) => {
+    clickUnblockNuclear(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
+  removeNuclearSite: (msg, sender, sendResponse) => {
+    removeNuclearSite(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
+  openSettings: (msg, sender, sendResponse) => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
+    sendResponse({ success: true });
+    return false;
   },
   blockedAppDetected: (msg, sender, sendResponse) => {
     if (state.sessionActive) {

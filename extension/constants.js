@@ -229,16 +229,33 @@ const PRESET_BLOCKED_SITES = [
   { name: 'Bloomberg', domain: 'bloomberg.com', category: 'News', checked: false },
   { name: 'WSJ', domain: 'wsj.com', category: 'News', checked: false },
   { name: 'USA Today', domain: 'usatoday.com', category: 'News', checked: false },
-  // Shopping
+  // Shopping — general
   { name: 'Amazon', domain: 'amazon.com', category: 'Shopping', checked: false },
   { name: 'eBay', domain: 'ebay.com', category: 'Shopping', checked: false },
-  { name: 'Etsy', domain: 'etsy.com', category: 'Shopping', checked: false },
   { name: 'Walmart', domain: 'walmart.com', category: 'Shopping', checked: false },
   { name: 'Target', domain: 'target.com', category: 'Shopping', checked: false },
-  { name: 'Best Buy', domain: 'bestbuy.com', category: 'Shopping', checked: false },
+  { name: 'Costco', domain: 'costco.com', category: 'Shopping', checked: false },
+  { name: 'Etsy', domain: 'etsy.com', category: 'Shopping', checked: false },
+  { name: 'Wish', domain: 'wish.com', category: 'Shopping', checked: false },
+  { name: 'Temu', domain: 'temu.com', category: 'Shopping', checked: false },
   { name: 'AliExpress', domain: 'aliexpress.com', category: 'Shopping', checked: false },
-  { name: 'SHEIN', domain: 'shein.com', category: 'Shopping', checked: false },
+  // Shopping — electronics & home
+  { name: 'Best Buy', domain: 'bestbuy.com', category: 'Shopping', checked: false },
+  { name: 'Newegg', domain: 'newegg.com', category: 'Shopping', checked: false },
   { name: 'Wayfair', domain: 'wayfair.com', category: 'Shopping', checked: false },
+  { name: 'Overstock', domain: 'overstock.com', category: 'Shopping', checked: false },
+  { name: 'Home Depot', domain: 'homedepot.com', category: 'Shopping', checked: false },
+  { name: 'Chewy', domain: 'chewy.com', category: 'Shopping', checked: false },
+  // Shopping — fashion
+  { name: 'SHEIN', domain: 'shein.com', category: 'Shopping', checked: false },
+  { name: 'ASOS', domain: 'asos.com', category: 'Shopping', checked: false },
+  { name: 'Zara', domain: 'zara.com', category: 'Shopping', checked: false },
+  { name: 'H&M', domain: 'hm.com', category: 'Shopping', checked: false },
+  { name: 'Nike', domain: 'nike.com', category: 'Shopping', checked: false },
+  { name: 'Adidas', domain: 'adidas.com', category: 'Shopping', checked: false },
+  { name: 'Nordstrom', domain: 'nordstrom.com', category: 'Shopping', checked: false },
+  { name: "Macy's", domain: 'macys.com', category: 'Shopping', checked: false },
+  { name: 'Zappos', domain: 'zappos.com', category: 'Shopping', checked: false },
   // Gaming — platforms
   { name: 'Steam', domain: 'steampowered.com', category: 'Gaming', checked: false },
   { name: 'Epic Games', domain: 'epicgames.com', category: 'Gaming', checked: false },
@@ -341,3 +358,39 @@ const NATIVE_HOST_NAME = 'com.brainrotblocker.native';
 
 const ALARM_PERIOD_MINUTES = 0.25;
 const ALLOW_RULE_ID_OFFSET = 1000;
+const NUCLEAR_RULE_ID_OFFSET = 2000;
+
+// Preset sites for Nuclear Block (permanent, always-on blocking with staged cooldowns)
+const PRESET_NUCLEAR_SITES = [
+  { name: 'OnlyFans', domain: 'onlyfans.com' },
+  {
+    name: 'Adult Websites',
+    domains: [
+      'pornhub.com', 'xvideos.com', 'xnxx.com', 'redtube.com', 'youporn.com',
+      'xhamster.com', 'tube8.com', 'spankbang.com', 'beeg.com', 'eporner.com',
+      'vporn.com', 'txxx.com', 'tnaflix.com', 'fuq.com', 'hclips.com',
+      'drtuber.com', 'nuvid.com', 'pornone.com', 'empflix.com', 'brazzers.com',
+      'realitykings.com', 'bangbros.com', 'naughtyamerica.com', 'anyporn.com',
+      'hotmovs.com', 'cliphunter.com', 'ixxx.com', 'pornmd.com', 'alphaporno.com',
+      'porntrex.com', 'sxyprn.com', 'porntube.com', 'fapster.xxx', 'gotporn.com',
+      'faphouse.com',
+    ],
+  },
+  {
+    name: 'Gambling Sites',
+    domains: [
+      'draftkings.com', 'fanduel.com', 'betmgm.com', 'caesarssportsbook.com',
+      'bet365.com', 'betway.com', 'williamhill.com', 'betrivers.com',
+      'pointsbet.com', 'hardrock.bet', 'unibet.com', 'bwin.com',
+      'bovada.lv', 'mybookie.ag', 'betonline.ag', 'sportsbetting.ag',
+      'prizepicks.com', 'getfliff.com', 'barstoolsports.com', 'ladbrokes.com',
+      'paddypower.com', '888casino.com', 'pokerstars.com', 'ggpoker.com',
+      'partypoker.com', 'wsop.com',
+    ],
+  },
+  { name: 'Steam', domain: 'steampowered.com' },
+  { name: 'Epic Games', domain: 'epicgames.com' },
+  { name: 'League of Legends', domain: 'leagueoflegends.com' },
+  { name: 'World of Warcraft', domain: 'worldofwarcraft.com' },
+  { name: 'Valorant', domain: 'playvalorant.com' },
+];
