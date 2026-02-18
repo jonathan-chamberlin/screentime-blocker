@@ -156,15 +156,6 @@ Blocking uses three priority tiers: session blocks (1), allow-path rules (2), an
 3. Click Load unpacked and select the `extension/` folder
 4. Click the Brainrot Blocker icon and hit Lock In
 
-For the leaderboard backend:
-
-```bash
-cd server
-npm install
-cp .env.example .env   # add your Auth0 credentials
-node server.js
-```
-
 ---
 
 ## Project Structure
