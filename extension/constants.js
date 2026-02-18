@@ -258,7 +258,7 @@ const PRESET_BLOCKED_SITES = [
   { name: 'Kotaku', domain: 'kotaku.com', category: 'Gaming', checked: false },
   { name: 'PC Gamer', domain: 'pcgamer.com', category: 'Gaming', checked: false },
   // Adult Sites
-  { name: 'OnlyFans (OF)', domain: 'onlyfans.com', category: 'Adult Sites', checked: false },
+  { name: 'OnlyFans', domain: 'onlyfans.com', category: 'Adult Sites', checked: false },
   {
     name: 'Most Adult Websites',
     domains: [
