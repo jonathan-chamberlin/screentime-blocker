@@ -43,6 +43,9 @@ importScripts(
 
   // Always apply nuclear block rules on startup
   await applyNuclearRules();
+
+  // Periodic nuclear expiry check — runs every minute regardless of session state
+  chrome.alarms.create('checkNuclear', { periodInMinutes: 1 });
 })();
 
 // --- Reward threshold check interval ---
@@ -244,6 +247,10 @@ const messageHandlers = {
     getNuclearData().then(sendResponse);
     return true;
   },
+  applyNuclearRules: (msg, sender, sendResponse) => {
+    applyNuclearRules().then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
   addNuclearSite: (msg, sender, sendResponse) => {
     addNuclearSite(msg.entry).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
@@ -291,6 +298,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // --- Alarm handler ---
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'checkNuclear') {
+    await applyNuclearRules();
+  }
+
   if (alarm.name === 'checkSession') {
     if (state.sessionActive) {
       flushProductive();

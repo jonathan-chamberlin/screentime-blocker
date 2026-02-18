@@ -580,6 +580,13 @@ async function loadNuclearBlock() {
       data = { sites: [], secondCooldownEnabled: true, secondCooldownMs: 18 * 60 * 60 * 1000 };
     }
 
+    // If any sites have expired, trigger background cleanup and re-render
+    const hasExpired = (data.sites || []).some(site => getNuclearSiteStage(site) === 'expired');
+    if (hasExpired) {
+      chrome.runtime.sendMessage({ action: 'applyNuclearRules' }, () => loadNuclearBlock());
+      return;
+    }
+
     // Render second cooldown radio
     const { secondCooldownEnabled, secondCooldownMs } = data;
     let radioVal = 'off';
