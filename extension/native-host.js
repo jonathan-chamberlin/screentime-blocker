@@ -44,16 +44,26 @@ function connectNativeHost() {
     nativePort.onMessage.addListener((msg) => {
       if (msg.type === 'app-focus') {
         currentAppName = msg.processName;
-        if (state.sessionActive && !browserHasFocus) {
-          // Check if app is blocked first
-          processAppUpdate(currentAppName);
+        if (!browserHasFocus) {
+          if (state.sessionActive) {
+            // Check if app is blocked first
+            processAppUpdate(currentAppName);
 
-          // Then handle productive app logic
-          isProductiveApp(currentAppName).then(isProductive => {
-            if (isProductive !== state.isOnProductiveSite) {
-              updateProductiveState(isProductive);
-            }
-          });
+            // Then handle productive app logic
+            isProductiveApp(currentAppName).then(isProductive => {
+              if (isProductive !== state.isOnProductiveSite) {
+                updateProductiveState(isProductive);
+              }
+            });
+          }
+          if (state.rewardActive) {
+            // Burn break time while user is in a blocked app during their reward period
+            isBlockedApp(currentAppName).then(isBlocked => {
+              if (isBlocked !== state.isOnRewardSite) {
+                updateRewardState(isBlocked);
+              }
+            });
+          }
         }
       } else if (msg.type === 'pong') {
         nativeHostAvailable = true;
@@ -96,6 +106,34 @@ async function processAppUpdate(appName) {
       nativePort.postMessage({ command: 'closeApp', processName: proc });
     });
     chrome.runtime.sendMessage({ action: 'blockedAppDetected', appName: blockedApp.name });
+  }
+}
+
+async function isBlockedApp(processName) {
+  if (!processName) return false;
+  const result = await getStorage(['blockedApps']);
+  const blockedApps = result.blockedApps || [];
+  const appNameLower = processName.toLowerCase();
+  return blockedApps.some(app => {
+    const detects = app.detectProcesses || [app.process];
+    return detects.some(p => (p || '').toLowerCase() === appNameLower);
+  });
+}
+
+async function killCurrentBlockedApp() {
+  if (!currentAppName || !nativePort) return;
+  const result = await getStorage(['blockedApps']);
+  const blockedApps = result.blockedApps || [];
+  const appNameLower = currentAppName.toLowerCase();
+  const blockedApp = blockedApps.find(app => {
+    const detects = app.detectProcesses || [app.process];
+    return detects.some(p => (p || '').toLowerCase() === appNameLower);
+  });
+  if (blockedApp) {
+    const toKill = blockedApp.killProcesses || [blockedApp.process];
+    toKill.forEach(proc => {
+      nativePort.postMessage({ command: 'closeApp', processName: proc });
+    });
   }
 }
 

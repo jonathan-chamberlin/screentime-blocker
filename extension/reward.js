@@ -93,6 +93,7 @@ async function handleRewardExpired() {
   chrome.action.setBadgeText({ text: '' });
   await blockSites();
   await redirectBlockedTabs('reward-expired');
+  await killCurrentBlockedApp();
   // Subscribers: popup.js:361 (poll)
   chrome.runtime.sendMessage({ action: 'rewardExpired' }).catch(() => {});
   stopRewardCountdown();

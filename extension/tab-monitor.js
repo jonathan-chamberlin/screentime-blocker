@@ -93,7 +93,8 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
         updateProductiveState(isProductive);
       }
       if (state.rewardActive) {
-        updateRewardState(false);
+        // If user switched to a blocked app, keep burning break time; otherwise pause
+        isBlockedApp(currentAppName).then(isBlocked => updateRewardState(isBlocked));
       }
     } else {
       checkCurrentTab();

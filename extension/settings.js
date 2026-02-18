@@ -190,6 +190,13 @@ const PRESET_BLOCKED_APPS = [
   { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', checked: false },
   { name: 'Discord', process: 'Discord', checked: false },
   { name: 'Minecraft', process: 'javaw', checked: false },
+  // Games
+  { name: 'League of Legends', process: 'LeagueClientUx.exe', detectProcesses: ['LeagueClientUx.exe', 'League of Legends.exe'], killProcesses: ['League of Legends.exe', 'LeagueClientUx.exe', 'LeagueClient.exe', 'LeagueClientUxRender.exe'], checked: false },
+  { name: 'Valorant', process: 'VALORANT-Win64-Shipping.exe', detectProcesses: ['VALORANT-Win64-Shipping.exe'], killProcesses: ['VALORANT-Win64-Shipping.exe', 'vgtray.exe', 'vgc.exe'], checked: false },
+  { name: 'Fortnite', process: 'FortniteClient-Win64-Shipping.exe', detectProcesses: ['FortniteClient-Win64-Shipping.exe'], killProcesses: ['FortniteClient-Win64-Shipping.exe', 'FortniteLauncher.exe'], checked: false },
+  { name: 'Apex Legends', process: 'r5apex.exe', detectProcesses: ['r5apex.exe', 'r5apex_dx12.exe'], killProcesses: ['r5apex.exe', 'r5apex_dx12.exe'], checked: false },
+  { name: 'World of Warcraft', process: 'Wow.exe', detectProcesses: ['Wow.exe'], killProcesses: ['Wow.exe'], checked: false },
+  { name: 'Overwatch 2', process: 'Overwatch.exe', detectProcesses: ['Overwatch.exe'], killProcesses: ['Overwatch.exe'], checked: false },
 ];
 
 async function loadBlockedApps() {
