@@ -239,18 +239,41 @@ const PRESET_BLOCKED_SITES = [
   { name: 'AliExpress', domain: 'aliexpress.com', category: 'Shopping', checked: false },
   { name: 'SHEIN', domain: 'shein.com', category: 'Shopping', checked: false },
   { name: 'Wayfair', domain: 'wayfair.com', category: 'Shopping', checked: false },
-  // Gaming
+  // Gaming — platforms
   { name: 'Steam', domain: 'steampowered.com', category: 'Gaming', checked: false },
   { name: 'Epic Games', domain: 'epicgames.com', category: 'Gaming', checked: false },
   { name: 'Roblox', domain: 'roblox.com', category: 'Gaming', checked: false },
   { name: 'Minecraft', domain: 'minecraft.net', category: 'Gaming', checked: false },
+  // Gaming — games
+  { name: 'League of Legends', domain: 'leagueoflegends.com', category: 'Gaming', checked: false },
+  { name: 'Valorant', domain: 'playvalorant.com', category: 'Gaming', checked: false },
+  { name: 'Fortnite', domain: 'fortnite.com', category: 'Gaming', checked: false },
+  { name: 'Apex Legends', domain: 'apexlegends.com', category: 'Gaming', checked: false },
+  { name: 'World of Warcraft', domain: 'worldofwarcraft.com', category: 'Gaming', checked: false },
+  { name: 'Overwatch 2', domain: 'playoverwatch.com', category: 'Gaming', checked: false },
+  // Gaming — news
   { name: 'IGN', domain: 'ign.com', category: 'Gaming', checked: false },
   { name: 'GameSpot', domain: 'gamespot.com', category: 'Gaming', checked: false },
   { name: 'Polygon', domain: 'polygon.com', category: 'Gaming', checked: false },
   { name: 'Kotaku', domain: 'kotaku.com', category: 'Gaming', checked: false },
   { name: 'PC Gamer', domain: 'pcgamer.com', category: 'Gaming', checked: false },
-  { name: 'EA', domain: 'ea.com', category: 'Gaming', checked: false },
-  { name: 'Ubisoft', domain: 'ubisoft.com', category: 'Gaming', checked: false },
+  // Adult Sites
+  { name: 'OnlyFans (OF)', domain: 'onlyfans.com', category: 'Adult Sites', checked: false },
+  {
+    name: 'Most Adult Websites',
+    domains: [
+      'pornhub.com', 'xvideos.com', 'xnxx.com', 'redtube.com', 'youporn.com',
+      'xhamster.com', 'tube8.com', 'spankbang.com', 'beeg.com', 'eporner.com',
+      'vporn.com', 'txxx.com', 'tnaflix.com', 'fuq.com', 'hclips.com',
+      'drtuber.com', 'nuvid.com', 'pornone.com', 'empflix.com', 'brazzers.com',
+      'realitykings.com', 'bangbros.com', 'naughtyamerica.com', 'anyporn.com',
+      'hotmovs.com', 'cliphunter.com', 'ixxx.com', 'pornmd.com', 'alphaporno.com',
+      'porntrex.com', 'sxyprn.com', 'porntube.com', 'fapster.xxx', 'gotporn.com',
+      'faphouse.com',
+    ],
+    category: 'Adult Sites',
+    checked: false,
+  },
 ];
 
 const PRESET_PRODUCTIVE_SITES = [
