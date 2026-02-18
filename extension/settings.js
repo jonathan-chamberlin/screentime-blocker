@@ -650,7 +650,6 @@ async function loadNuclearBlock() {
           const fuzzy = fuzzyTimeLeft(ms) || '1 day';
           countdownEl.textContent = fuzzy + ' until you can request unblock';
         } else if (stage === 'ready') {
-          countdownEl.textContent = 'Ready — click Unblock to start removal process';
           countdownEl.className = 'site-countdown ready';
         } else if (stage === 'unblocking') {
           const ms = getNuclearCountdownMs(site);
