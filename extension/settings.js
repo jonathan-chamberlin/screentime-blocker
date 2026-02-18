@@ -528,8 +528,9 @@ function fuzzyTimeLeft(ms) {
   const DAY = 24 * 60 * 60 * 1000;
   if (ms <= 0) return null; // signal "ready"
   if (ms >= MONTH) return Math.ceil(ms / MONTH) + ' months';
-  if (ms >= DAY) return Math.ceil(ms / DAY) + ' days';
-  return '1 day';
+  if (ms >= 2 * DAY) return Math.ceil(ms / DAY) + ' days';
+  if (ms >= DAY) return '1 day';
+  return 'Less than 1 day';
 }
 
 function getNuclearSiteStage(site) {
