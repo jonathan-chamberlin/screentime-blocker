@@ -50,7 +50,7 @@ function showConfetti() {
   container.className = 'confetti-container';
   document.body.appendChild(container);
 
-  const colors = ['#4ade80', '#f472b6', '#eab308', '#c084fc', '#f9a8d4', '#a78bfa'];
+  const colors = ['#00ff88', '#f093fb', '#ffaa00', '#ff4757', '#667eea', '#f5576c', '#a78bfa'];
   for (let i = 0; i < 60; i++) {
     const confetti = document.createElement('div');
     confetti.className = 'confetti';
@@ -72,6 +72,9 @@ async function syncUserProfile(token) {
     });
     if (userInfoRes.ok) {
       const userInfo = await userInfoRes.json();
+      if (userInfo.email) {
+        await chrome.storage.local.set({ user_email: userInfo.email });
+      }
       await fetch(`${CONFIG.API_BASE_URL}/auth/profile`, {
         method: 'POST',
         headers: {
@@ -113,7 +116,7 @@ function renderInputLock(status) {
 function showEndButton(status) {
   el.btnEnd.style.display = 'block';
   const thresholdMet = (status.rewardGrantCount || 0) >= 1;
-  el.btnEnd.textContent = thresholdMet ? 'End Session' : 'Quit Early (coward)';
+  el.btnEnd.textContent = thresholdMet ? 'End session' : 'Quit early (coward)';
   if (strictMode && !thresholdMet) {
     el.btnEnd.disabled = true;
     el.btnEnd.title = 'Complete your work threshold to unlock';
@@ -180,7 +183,7 @@ function renderButtons(status) {
       }
     }
   } else {
-    el.btnStart.textContent = 'Lock In';
+    el.btnStart.textContent = 'Lock in';
     el.btnStart.style.display = 'block';
   }
 }
@@ -226,24 +229,61 @@ function renderUI(status) {
   updateAuthUI();
 }
 
+async function renderActiveLists() {
+  const result = await getStorage(['breakLists', 'productiveLists', 'productiveMode']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+  const mode = result.productiveMode || DEFAULTS.productiveMode;
+
+  const container = document.getElementById('active-lists-content');
+  container.innerHTML = '';
+
+  const activeBreak = breakLists.filter(l => l.isActive);
+  const activeProductive = mode === 'lists' ? productiveLists.filter(l => l.isActive) : [];
+
+  if (activeBreak.length === 0 && activeProductive.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+
+  activeBreak.forEach(list => {
+    const tag = document.createElement('span');
+    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(255,71,87,0.1); color:#ff6b7a; border:1px solid rgba(255,71,87,0.18); white-space:nowrap;';
+    tag.textContent = list.name;
+    tag.title = 'Break list: ' + list.name;
+    container.appendChild(tag);
+  });
+
+  activeProductive.forEach(list => {
+    const tag = document.createElement('span');
+    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(0,255,136,0.08); color:#00ff88; border:1px solid rgba(0,255,136,0.15); white-space:nowrap;';
+    tag.textContent = list.name;
+    tag.title = 'Productive list: ' + list.name;
+    container.appendChild(tag);
+  });
+}
+
 async function updateAuthUI() {
   if (!Auth.isConfigured()) {
     el.authDot.className = 'auth-dot disconnected';
     el.authText.textContent = 'leaderboard offline';
-    el.btnLogin.textContent = 'Leaderboard Not Configured';
-    el.btnLogin.disabled = true;
+    el.authText.className = '';
+    el.authStatus.classList.remove('clickable');
     return;
   }
 
   const token = await Auth.getToken();
+  el.authStatus.classList.add('clickable');
   if (token) {
     el.authDot.className = 'auth-dot connected';
-    el.authText.textContent = 'signed in';
-    el.btnLogin.textContent = 'Sign Out';
+    const { user_email } = await chrome.storage.local.get('user_email');
+    el.authText.textContent = user_email || 'signed in';
+    el.authText.className = 'auth-email';
   } else {
     el.authDot.className = 'auth-dot disconnected';
-    el.authText.textContent = 'not signed in';
-    el.btnLogin.textContent = 'Sign In for Leaderboard';
+    el.authText.textContent = 'Sign in';
+    el.authText.className = 'auth-link';
   }
 }
 
@@ -293,11 +333,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   el.btnEnd = document.getElementById('btn-end');
   el.btnReward = document.getElementById('btn-reward');
   el.btnPause = document.getElementById('btn-pause');
-  el.btnLogin = document.getElementById('btn-login');
   el.btnLeaderboard = document.getElementById('btn-leaderboard');
   el.btnSettings = document.getElementById('btn-settings');
   el.btnReportLink = document.getElementById('btn-report-link');
   el.linkedinLink = document.getElementById('linkedin-link');
+  el.authStatus = document.getElementById('auth-status');
   el.authDot = document.getElementById('auth-dot');
   el.authText = document.getElementById('auth-text');
   el.penaltyModal = document.getElementById('penalty-modal');
@@ -329,6 +369,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.strictMode) {
       strictMode = changes.strictMode.newValue === 'on';
+    }
+    if (changes.breakLists || changes.productiveLists || changes.productiveMode) {
+      renderActiveLists();
     }
   });
 
@@ -397,10 +440,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  el.btnLogin.addEventListener('click', async () => {
+  el.authStatus.addEventListener('click', async () => {
+    if (!Auth.isConfigured()) return;
     const token = await Auth.getToken();
     if (token) {
       await Auth.logout();
+      await chrome.storage.local.remove('user_email');
     } else {
       try {
         const accessToken = await Auth.login();
@@ -478,4 +523,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive)) {
     startPolling();
   }
+  await renderActiveLists();
 });

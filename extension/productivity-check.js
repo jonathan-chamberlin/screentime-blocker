@@ -94,14 +94,14 @@
         font-family: 'Space Grotesk', sans-serif;
       }
       .brainrot-modal {
-        background: #1a1a2e;
-        border: 2px solid #00ff88;
+        background: #1c1826;
+        border: 1px solid rgba(0, 255, 136, 0.25);
         border-radius: 16px;
         padding: 32px;
         max-width: 420px;
         text-align: center;
-        color: #ffffff;
-        box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+        color: #ede9e3;
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
       }
       .brainrot-modal h2 {
         color: #00ff88;

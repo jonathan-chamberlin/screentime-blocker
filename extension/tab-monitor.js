@@ -13,8 +13,9 @@ async function checkCurrentTab() {
       return;
     }
 
-    const result = await getStorage(['productiveSites', 'productiveMode', 'rewardSites', 'allowedPaths']);
-    const blockedSites = result.rewardSites || DEFAULTS.rewardSites;
+    const result = await getStorage(['breakLists', 'productiveLists', 'productiveMode', 'allowedPaths']);
+    const breakLists = result.breakLists || DEFAULTS.breakLists;
+    const blockedSites = getActiveBreakSites(breakLists);
     const allowedPaths = result.allowedPaths || DEFAULTS.allowedPaths;
 
     if (state.sessionActive) {
@@ -26,7 +27,8 @@ async function checkCurrentTab() {
         const isProductive = !urlMatchesSites(tab.url, blockedSites);
         updateProductiveState(isProductive);
       } else {
-        const productiveSites = result.productiveSites || DEFAULTS.productiveSites;
+        const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+        const productiveSites = getActiveProductiveSites(productiveLists);
         const isProductive = urlMatchesSites(tab.url, productiveSites);
         updateProductiveState(isProductive);
       }

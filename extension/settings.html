@@ -17,10 +17,10 @@
 
         body {
             font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: #0f0f1a;
+            background-color: #121016;
             padding: 40px 20px;
             line-height: 1.6;
-            color: #e0e0e0;
+            color: #ede9e3;
             min-height: 100vh;
         }
 
@@ -30,12 +30,12 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #1c1826 0%, #191428 100%);
             border-radius: 16px;
             padding: 40px 30px;
             margin-bottom: 30px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .header h1 {
@@ -49,7 +49,7 @@
         }
 
         .header .close-link {
-            color: #888;
+            color: #8a8690;
             text-decoration: none;
             font-size: 14px;
             transition: color 0.2s;
@@ -60,8 +60,8 @@
         }
 
         .section {
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background-color: #1a1722;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
@@ -69,14 +69,18 @@
         }
 
         .section:hover {
-            border-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.08);
         }
 
         .section h2 {
-            color: #e0e0e0;
+            color: #ede9e3;
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 0;
+        }
+
+        /* Collapsible section support */
+        .section.collapsible h2 {
             cursor: pointer;
             user-select: none;
             display: flex;
@@ -84,13 +88,13 @@
             justify-content: space-between;
         }
 
-        .section h2::after {
+        .section.collapsible h2::after {
             content: '';
             display: inline-block;
             width: 8px;
             height: 8px;
-            border-right: 2px solid #555;
-            border-bottom: 2px solid #555;
+            border-right: 2px solid #5c5862;
+            border-bottom: 2px solid #5c5862;
             transform: rotate(-45deg);
             transition: transform 0.2s ease;
             flex-shrink: 0;
@@ -98,17 +102,20 @@
             margin-bottom: 2px;
         }
 
-        .section.expanded h2::after {
+        .section.collapsible.expanded h2::after {
             transform: rotate(45deg);
             margin-bottom: 6px;
         }
 
         .section-body {
-            display: none;
             padding-top: 20px;
         }
 
-        .section.expanded .section-body {
+        .section.collapsible .section-body {
+            display: none;
+        }
+
+        .section.collapsible.expanded .section-body {
             display: block;
         }
 
@@ -118,8 +125,8 @@
 
         .form-group label {
             display: block;
-            color: #888;
-            font-size: 15px;
+            color: #8a8690;
+            font-size: 12px;
             margin-bottom: 8px;
             font-weight: 500;
             text-transform: uppercase;
@@ -130,13 +137,13 @@
         .form-group input[type="text"],
         .form-group textarea {
             width: 100%;
-            padding: 12px 16px;
-            background-color: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            background-color: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             font-family: inherit;
-            color: #e0e0e0;
+            color: #ede9e3;
             transition: all 0.3s;
         }
 
@@ -150,13 +157,13 @@
         .form-group textarea:focus {
             outline: none;
             border-color: #f093fb;
-            box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.15);
-            background-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.1);
+            background-color: #28243a;
         }
 
         .form-group input::placeholder,
         .form-group textarea::placeholder {
-            color: #555;
+            color: #5c5862;
         }
 
         .radio-group {
@@ -170,8 +177,8 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            color: #e0e0e0;
-            font-size: 15px;
+            color: #ede9e3;
+            font-size: 14px;
             text-transform: none;
             letter-spacing: normal;
         }
@@ -185,23 +192,22 @@
 
         button {
             background-color: #00ff88;
-            color: #0f0f1a;
+            color: #121016;
             border: none;
-            padding: 12px 28px;
+            padding: 10px 24px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
         button:hover {
             background-color: #00dd77;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.25);
         }
 
         button:active {
@@ -221,7 +227,6 @@
             right: 16px;
             font-size: 11px;
             color: #ff4757;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
             pointer-events: none;
@@ -230,20 +235,22 @@
         .section-group-label {
             margin: 20px 0 0 0;
             padding: 0 4px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .section-group-label span {
-            font-size: 33px;
+            font-size: 24px;
             font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: #f093fb;
+            letter-spacing: 0.02em;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .section-group-label p {
             font-size: 13px;
-            color: #555;
+            color: #5c5862;
             margin-top: 4px;
         }
 
@@ -256,21 +263,194 @@
             flex: 1;
         }
 
+        /* List row — t3.chat model-selector style */
+        .list-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            height: 56px;
+            background: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.15s;
+        }
+
+        .list-row:hover {
+            background: #2a2636;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .list-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .list-icon.break-icon {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.3), rgba(255, 71, 87, 0.15));
+        }
+
+        .list-icon.productive-icon {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 136, 0.15));
+        }
+
+        .list-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ede9e3;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .list-badge {
+            font-size: 11px;
+            font-weight: 400;
+            color: #5c5862;
+            white-space: nowrap;
+        }
+
+        .list-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .list-row:hover .list-actions {
+            opacity: 1;
+        }
+
+        .list-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.04);
+            color: #8a8690;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            padding: 0;
+        }
+
+        .list-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ede9e3;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .list-action-btn.delete-btn:hover {
+            color: #ff6b7a;
+            border-color: rgba(255, 71, 87, 0.3);
+        }
+
+        /* List selector row — active list selection */
+        .list-selector-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .list-selector-row:hover {
+            background: #2a2636;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .list-selector-row.active {
+            background: rgba(240, 147, 251, 0.06);
+            border-color: rgba(240, 147, 251, 0.2);
+        }
+
+        .list-selector-row.active:hover {
+            background: rgba(240, 147, 251, 0.1);
+        }
+
+        .list-selector-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .list-selector-row.active .list-selector-check {
+            background: #f093fb;
+            border-color: #f093fb;
+        }
+
+        .list-selector-check svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: #121016;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+        }
+
+        .list-selector-row.active .list-selector-check svg {
+            opacity: 1;
+        }
+
+        .list-selector-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ede9e3;
+        }
+
+        .list-selector-badge {
+            font-size: 11px;
+            color: #5c5862;
+        }
+
+        /* Hidden checkbox for form state */
+        .list-selector-row input[type="checkbox"] {
+            display: none;
+        }
+
         .app-checkbox-item {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 8px 10px;
-            background-color: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background-color: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .app-checkbox-item:hover {
-            background-color: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.12);
+            background-color: #2a2636;
+            border-color: rgba(255, 255, 255, 0.08);
         }
 
         .app-checkbox-item input[type="checkbox"] {
@@ -283,7 +463,7 @@
 
         .app-checkbox-item span {
             font-size: 13px;
-            color: #e0e0e0;
+            color: #ede9e3;
             cursor: pointer;
         }
 
@@ -292,7 +472,7 @@
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #666;
+            color: #5c5862;
             font-weight: 600;
             margin-top: 8px;
         }
@@ -307,12 +487,12 @@
             top: 20px;
             right: 20px;
             background: #00ff88;
-            color: #0f0f1a;
+            color: #121016;
             padding: 12px 24px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
             opacity: 0;
             transform: translateY(-10px);
             transition: opacity 0.3s, transform 0.3s;
@@ -326,7 +506,7 @@
         }
 
         .muted {
-            color: #888;
+            color: #8a8690;
             font-size: 13px;
         }
 
@@ -338,24 +518,24 @@
         }
 
         .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.08);
-            color: #e0e0e0;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #ede9e3;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.12);
+            background-color: rgba(255, 255, 255, 0.1);
             box-shadow: none;
         }
 
         .sync-status {
             font-size: 13px;
-            color: #888;
+            color: #8a8690;
         }
 
         .danger-zone {
-            border-color: rgba(255, 71, 87, 0.45);
-            background: rgba(255, 71, 87, 0.08);
+            border-color: rgba(255, 71, 87, 0.35);
+            background: rgba(255, 71, 87, 0.06);
         }
 
         .danger-zone h2 {
@@ -363,7 +543,7 @@
         }
 
         .danger-zone p {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 14px;
             margin-bottom: 14px;
         }
@@ -371,18 +551,18 @@
         .btn-danger {
             background: linear-gradient(135deg, #ff4757, #d63031);
             color: #fff;
-            border: 1px solid rgba(255, 71, 87, 0.8);
+            border: 1px solid rgba(255, 71, 87, 0.6);
         }
 
         .btn-danger:hover {
             background: linear-gradient(135deg, #ff6b7a, #e84142);
-            box-shadow: 0 4px 14px rgba(255, 71, 87, 0.35);
+            box-shadow: 0 4px 14px rgba(255, 71, 87, 0.3);
         }
 
         /* Nuclear Block section */
         .nuclear-zone {
-            border-color: rgba(255, 140, 0, 0.35);
-            background: rgba(255, 100, 0, 0.05);
+            border-color: rgba(255, 140, 0, 0.25);
+            background: rgba(255, 100, 0, 0.04);
         }
 
         .nuclear-zone h2 {
@@ -390,14 +570,14 @@
         }
 
         .nuclear-zone p.section-desc {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
             margin-bottom: 20px;
         }
 
         .nuclear-site-card {
-            background: rgba(255, 140, 0, 0.07);
-            border: 1px solid rgba(255, 140, 0, 0.2);
+            background: rgba(255, 140, 0, 0.05);
+            border: 1px solid rgba(255, 140, 0, 0.15);
             border-radius: 8px;
             padding: 14px 16px;
             margin-bottom: 10px;
@@ -413,17 +593,17 @@
         .nuclear-site-card .site-name {
             font-size: 14px;
             font-weight: 600;
-            color: #e0e0e0;
+            color: #ede9e3;
         }
 
         .nuclear-site-card .site-countdown {
             font-size: 12px;
-            color: #aaa;
+            color: #8a8690;
             margin-top: 3px;
         }
 
         .nuclear-site-card .site-countdown.ready {
-            color: #aaa;
+            color: #8a8690;
         }
 
         .nuclear-site-card .site-countdown.unblocking {
@@ -431,13 +611,12 @@
         }
 
         .btn-unblock {
-            background: rgba(255, 140, 0, 0.15);
+            background: rgba(255, 140, 0, 0.1);
             color: #ffaa44;
-            border: 1px solid rgba(255, 140, 0, 0.35);
+            border: 1px solid rgba(255, 140, 0, 0.25);
             padding: 6px 14px;
             font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             font-weight: 600;
             border-radius: 6px;
             cursor: pointer;
@@ -447,15 +626,15 @@
         }
 
         .btn-unblock:hover {
-            background: rgba(255, 140, 0, 0.25);
+            background: rgba(255, 140, 0, 0.2);
             box-shadow: none;
             transform: none;
         }
 
         .select-block-again {
-            background: rgba(255, 255, 255, 0.05);
-            color: #aaa;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #211e2b;
+            color: #8a8690;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 6px 10px;
             border-radius: 6px;
             font-size: 13px;
@@ -467,25 +646,25 @@
         }
 
         .select-block-again:hover {
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #ccc;
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ede9e3;
         }
 
         .select-block-again option {
-            background: #1e1e30;
-            color: #e0e0e0;
+            background: #1a1722;
+            color: #ede9e3;
         }
 
         .nuclear-add-section {
             margin-top: 20px;
             padding-top: 20px;
-            border-top: 1px solid rgba(255, 140, 0, 0.15);
+            border-top: 1px solid rgba(255, 140, 0, 0.1);
         }
 
         .nuclear-add-section label {
             display: block;
-            color: #888;
-            font-size: 13px;
+            color: #8a8690;
+            font-size: 12px;
             margin-bottom: 8px;
             font-weight: 500;
             text-transform: uppercase;
@@ -504,16 +683,16 @@
             align-items: center;
             gap: 8px;
             padding: 8px 10px;
-            background-color: rgba(255, 140, 0, 0.06);
-            border: 1px solid rgba(255, 140, 0, 0.15);
+            background-color: rgba(255, 140, 0, 0.04);
+            border: 1px solid rgba(255, 140, 0, 0.1);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .nuclear-preset-item:hover {
-            background-color: rgba(255, 140, 0, 0.1);
-            border-color: rgba(255, 140, 0, 0.25);
+            background-color: rgba(255, 140, 0, 0.08);
+            border-color: rgba(255, 140, 0, 0.2);
         }
 
         .nuclear-preset-item input[type="checkbox"] {
@@ -526,7 +705,7 @@
 
         .nuclear-preset-item span {
             font-size: 13px;
-            color: #e0e0e0;
+            color: #ede9e3;
             cursor: pointer;
         }
 
@@ -547,17 +726,17 @@
         .nuclear-add-row select {
             width: 100%;
             padding: 10px 12px;
-            background-color: #1e1e30;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 8px;
             font-size: 14px;
             font-family: inherit;
-            color: #e0e0e0;
+            color: #ede9e3;
         }
 
         .nuclear-add-row select option {
-            background-color: #1e1e30;
-            color: #e0e0e0;
+            background-color: #1a1722;
+            color: #ede9e3;
         }
 
         .btn-nuclear-add {
@@ -567,31 +746,30 @@
             padding: 10px 20px;
             border-radius: 8px;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             font-family: inherit;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             transition: all 0.2s;
             white-space: nowrap;
         }
 
         .btn-nuclear-add:hover {
             background: linear-gradient(135deg, #ffa020, #ff6600);
-            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.35);
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
             transform: translateY(-1px);
         }
 
         .nuclear-second-cooldown {
             margin-bottom: 20px;
             padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 140, 0, 0.15);
+            border-bottom: 1px solid rgba(255, 140, 0, 0.1);
         }
 
         .nuclear-second-cooldown label {
             display: block;
-            color: #888;
-            font-size: 13px;
+            color: #8a8690;
+            font-size: 12px;
             margin-bottom: 8px;
             font-weight: 500;
             text-transform: uppercase;
@@ -609,7 +787,7 @@
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            color: #e0e0e0;
+            color: #ede9e3;
             font-size: 14px;
             text-transform: none;
             letter-spacing: normal;
@@ -623,10 +801,147 @@
         }
 
         .nuclear-empty {
-            color: #555;
+            color: #5c5862;
             font-size: 14px;
             font-style: italic;
             padding: 12px 0;
+        }
+
+        /* Companion App notification banner */
+        .companion-banner {
+            border-color: rgba(0, 200, 255, 0.2);
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.04), rgba(0, 150, 255, 0.02));
+        }
+
+        .companion-banner h2 {
+            color: #00c8ff;
+            font-size: 16px;
+        }
+
+        .companion-banner .banner-hint {
+            color: #00c8ff;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-left: auto;
+            font-weight: 400;
+        }
+
+        .companion-banner.expanded .banner-hint {
+            display: none;
+        }
+
+        /* Typing confirmation modal */
+        .nuclear-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .nuclear-confirm-modal {
+            background: #1c1826;
+            border: 1px solid rgba(255,140,0,0.2);
+            border-radius: 14px;
+            padding: 32px;
+            max-width: 460px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .nuclear-confirm-modal .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffaa44;
+            margin-bottom: 16px;
+        }
+
+        .nuclear-confirm-modal .modal-desc {
+            font-size: 14px;
+            color: #8a8690;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .nuclear-confirm-modal .modal-phrase {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ede9e3;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: rgba(255,140,0,0.06);
+            border: 1px solid rgba(255,140,0,0.15);
+            border-radius: 8px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .nuclear-confirm-modal input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: #211e2b;
+            border: 1px solid rgba(255,140,0,0.2);
+            border-radius: 8px;
+            color: #ede9e3;
+            font-size: 15px;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+
+        .nuclear-confirm-modal input[type="text"]:focus {
+            outline: none;
+            border-color: #ffaa44;
+        }
+
+        .nuclear-confirm-modal .modal-btn-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .nuclear-confirm-modal .modal-btn-cancel {
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.06);
+            color: #8a8690;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .nuclear-confirm-modal .modal-btn-cancel:hover {
+            background: rgba(255,255,255,0.1);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .nuclear-confirm-modal .modal-btn-confirm {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #ff8c00, #e65c00);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            opacity: 0.4;
+            pointer-events: none;
+            transition: all 0.2s;
+        }
+
+        .nuclear-confirm-modal .modal-btn-confirm.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nuclear-confirm-modal .modal-btn-confirm.enabled:hover {
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
         }
     </style>
 </head>
@@ -634,6 +949,59 @@
     <div class="container">
         <div class="header">
             <h1>Brainrot Blocker Settings</h1>
+        </div>
+
+        <div class="section companion-banner collapsible" data-lockable>
+            <h2>🖥️ Want to block or track time on desktop apps too? <span class="banner-hint">Click to expand</span></h2>
+            <div class="section-body">
+            <p style="color: #8a8690; font-size: 14px; margin-bottom: 16px;">
+                Enable Companion App mode to track and block desktop applications during work sessions. Requires installing the native host helper.
+            </p>
+            <div class="form-group">
+                <label>Web &amp; Application Tracking</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="companionMode" value="off" checked>
+                        <span>Web Tracking Only</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="companionMode" value="on">
+                        <span>Companion App mode (track/block desktop apps)</span>
+                    </label>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="section" style="border-color: rgba(240, 147, 251, 0.15); background: linear-gradient(135deg, rgba(240, 147, 251, 0.04), rgba(245, 87, 108, 0.02));" data-lockable>
+            <h2 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 22px;">Choose your active lists</h2>
+            <div class="section-body">
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Check which break lists and productive lists are active. Sites and apps from active break lists are blocked during sessions.</p>
+
+            <div class="form-group">
+                <label>Break Lists</label>
+                <div id="activeBreakLists" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>What counts as productive?</label>
+                <div class="radio-group" style="flex-direction: column; gap: 10px;">
+                    <label>
+                        <input type="radio" name="productiveMode" value="all-except-blocked" checked>
+                        <span>Everything except my blocked sites/apps</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="productiveMode" value="lists">
+                        <span>Only sites and apps from my productive lists</span>
+                    </label>
+                </div>
+            </div>
+            <div id="activeProductiveLists" style="display: none;">
+                <label style="display: block; color: #8a8690; font-size: 12px; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Productive Lists</label>
+                <div id="activeProductiveListsInner" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                <p id="noProductiveListsMsg" style="color: #5c5862; font-size: 13px; font-style: italic; margin-top: 8px;">No productive lists created yet. Create one below.</p>
+            </div>
+            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -657,34 +1025,60 @@
 
         <div class="section-group-label">
             <span>What is Distracting?</span>
-            <p>Sites blocked during work sessions or permanently.</p>
+            <p>Manage your break lists and choose which are active.</p>
         </div>
 
         <div class="section" data-lockable>
-            <h2>Break Only Sites</h2>
+            <h2>Break Lists</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">These sites are blocked during work sessions. After completing a work cycle, you earn break time to visit them.</p>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Create and manage your break lists. Each list can contain sites and apps that are blocked during work sessions.</p>
+            <div id="breakListsMaster" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;"></div>
+            <button type="button" id="btn-create-break-list" class="btn-secondary" style="padding: 10px 20px;">+ Create new break list</button>
+
+            <div id="breakListEditor" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <div class="form-group">
+                    <label for="breakListEditorName">List Name</label>
+                    <input type="text" id="breakListEditorName" placeholder="e.g., Social Media, Gaming">
+                </div>
+                <div class="form-group">
+                    <label>Sites to block</label>
+                    <div id="breakListEditorSites" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                    <label for="breakListEditorCustomSites" style="margin-top: 8px;">Custom sites (one per line)</label>
+                    <textarea id="breakListEditorCustomSites" style="min-height: 80px;" placeholder="mysite.com&#10;othersite.com"></textarea>
+                </div>
+                <div id="breakListEditorAppsSection">
+                    <div class="form-group">
+                        <label>Apps to block</label>
+                        <div id="breakListEditorApps" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                        <label for="breakListEditorCustomApps" style="margin-top: 8px;">Custom apps (name:process, one per line)</label>
+                        <textarea id="breakListEditorCustomApps" style="min-height: 60px;" placeholder="MyGame:mygame.exe"></textarea>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 12px;">
+                    <button type="button" id="btn-save-break-list">Save list</button>
+                    <button type="button" id="btn-cancel-break-list" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="section" data-lockable>
+            <h2>Allowed Exceptions</h2>
+            <div class="section-body">
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Specific pages that bypass the block, even if their domain is in a break list.</p>
             <div class="form-group">
-                <label>Select sites to block</label>
-                <div id="blockedSitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px;"></div>
-            </div>
-            <div class="form-group" style="margin-top: 12px;">
-                <label for="customBlockedSites">Custom blocked sites (one per line)</label>
-                <textarea id="customBlockedSites" style="min-height: 80px;" placeholder="mysite.com&#10;othersite.com"></textarea>
-            </div>
-            <div class="form-group" style="margin-top: 18px;">
-                <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
+                <label for="allowedPaths">Allowed pages (one per line)</label>
                 <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
             </div>
             </div>
         </div>
 
-        <div class="section nuclear-zone">
+        <div class="section nuclear-zone collapsible">
             <h2>☢️ Nuclear Block</h2>
             <div class="section-body">
             <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it. These sites will remain blocked even if you delete your data or uninstall and reinstall the extension.</p>
 
-            <p class="section-desc" style="margin-top: -6px; font-size: 13px; color: #999;"><strong>How it works:</strong> Nuclear Block is for sites you've decided have no place in your life. Adding a site blocks it instantly — the hard part is getting it back. To remove a site, you click "Remove" and wait through the removal cooldown you chose when you added it. During that wait, you can easily re-block it if you change your mind. If a second confirmation cooldown is enabled, you'll need to confirm your decision again and wait a second time — giving you even more space to reconsider whether unblocking is really what you want.</p>
+            <p class="section-desc" style="margin-top: -6px; font-size: 13px; color: #8a8690;"><strong>How it works:</strong> Nuclear Block is for sites you've decided have no place in your life. Adding a site blocks it instantly — the hard part is getting it back. To remove a site, you click "Remove" and wait through the removal cooldown you chose when you added it. During that wait, you can easily re-block it if you change your mind. If a second confirmation cooldown is enabled, you'll need to confirm your decision again and wait a second time — giving you even more space to reconsider whether unblocking is really what you want.</p>
 
             <div class="form-group">
                 <label>Currently nuclear-blocked sites</label>
@@ -717,7 +1111,7 @@
                 </div>
             </div>
 
-            <div class="nuclear-second-cooldown" style="margin-top: 20px; margin-bottom: 0; padding-top: 20px; padding-bottom: 0; border-top: 1px solid rgba(255, 140, 0, 0.15); border-bottom: none;">
+            <div class="nuclear-second-cooldown" style="margin-top: 20px; margin-bottom: 0; padding-top: 20px; padding-bottom: 0; border-top: 1px solid rgba(255, 140, 0, 0.1); border-bottom: none;">
                 <label>Second confirmation cooldown (applies to new sites only)</label>
                 <div class="nuclear-radio-group">
                     <label>
@@ -757,58 +1151,41 @@
             </div>
         </div>
 
-        <div id="section-blocked-apps" class="section" data-lockable style="display: none;">
-            <h2>Blocked Applications</h2>
-            <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Apps that will be closed during work sessions (accessible during breaks)</p>
-
-            <div class="form-group">
-                <label>Select apps to block during work</label>
-                <div id="blockedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Add custom blocked app</label>
-                <div class="input-row">
-                    <div class="form-group">
-                        <input type="text" id="custom-blocked-app-name" placeholder="App name (e.g., Steam)">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="custom-blocked-app-process" placeholder="Process name (e.g., steam)">
-                    </div>
-                </div>
-                <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
-            </div>
-            </div>
-        </div>
-
         <div class="section-group-label">
             <span>What is Productive?</span>
-            <p>Control what counts as productive and which sites trigger the productivity check popup.</p>
+            <p>Control what counts as productive during work sessions.</p>
         </div>
 
         <div class="section" data-lockable>
-            <h2>Productive Sites</h2>
+            <h2>Productive Lists</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Your work timer only counts when you're on a productive site or app. Choose what counts as productive below.</p>
-            <div class="form-group">
-                <label>What counts as productive?</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="productiveMode" value="whitelist">
-                        <span>Only the specific sites I list below</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="productiveMode" value="all-except-blocked" checked>
-                        <span>Everything counts as productive (except my blocked sites above)</span>
-                    </label>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Create and manage your productive lists. Your work timer only runs when you're on a site or app from an active productive list.</p>
+            <div id="productiveListsMaster" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;"></div>
+            <button type="button" id="btn-create-productive-list" class="btn-secondary" style="padding: 10px 20px;">+ Create new productive list</button>
+
+            <div id="productiveListEditor" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <div class="form-group">
+                    <label for="productiveListEditorName">List Name</label>
+                    <input type="text" id="productiveListEditorName" placeholder="e.g., Work Tools, Study Sites">
                 </div>
-            </div>
-            <div id="productiveSitesGroup" class="form-group">
-                <label>Select productive sites — your timer only runs on these</label>
-                <div id="productiveSitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 12px;"></div>
-                <label for="customProductiveSites" style="margin-top: 8px;">Custom sites (one per line)</label>
-                <textarea id="customProductiveSites" style="min-height: 80px;" placeholder="docs.google.com&#10;notion.so"></textarea>
+                <div class="form-group">
+                    <label>Productive sites</label>
+                    <div id="productiveListEditorSites" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                    <label for="productiveListEditorCustomSites" style="margin-top: 8px;">Custom sites (one per line)</label>
+                    <textarea id="productiveListEditorCustomSites" style="min-height: 80px;" placeholder="docs.google.com&#10;notion.so"></textarea>
+                </div>
+                <div id="productiveListEditorAppsSection">
+                    <div class="form-group">
+                        <label>Productive apps</label>
+                        <div id="productiveListEditorApps" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                        <label for="productiveListEditorCustomApps" style="margin-top: 8px;">Custom app process names (one per line)</label>
+                        <textarea id="productiveListEditorCustomApps" style="min-height: 60px;" placeholder="MyApp&#10;CustomTool"></textarea>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 12px;">
+                    <button type="button" id="btn-save-productive-list">Save list</button>
+                    <button type="button" id="btn-cancel-productive-list" class="btn-secondary">Cancel</button>
+                </div>
             </div>
             </div>
         </div>
@@ -816,59 +1193,10 @@
         <div class="section">
             <h2>Skip Productivity Check Popup</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Sites listed here will never trigger the "Are you really working?" popup. Sites are added automatically when you click "Yes, I'm working" — or add them manually below.</p>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Sites listed here will never trigger the "Are you really working?" popup. Sites are added automatically when you click "Yes, I'm working" — or add them manually below.</p>
             <div class="form-group">
                 <label for="skipProductivityCheck">Approved sites (one per line)</label>
                 <textarea id="skipProductivityCheck" placeholder="github.com&#10;docs.google.com&#10;notion.so"></textarea>
-            </div>
-            </div>
-        </div>
-
-        <div id="section-productive-apps" class="section" data-lockable style="display: none;">
-            <h2>Productive Applications</h2>
-            <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Desktop apps that count as productive. Your work timer runs while these are in the foreground, even when the browser isn't active.</p>
-
-            <div id="nativeHostWarning" style="display: none; background-color: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #ff6b7a;">
-                Application detection is unavailable. <a href="#" id="installInstructions" style="color: #f093fb; text-decoration: underline; margin-left: 4px;">Install the native host</a> to track desktop apps.
-            </div>
-
-            <div class="form-group">
-                <label>Select apps that count as productive</label>
-                <div id="curatedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label for="customApps">Custom process names (one per line)</label>
-                <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
-                <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
-            </div>
-            </div>
-        </div>
-
-        <div class="section-group-label">
-            <span>Desktop App Tracking</span>
-            <p>Enable Companion App mode below to configure productive and blocked desktop applications.</p>
-        </div>
-
-        <div class="section" data-lockable>
-            <h2>Companion App</h2>
-            <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">
-                Website blocking works with extension-only mode. Turn on Companion App mode only if you also install the desktop app/native host.
-            </p>
-            <div class="form-group">
-                <label>Web &amp; Application Tracking</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="companionMode" value="off" checked>
-                        <span>Web Tracking Only</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="companionMode" value="on">
-                        <span>Companion App mode (track/block desktop apps)</span>
-                    </label>
-                </div>
             </div>
             </div>
         </div>
@@ -881,7 +1209,7 @@
         <div class="section" data-lockable>
             <h2>Financial Penalty</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">When off, you'll still see a confirmation popup when quitting early — but with no financial consequence.</p>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">When off, you'll still see a confirmation popup when quitting early — but with no financial consequence.</p>
             <div class="form-group">
                 <div class="radio-group">
                     <label>
@@ -912,7 +1240,7 @@
                         <span>Anti-Charity</span>
                     </label>
                 </div>
-                <div style="color: #666; font-size: 13px; margin-top: 8px; margin-bottom: 12px;">Charity: donate to a cause you support. Anti-Charity: donate to a cause you oppose (stronger motivation to stay focused).</div>
+                <div style="color: #5c5862; font-size: 13px; margin-top: 8px; margin-bottom: 12px;">Charity: donate to a cause you support. Anti-Charity: donate to a cause you oppose (stronger motivation to stay focused).</div>
             </div>
             <div class="form-group">
                 <label for="penaltyTarget">Organization Name</label>
@@ -928,7 +1256,7 @@
         <div id="section-penalty-reminder" class="section" data-lockable>
             <h2>Penalty Reminder</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Penalty tracking is honor-system. Keep an optional reminder note here. Never enter card or bank numbers.</p>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Penalty tracking is honor-system. Keep an optional reminder note here. Never enter card or bank numbers.</p>
             <div class="form-group">
                 <label for="paymentMethod">Reminder note</label>
                 <input type="text" id="paymentMethod" placeholder="e.g., Donate to my selected cause after failed session">
@@ -940,7 +1268,7 @@
             <h2>Danger Zone</h2>
             <div class="section-body">
             <p>Delete all extension data from this browser, including settings, local session stats, and sign-in token. Nuclear Block data is preserved.</p>
-            <button type="button" id="btn-delete-all-data" class="btn-danger">Delete All Data</button>
+            <button type="button" id="btn-delete-all-data" class="btn-danger">Delete all data</button>
             </div>
         </div>
     </div>
@@ -949,6 +1277,7 @@
 
     <script src="constants.js"></script>
     <script src="storage.js"></script>
+    <script src="list-utils.js"></script>
     <script src="config.default.js"></script>
     <script src="config.js"></script>
     <script src="settings.js"></script>

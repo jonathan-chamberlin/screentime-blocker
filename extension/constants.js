@@ -5,6 +5,45 @@
 const APP_NAME = 'Brainrot Blocker';
 const APP_NAME_FULL = 'Brainrot Blocker';
 
+// Default break list — ships pre-populated for out-of-box experience
+// Must be defined before DEFAULTS which references it.
+const DEFAULT_BREAK_LIST = {
+  id: 'break-default',
+  name: 'Default',
+  sites: [
+    'instagram.com',
+    'facebook.com',
+    'youtube.com',
+    'steampowered.com', 'steamcommunity.com',
+    // Adult Sites
+    'onlyfans.com',
+    'pornhub.com', 'xvideos.com', 'xnxx.com', 'redtube.com', 'youporn.com',
+    'xhamster.com', 'tube8.com', 'spankbang.com', 'beeg.com', 'eporner.com',
+    'vporn.com', 'txxx.com', 'tnaflix.com', 'fuq.com', 'hclips.com',
+    'drtuber.com', 'nuvid.com', 'pornone.com', 'empflix.com', 'brazzers.com',
+    'realitykings.com', 'bangbros.com', 'naughtyamerica.com', 'anyporn.com',
+    'hotmovs.com', 'cliphunter.com', 'ixxx.com', 'pornmd.com', 'alphaporno.com',
+    'porntrex.com', 'sxyprn.com', 'porntube.com', 'fapster.xxx', 'gotporn.com',
+    'faphouse.com',
+    // Gambling Sites
+    'draftkings.com', 'fanduel.com', 'betmgm.com', 'caesarssportsbook.com',
+    'bet365.com', 'betway.com', 'williamhill.com', 'betrivers.com',
+    'pointsbet.com', 'hardrock.bet', 'unibet.com', 'bwin.com',
+    'bovada.lv', 'mybookie.ag', 'betonline.ag', 'sportsbetting.ag',
+    'prizepicks.com', 'getfliff.com', 'barstoolsports.com', 'ladbrokes.com',
+    'paddypower.com', '888casino.com', 'pokerstars.com', 'ggpoker.com',
+    'partypoker.com', 'wsop.com',
+    // News Sites
+    'cnn.com', 'bbc.com', 'nytimes.com', 'theguardian.com', 'washingtonpost.com',
+    'foxnews.com', 'reuters.com', 'apnews.com', 'nbcnews.com', 'bloomberg.com',
+    'wsj.com', 'usatoday.com',
+  ],
+  apps: [
+    { name: 'Steam', process: 'steam', detectProcesses: ['steam', 'steamwebhelper'], killProcesses: ['steam', 'steamwebhelper'] },
+  ],
+  isActive: true,
+};
+
 const DEFAULTS = {
   workMinutes: 50,
   rewardMinutes: 10,
@@ -109,6 +148,8 @@ const DEFAULTS = {
   penaltyAmount: 5,
   paymentMethod: '',
   companionMode: 'off',
+  breakLists: [DEFAULT_BREAK_LIST],
+  productiveLists: [],
 };
 
 const CURATED_APPS = [
@@ -350,6 +391,25 @@ const PRESET_PRODUCTIVE_SITES = [
   { name: 'Sonic Academy', domain: 'sonicacademy.com', category: 'Music Production', checked: false },
   { name: 'Point Blank School', domain: 'pointblankmusicschool.com', category: 'Music Production', checked: false },
   { name: 'ProducerTech', domain: 'producertech.com', category: 'Music Production', checked: false },
+];
+
+// ── Break & Productive Lists (continued) ──
+
+// Alias — break list editor uses the same site presets as the old blocked sites
+const PRESET_BREAK_SITES = PRESET_BLOCKED_SITES;
+
+// App presets available when creating/editing break lists
+const PRESET_BREAK_APPS = [
+  { name: 'Steam', process: 'steam', detectProcesses: ['steam', 'steamwebhelper'], killProcesses: ['steam', 'steamwebhelper'], category: 'Gaming', checked: false },
+  { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', category: 'Gaming', checked: false },
+  { name: 'Discord', process: 'Discord', category: 'Communication', checked: false },
+  { name: 'Minecraft', process: 'javaw', category: 'Gaming', checked: false },
+  { name: 'League of Legends', process: 'LeagueClientUx.exe', detectProcesses: ['LeagueClientUx.exe', 'LeagueClient.exe', 'League of Legends.exe', 'RiotClientServices.exe'], killProcesses: ['LeagueClientUx.exe', 'LeagueClient.exe', 'League of Legends.exe', 'RiotClientServices.exe'], category: 'Gaming', checked: false },
+  { name: 'Valorant', process: 'VALORANT-Win64-Shipping.exe', detectProcesses: ['VALORANT-Win64-Shipping.exe', 'RiotClientServices.exe'], killProcesses: ['VALORANT-Win64-Shipping.exe', 'RiotClientServices.exe'], category: 'Gaming', checked: false },
+  { name: 'Fortnite', process: 'FortniteClient-Win64-Shipping.exe', category: 'Gaming', checked: false },
+  { name: 'Apex Legends', process: 'r5apex.exe', detectProcesses: ['r5apex.exe', 'r5apex_dx12.exe'], killProcesses: ['r5apex.exe', 'r5apex_dx12.exe'], category: 'Gaming', checked: false },
+  { name: 'World of Warcraft', process: 'Wow.exe', category: 'Gaming', checked: false },
+  { name: 'Overwatch 2', process: 'Overwatch.exe', category: 'Gaming', checked: false },
 ];
 
 const PRODUCTIVITY_CHECK_MINUTES = 5; // minutes of focused time before "Are you really working?" popup

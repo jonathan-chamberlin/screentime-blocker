@@ -13,22 +13,22 @@
 
         body {
             font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: #0f0f1a;
+            background-color: #121016;
             padding: 40px 20px;
             line-height: 1.6;
-            color: #e0e0e0;
+            color: #ede9e3;
             min-height: 100vh;
         }
 
         .container { max-width: 700px; margin: 0 auto; }
 
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #1c1826 0%, #191428 100%);
             border-radius: 16px;
             padding: 40px 30px;
             margin-bottom: 30px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         .header h1 {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -40,22 +40,22 @@
             margin-bottom: 8px;
         }
         .header p {
-            color: #888;
+            color: #8a8690;
             font-size: 14px;
         }
 
         .section {
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background-color: #1a1722;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
             transition: border-color 0.3s;
         }
-        .section:hover { border-color: rgba(255, 255, 255, 0.1); }
+        .section:hover { border-color: rgba(255, 255, 255, 0.08); }
 
         .section h2 {
-            color: #e0e0e0;
+            color: #ede9e3;
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 16px;
@@ -63,8 +63,8 @@
 
         /* Streak banner */
         .streak-banner {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: linear-gradient(135deg, #1c1826 0%, #191428 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
@@ -86,7 +86,7 @@
             line-height: 1.1;
         }
         .streak-label {
-            color: #888;
+            color: #8a8690;
             font-size: 13px;
             margin-top: 4px;
         }
@@ -108,14 +108,14 @@
         }
         .week-card {
             flex: 1;
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background-color: #1a1722;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
         }
         .week-card-label {
-            color: #888;
+            color: #8a8690;
             font-size: 13px;
             margin-bottom: 8px;
         }
@@ -125,13 +125,13 @@
             color: #00ff88;
         }
         .week-card-unit {
-            color: #888;
+            color: #8a8690;
             font-size: 14px;
             font-weight: 400;
         }
         .week-change {
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background-color: #1a1722;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 16px 20px;
             text-align: center;
@@ -176,7 +176,7 @@
             background: linear-gradient(180deg, #ffaa00, #ff8800);
         }
         .chart-label {
-            color: #555;
+            color: #5c5862;
             font-size: 10px;
             margin-top: 6px;
             white-space: nowrap;
@@ -185,7 +185,7 @@
             max-width: 100%;
         }
         .chart-value {
-            color: #888;
+            color: #8a8690;
             font-size: 10px;
             margin-bottom: 4px;
         }
@@ -222,7 +222,7 @@
             transition: width 0.3s;
         }
         .h-bar-count {
-            color: #888;
+            color: #8a8690;
             font-size: 13px;
             width: 40px;
             flex-shrink: 0;
@@ -236,8 +236,8 @@
             margin-bottom: 20px;
         }
         .stat-card {
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background-color: #1a1722;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
@@ -245,13 +245,13 @@
         .stat-value {
             font-size: 28px;
             font-weight: 700;
-            color: #e0e0e0;
+            color: #ede9e3;
         }
         .stat-value-green { color: #00ff88; }
         .stat-value-orange { color: #ffaa00; }
         .stat-value-pink { color: #f093fb; }
         .stat-label {
-            color: #888;
+            color: #8a8690;
             font-size: 13px;
             margin-top: 4px;
         }
@@ -278,22 +278,120 @@
             background: linear-gradient(180deg, #00ff88, #00cc6a);
         }
         .dow-label {
-            color: #888;
+            color: #8a8690;
             font-size: 12px;
             margin-top: 8px;
             font-weight: 500;
         }
         .dow-value {
-            color: #888;
+            color: #8a8690;
             font-size: 11px;
             margin-bottom: 4px;
+        }
+
+        /* Heatmap (GitHub contribution style) */
+        .heatmap-scroll {
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .heatmap-outer {
+            display: flex;
+            gap: 4px;
+        }
+        .heatmap-day-labels {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-top: 20px;
+            flex-shrink: 0;
+        }
+        .heatmap-day-label {
+            height: 12px;
+            line-height: 12px;
+            font-size: 10px;
+            color: #5c5862;
+            width: 28px;
+            text-align: right;
+        }
+        .heatmap-main {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            min-width: 0;
+        }
+        .heatmap-months {
+            display: flex;
+            height: 20px;
+            align-items: flex-end;
+            padding-bottom: 4px;
+        }
+        .heatmap-month-label {
+            font-size: 10px;
+            color: #5c5862;
+        }
+        .heatmap-grid {
+            display: flex;
+            gap: 2px;
+        }
+        .heatmap-week {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background: #1a1722;
+            position: relative;
+        }
+        .heatmap-cell[data-tip]:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1c1826;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #ede9e3;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 10;
+            pointer-events: none;
+            margin-bottom: 4px;
+        }
+        /* Green levels (productive) */
+        .heatmap-green-1 { background: #0e4429; }
+        .heatmap-green-2 { background: #006d32; }
+        .heatmap-green-3 { background: #26a641; }
+        .heatmap-green-4 { background: #39d353; }
+        /* Red levels (blocked) */
+        .heatmap-red-1 { background: #5c1a1a; }
+        .heatmap-red-2 { background: #8b2525; }
+        .heatmap-red-3 { background: #c13030; }
+        .heatmap-red-4 { background: #e34040; }
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #5c5862;
+        }
+        .heatmap-legend-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
         }
 
         /* Empty state */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #666;
+            color: #5c5862;
             font-size: 16px;
         }
         .empty-state .empty-icon {
