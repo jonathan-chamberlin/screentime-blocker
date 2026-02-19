@@ -50,7 +50,7 @@ function showConfetti() {
   container.className = 'confetti-container';
   document.body.appendChild(container);
 
-  const colors = ['#00ff88', '#f093fb', '#ffaa00', '#ff4757', '#667eea', '#f5576c'];
+  const colors = ['#00ff88', '#f093fb', '#ffaa00', '#ff4757', '#667eea', '#f5576c', '#a78bfa'];
   for (let i = 0; i < 60; i++) {
     const confetti = document.createElement('div');
     confetti.className = 'confetti';
@@ -116,7 +116,7 @@ function renderInputLock(status) {
 function showEndButton(status) {
   el.btnEnd.style.display = 'block';
   const thresholdMet = (status.rewardGrantCount || 0) >= 1;
-  el.btnEnd.textContent = thresholdMet ? 'End Session' : 'Quit Early (coward)';
+  el.btnEnd.textContent = thresholdMet ? 'End session' : 'Quit early (coward)';
   if (strictMode && !thresholdMet) {
     el.btnEnd.disabled = true;
     el.btnEnd.title = 'Complete your work threshold to unlock';
@@ -183,7 +183,7 @@ function renderButtons(status) {
       }
     }
   } else {
-    el.btnStart.textContent = 'Lock In';
+    el.btnStart.textContent = 'Lock in';
     el.btnStart.style.display = 'block';
   }
 }
@@ -216,7 +216,7 @@ async function renderActiveLists() {
 
   activeBreak.forEach(list => {
     const tag = document.createElement('span');
-    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(255,71,87,0.15); color:#ff6b7a; border:1px solid rgba(255,71,87,0.25); white-space:nowrap;';
+    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(255,71,87,0.1); color:#ff6b7a; border:1px solid rgba(255,71,87,0.18); white-space:nowrap;';
     tag.textContent = list.name;
     tag.title = 'Break list: ' + list.name;
     container.appendChild(tag);
@@ -224,7 +224,7 @@ async function renderActiveLists() {
 
   activeProductive.forEach(list => {
     const tag = document.createElement('span');
-    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(0,255,136,0.1); color:#00ff88; border:1px solid rgba(0,255,136,0.2); white-space:nowrap;';
+    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(0,255,136,0.08); color:#00ff88; border:1px solid rgba(0,255,136,0.15); white-space:nowrap;';
     tag.textContent = list.name;
     tag.title = 'Productive list: ' + list.name;
     container.appendChild(tag);

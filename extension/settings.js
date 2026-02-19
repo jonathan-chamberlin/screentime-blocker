@@ -492,51 +492,46 @@ function showTypingConfirmation(siteId) {
 
   const overlay = document.createElement('div');
   overlay.id = 'nuclear-confirm-modal';
-  overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+  overlay.className = 'nuclear-confirm-overlay';
 
   const modal = document.createElement('div');
-  modal.style.cssText = 'background: #1a1a2e; border: 1px solid rgba(255,140,0,0.3); border-radius: 14px; padding: 32px; max-width: 460px; width: 90%; text-align: center;';
+  modal.className = 'nuclear-confirm-modal';
 
   const title = document.createElement('div');
-  title.style.cssText = 'font-size: 18px; font-weight: 600; color: #ffaa44; margin-bottom: 16px;';
+  title.className = 'modal-title';
   title.textContent = 'Are you sure?';
 
   const desc = document.createElement('div');
-  desc.style.cssText = 'font-size: 14px; color: #aaa; margin-bottom: 20px; line-height: 1.6;';
+  desc.className = 'modal-desc';
   desc.textContent = 'To unblock this site, type the phrase below exactly as shown.';
 
   const phrase = document.createElement('div');
-  phrase.style.cssText = 'font-size: 16px; font-weight: 600; color: #e0e0e0; margin-bottom: 16px; padding: 12px 16px; background: rgba(255,140,0,0.08); border: 1px solid rgba(255,140,0,0.2); border-radius: 8px; user-select: none; -webkit-user-select: none;';
+  phrase.className = 'modal-phrase';
   phrase.textContent = NUCLEAR_CONFIRM_PHRASE;
-  // Block copy via keyboard and context menu
   phrase.addEventListener('copy', e => e.preventDefault());
   phrase.addEventListener('contextmenu', e => e.preventDefault());
 
   const input = document.createElement('input');
   input.type = 'text';
   input.autocomplete = 'off';
-  input.style.cssText = 'width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,140,0,0.25); border-radius: 8px; color: #e0e0e0; font-size: 15px; font-family: inherit; margin-bottom: 16px;';
   input.placeholder = 'Type the phrase here...';
-  // Block pasting
   input.addEventListener('paste', e => e.preventDefault());
 
   const btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+  btnRow.className = 'modal-btn-row';
 
   const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn-secondary';
+  cancelBtn.className = 'modal-btn-cancel';
   cancelBtn.textContent = 'Cancel';
-  cancelBtn.style.cssText = 'padding: 10px 24px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;';
   cancelBtn.addEventListener('click', () => overlay.remove());
 
   const confirmBtn = document.createElement('button');
-  confirmBtn.textContent = 'Confirm Unblock';
-  confirmBtn.style.cssText = 'padding: 10px 24px; background: linear-gradient(135deg, #ff8c00, #e65c00); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; opacity: 0.4; pointer-events: none; transition: all 0.2s;';
+  confirmBtn.className = 'modal-btn-confirm';
+  confirmBtn.textContent = 'Confirm unblock';
 
   input.addEventListener('input', () => {
     const match = input.value === NUCLEAR_CONFIRM_PHRASE;
-    confirmBtn.style.opacity = match ? '1' : '0.4';
-    confirmBtn.style.pointerEvents = match ? 'auto' : 'none';
+    confirmBtn.classList.toggle('enabled', match);
   });
 
   confirmBtn.addEventListener('click', () => {
@@ -548,7 +543,6 @@ function showTypingConfirmation(siteId) {
     });
   });
 
-  // Close on overlay click (not modal)
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
@@ -600,37 +594,48 @@ async function loadBreakLists() {
 
   breakLists.forEach(list => {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px;';
+    row.className = 'list-row';
 
-    const name = document.createElement('span');
-    name.style.cssText = 'flex:1; font-size:14px; color:#e0e0e0; font-weight:500;';
-    name.textContent = list.name;
+    const icon = document.createElement('div');
+    icon.className = 'list-icon break-icon';
+    icon.textContent = list.name.charAt(0).toUpperCase();
 
-    const siteCount = document.createElement('span');
-    siteCount.style.cssText = 'font-size:12px; color:#666;';
-    siteCount.textContent = `${list.sites.length} sites, ${list.apps.length} apps`;
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'list-name';
+    const nameText = document.createTextNode(list.name);
+    const badge = document.createElement('span');
+    badge.className = 'list-badge';
+    badge.textContent = `${list.sites.length} sites · ${list.apps.length} apps`;
+    nameWrap.appendChild(nameText);
+    nameWrap.appendChild(badge);
+
+    const actions = document.createElement('div');
+    actions.className = 'list-actions';
 
     const editBtn = document.createElement('button');
-    editBtn.className = 'btn-secondary';
-    editBtn.style.cssText = 'padding:6px 14px; font-size:12px;';
-    editBtn.textContent = 'Edit';
+    editBtn.className = 'list-action-btn';
+    editBtn.innerHTML = '✏️';
+    editBtn.title = 'Edit';
     editBtn.addEventListener('click', () => openBreakListEditor(list.id));
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-secondary';
-    deleteBtn.style.cssText = 'padding:6px 14px; font-size:12px; color:#ff6b7a; border-color:rgba(255,71,87,0.3);';
-    deleteBtn.textContent = 'Delete';
+    deleteBtn.className = 'list-action-btn delete-btn';
+    deleteBtn.innerHTML = '🗑️';
+    deleteBtn.title = 'Delete';
     if (list.id === 'break-default') {
       deleteBtn.disabled = true;
       deleteBtn.title = 'Default list cannot be deleted';
-      deleteBtn.style.opacity = '0.4';
+      deleteBtn.style.opacity = '0.3';
+      deleteBtn.style.pointerEvents = 'none';
     }
     deleteBtn.addEventListener('click', () => deleteBreakList(list.id));
 
-    row.appendChild(name);
-    row.appendChild(siteCount);
-    row.appendChild(editBtn);
-    row.appendChild(deleteBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+
+    row.appendChild(icon);
+    row.appendChild(nameWrap);
+    row.appendChild(actions);
     master.appendChild(row);
   });
 }
@@ -744,38 +749,48 @@ async function loadProductiveLists() {
   master.innerHTML = '';
 
   if (productiveLists.length === 0) {
-    master.innerHTML = '<p style="color:#666; font-size:13px; font-style:italic;">No productive lists yet. Create one to get started.</p>';
+    master.innerHTML = '<p style="color:#5c5862; font-size:13px; font-style:italic;">No productive lists yet. Create one to get started.</p>';
     return;
   }
 
   productiveLists.forEach(list => {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px;';
+    row.className = 'list-row';
 
-    const name = document.createElement('span');
-    name.style.cssText = 'flex:1; font-size:14px; color:#e0e0e0; font-weight:500;';
-    name.textContent = list.name;
+    const icon = document.createElement('div');
+    icon.className = 'list-icon productive-icon';
+    icon.textContent = list.name.charAt(0).toUpperCase();
 
-    const siteCount = document.createElement('span');
-    siteCount.style.cssText = 'font-size:12px; color:#666;';
-    siteCount.textContent = `${list.sites.length} sites, ${list.apps.length} apps`;
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'list-name';
+    const nameText = document.createTextNode(list.name);
+    const badge = document.createElement('span');
+    badge.className = 'list-badge';
+    badge.textContent = `${list.sites.length} sites · ${list.apps.length} apps`;
+    nameWrap.appendChild(nameText);
+    nameWrap.appendChild(badge);
+
+    const actions = document.createElement('div');
+    actions.className = 'list-actions';
 
     const editBtn = document.createElement('button');
-    editBtn.className = 'btn-secondary';
-    editBtn.style.cssText = 'padding:6px 14px; font-size:12px;';
-    editBtn.textContent = 'Edit';
+    editBtn.className = 'list-action-btn';
+    editBtn.innerHTML = '✏️';
+    editBtn.title = 'Edit';
     editBtn.addEventListener('click', () => openProductiveListEditor(list.id));
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-secondary';
-    deleteBtn.style.cssText = 'padding:6px 14px; font-size:12px; color:#ff6b7a; border-color:rgba(255,71,87,0.3);';
-    deleteBtn.textContent = 'Delete';
+    deleteBtn.className = 'list-action-btn delete-btn';
+    deleteBtn.innerHTML = '🗑️';
+    deleteBtn.title = 'Delete';
     deleteBtn.addEventListener('click', () => deleteProductiveList(list.id));
 
-    row.appendChild(name);
-    row.appendChild(siteCount);
-    row.appendChild(editBtn);
-    row.appendChild(deleteBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+
+    row.appendChild(icon);
+    row.appendChild(nameWrap);
+    row.appendChild(actions);
     master.appendChild(row);
   });
 }
@@ -869,26 +884,36 @@ async function renderActiveBreakLists() {
   container.innerHTML = '';
 
   breakLists.forEach(list => {
-    const item = document.createElement('div');
-    item.className = 'app-checkbox-item';
+    const row = document.createElement('div');
+    row.className = 'list-selector-row' + (list.isActive ? ' active' : '');
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = list.isActive;
     checkbox.dataset.listId = list.id;
 
-    const label = document.createElement('span');
-    label.textContent = list.name;
+    const check = document.createElement('div');
+    check.className = 'list-selector-check';
+    check.innerHTML = '<svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>';
 
-    item.appendChild(checkbox);
-    item.appendChild(label);
-    item.addEventListener('click', (e) => {
-      if (e.target !== checkbox) {
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      }
+    const name = document.createElement('span');
+    name.className = 'list-selector-name';
+    name.textContent = list.name;
+
+    const badge = document.createElement('span');
+    badge.className = 'list-selector-badge';
+    badge.textContent = `${list.sites.length} sites · ${list.apps.length} apps`;
+
+    row.appendChild(checkbox);
+    row.appendChild(check);
+    row.appendChild(name);
+    row.appendChild(badge);
+    row.addEventListener('click', (e) => {
+      checkbox.checked = !checkbox.checked;
+      row.classList.toggle('active', checkbox.checked);
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    container.appendChild(item);
+    container.appendChild(row);
   });
 }
 
@@ -913,26 +938,36 @@ async function renderActiveProductiveLists() {
   noListsMsg.style.display = 'none';
 
   productiveLists.forEach(list => {
-    const item = document.createElement('div');
-    item.className = 'app-checkbox-item';
+    const row = document.createElement('div');
+    row.className = 'list-selector-row' + (list.isActive ? ' active' : '');
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = list.isActive;
     checkbox.dataset.listId = list.id;
 
-    const label = document.createElement('span');
-    label.textContent = list.name;
+    const check = document.createElement('div');
+    check.className = 'list-selector-check';
+    check.innerHTML = '<svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>';
 
-    item.appendChild(checkbox);
-    item.appendChild(label);
-    item.addEventListener('click', (e) => {
-      if (e.target !== checkbox) {
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      }
+    const name = document.createElement('span');
+    name.className = 'list-selector-name';
+    name.textContent = list.name;
+
+    const badge = document.createElement('span');
+    badge.className = 'list-selector-badge';
+    badge.textContent = `${list.sites.length} sites · ${list.apps.length} apps`;
+
+    row.appendChild(checkbox);
+    row.appendChild(check);
+    row.appendChild(name);
+    row.appendChild(badge);
+    row.addEventListener('click', (e) => {
+      checkbox.checked = !checkbox.checked;
+      row.classList.toggle('active', checkbox.checked);
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    inner.appendChild(item);
+    inner.appendChild(row);
   });
 }
 
