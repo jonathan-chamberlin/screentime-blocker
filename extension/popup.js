@@ -50,7 +50,7 @@ function showConfetti() {
   container.className = 'confetti-container';
   document.body.appendChild(container);
 
-  const colors = ['#00ff88', '#f093fb', '#ffaa00', '#ff4757', '#667eea', '#f5576c', '#a78bfa'];
+  const colors = ['#4ade80', '#f472b6', '#eab308', '#c084fc', '#f9a8d4', '#a78bfa'];
   for (let i = 0; i < 60; i++) {
     const confetti = document.createElement('div');
     confetti.className = 'confetti';
@@ -227,41 +227,6 @@ function renderUI(status) {
   renderTimer(status);
   renderButtons(status);
   updateAuthUI();
-}
-
-async function renderActiveLists() {
-  const result = await getStorage(['breakLists', 'productiveLists', 'productiveMode']);
-  const breakLists = result.breakLists || DEFAULTS.breakLists;
-  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
-  const mode = result.productiveMode || DEFAULTS.productiveMode;
-
-  const container = document.getElementById('active-lists-content');
-  container.innerHTML = '';
-
-  const activeBreak = breakLists.filter(l => l.isActive);
-  const activeProductive = mode === 'lists' ? productiveLists.filter(l => l.isActive) : [];
-
-  if (activeBreak.length === 0 && activeProductive.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-  container.style.display = 'flex';
-
-  activeBreak.forEach(list => {
-    const tag = document.createElement('span');
-    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(255,71,87,0.1); color:#ff6b7a; border:1px solid rgba(255,71,87,0.18); white-space:nowrap;';
-    tag.textContent = list.name;
-    tag.title = 'Break list: ' + list.name;
-    container.appendChild(tag);
-  });
-
-  activeProductive.forEach(list => {
-    const tag = document.createElement('span');
-    tag.style.cssText = 'font-size:10px; padding:3px 8px; border-radius:10px; background:rgba(0,255,136,0.08); color:#00ff88; border:1px solid rgba(0,255,136,0.15); white-space:nowrap;';
-    tag.textContent = list.name;
-    tag.title = 'Productive list: ' + list.name;
-    container.appendChild(tag);
-  });
 }
 
 async function updateAuthUI() {
@@ -523,5 +488,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive)) {
     startPolling();
   }
-  await renderActiveLists();
 });
