@@ -2,6 +2,7 @@
 // Loads all modules via importScripts (global scope shared across files)
 importScripts(
   'constants.js',
+  'list-utils.js',
   'storage.js',
   'timer.js',
   'site-utils.js',
@@ -161,11 +162,13 @@ const messageHandlers = {
   addToBlockedSites: (msg, sender, sendResponse) => {
     (async () => {
       try {
-        const result = await getStorage(['rewardSites']);
-        const sites = result.rewardSites || DEFAULTS.rewardSites;
-        if (!sites.includes(msg.site)) {
-          sites.push(msg.site);
-          await setStorage({ rewardSites: sites });
+        const result = await getStorage(['breakLists']);
+        const breakLists = result.breakLists || DEFAULTS.breakLists;
+        // Add to first active break list (or default)
+        const targetList = breakLists.find(l => l.isActive) || breakLists[0];
+        if (targetList && !targetList.sites.includes(msg.site)) {
+          targetList.sites.push(msg.site);
+          await setStorage({ breakLists });
         }
         if (state.sessionActive) {
           await blockSites();

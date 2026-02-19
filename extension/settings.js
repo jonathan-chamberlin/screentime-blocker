@@ -45,10 +45,6 @@ function autoSave(key, value) {
   saveTimeouts[key] = setTimeout(async () => {
     await setStorage({ [key]: value });
     showSavedIndicator();
-
-    if (key === 'rewardSites') {
-      chrome.runtime.sendMessage({ action: 'updateRewardSites', sites: value });
-    }
   }, 500);
 }
 
@@ -57,12 +53,6 @@ async function loadSettings() {
 
   document.getElementById('allowedPaths').value =
     (result.allowedPaths || DEFAULTS.allowedPaths).join('\n');
-
-  const productiveMode = result.productiveMode || DEFAULTS.productiveMode;
-  document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
-    if (radio.value === productiveMode) radio.checked = true;
-  });
-  toggleProductiveSitesList(productiveMode);
 
   document.getElementById('skipProductivityCheck').value =
     (result.skipProductivityCheck || DEFAULTS.skipProductivityCheck).join('\n');
@@ -81,7 +71,6 @@ async function loadSettings() {
   document.querySelectorAll('input[name="companionMode"]').forEach(radio => {
     if (radio.value === companionMode) radio.checked = true;
   });
-  toggleAppSections(companionMode);
 
   const penaltyEnabled = result.penaltyEnabled || DEFAULTS.penaltyEnabled;
   document.querySelectorAll('input[name="penaltyEnabled"]').forEach(radio => {
@@ -108,6 +97,7 @@ function getSelectedCompanionMode() {
 
 function refreshNativeHostWarning() {
   const warning = document.getElementById('nativeHostWarning');
+  if (!warning) return;
   const companionMode = getSelectedCompanionMode();
 
   if (companionMode !== 'on') {
@@ -143,355 +133,6 @@ function scheduleNativeHostStatusChecks() {
       nativeHostStatusPoll = null;
     }
   }, 1000);
-}
-
-async function loadProductiveApps() {
-  const result = await getStorage(['productiveApps', 'companionMode']);
-  const userApps = result.productiveApps || [];
-
-  const grid = document.getElementById('curatedAppsList');
-  grid.innerHTML = '';
-
-  const categories = [];
-  const seen = new Set();
-  CURATED_APPS.forEach(app => {
-    if (!seen.has(app.category)) {
-      seen.add(app.category);
-      categories.push(app.category);
-    }
-  });
-
-  categories.forEach(category => {
-    const header = document.createElement('div');
-    header.className = 'app-category-header';
-    header.textContent = category;
-    grid.appendChild(header);
-
-    CURATED_APPS.filter(a => a.category === category).forEach(app => {
-      const item = document.createElement('div');
-      item.className = 'app-checkbox-item';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = 'app-' + app.process;
-      checkbox.checked = userApps.includes(app.process);
-
-      const label = document.createElement('span');
-      label.textContent = app.name;
-
-      item.appendChild(checkbox);
-      item.appendChild(label);
-      item.addEventListener('click', (e) => {
-        if (e.target !== checkbox) {
-          checkbox.checked = !checkbox.checked;
-          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
-      grid.appendChild(item);
-    });
-  });
-
-  const curatedProcessNames = CURATED_APPS.map(a => a.process);
-  const customApps = userApps.filter(app => !curatedProcessNames.includes(app));
-  document.getElementById('customApps').value = customApps.join('\n');
-
-  refreshNativeHostWarning();
-}
-
-async function saveProductiveApps() {
-  const apps = [];
-
-  CURATED_APPS.forEach(app => {
-    const checkbox = document.getElementById('app-' + app.process);
-    if (checkbox && checkbox.checked) {
-      apps.push(app.process);
-    }
-  });
-
-  const customText = document.getElementById('customApps').value;
-  const customApps = customText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-  apps.push(...customApps);
-
-  await setStorage({ productiveApps: apps });
-}
-
-const PRESET_BLOCKED_APPS = [
-  // detectProcesses: process names the foreground window may report (Steam UI runs under steamwebhelper)
-  // killProcesses: all processes to kill when blocked
-  { name: 'Steam', process: 'steam', detectProcesses: ['steam', 'steamwebhelper'], killProcesses: ['steam', 'steamwebhelper'], checked: true },
-  { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', checked: false },
-  { name: 'Discord', process: 'Discord', checked: false },
-  { name: 'Minecraft', process: 'javaw', checked: false },
-  // Games
-  { name: 'League of Legends', process: 'LeagueClientUx.exe', detectProcesses: ['LeagueClientUx.exe', 'League of Legends.exe'], killProcesses: ['League of Legends.exe', 'LeagueClientUx.exe', 'LeagueClient.exe', 'LeagueClientUxRender.exe'], checked: false },
-  { name: 'Valorant', process: 'VALORANT-Win64-Shipping.exe', detectProcesses: ['VALORANT-Win64-Shipping.exe'], killProcesses: ['VALORANT-Win64-Shipping.exe', 'vgtray.exe', 'vgc.exe'], checked: false },
-  { name: 'Fortnite', process: 'FortniteClient-Win64-Shipping.exe', detectProcesses: ['FortniteClient-Win64-Shipping.exe'], killProcesses: ['FortniteClient-Win64-Shipping.exe', 'FortniteLauncher.exe'], checked: false },
-  { name: 'Apex Legends', process: 'r5apex.exe', detectProcesses: ['r5apex.exe', 'r5apex_dx12.exe'], killProcesses: ['r5apex.exe', 'r5apex_dx12.exe'], checked: false },
-  { name: 'World of Warcraft', process: 'Wow.exe', detectProcesses: ['Wow.exe'], killProcesses: ['Wow.exe'], checked: false },
-  { name: 'Overwatch 2', process: 'Overwatch.exe', detectProcesses: ['Overwatch.exe'], killProcesses: ['Overwatch.exe'], checked: false },
-];
-
-async function loadBlockedApps() {
-  const result = await getStorage(['blockedApps']);
-
-  // First-time init: blockedApps was never explicitly saved — persist visual defaults now
-  if (result.blockedApps === undefined) {
-    const defaults = PRESET_BLOCKED_APPS
-      .filter(app => app.checked)
-      .map(({ name, process, detectProcesses, killProcesses }) => ({
-        name, process,
-        ...(detectProcesses && { detectProcesses }),
-        ...(killProcesses && { killProcesses }),
-      }));
-    await setStorage({ blockedApps: defaults });
-    result.blockedApps = defaults;
-  }
-
-  // Migrate: merge any new preset fields (detectProcesses, killProcesses) into existing stored entries
-  let needsMigration = false;
-  const migrated = result.blockedApps.map(stored => {
-    const preset = PRESET_BLOCKED_APPS.find(p => p.process === stored.process);
-    if (!preset) return stored;
-    const merged = { ...stored };
-    if (preset.detectProcesses && !stored.detectProcesses) { merged.detectProcesses = preset.detectProcesses; needsMigration = true; }
-    if (preset.killProcesses && !stored.killProcesses) { merged.killProcesses = preset.killProcesses; needsMigration = true; }
-    return merged;
-  });
-  if (needsMigration) {
-    await setStorage({ blockedApps: migrated });
-    result.blockedApps = migrated;
-  }
-
-  const userBlockedApps = result.blockedApps;
-  const presetProcessNames = new Set(PRESET_BLOCKED_APPS.map(a => a.process));
-
-  const grid = document.getElementById('blockedAppsList');
-  grid.innerHTML = '';
-
-  PRESET_BLOCKED_APPS.forEach(app => {
-    const item = document.createElement('div');
-    item.className = 'app-checkbox-item';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = 'blocked-app-' + app.process;
-    checkbox.checked = userBlockedApps.some(ua => ua.process === app.process);
-
-    const label = document.createElement('span');
-    label.textContent = app.name;
-
-    item.appendChild(checkbox);
-    item.appendChild(label);
-    item.addEventListener('click', (e) => {
-      if (e.target !== checkbox) {
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-    grid.appendChild(item);
-  });
-}
-
-async function saveBlockedApps() {
-  // Read current storage to preserve any custom apps (not in preset list)
-  const result = await getStorage(['blockedApps']);
-  const existing = result.blockedApps || [];
-  const presetProcessNames = new Set(PRESET_BLOCKED_APPS.map(a => a.process));
-  const customApps = existing.filter(app => !presetProcessNames.has(app.process));
-
-  const presetApps = [];
-  PRESET_BLOCKED_APPS.forEach(app => {
-    const checkbox = document.getElementById('blocked-app-' + app.process);
-    if (checkbox && checkbox.checked) {
-      const entry = { name: app.name, process: app.process };
-      if (app.detectProcesses) entry.detectProcesses = app.detectProcesses;
-      if (app.killProcesses) entry.killProcesses = app.killProcesses;
-      presetApps.push(entry);
-    }
-  });
-
-  await setStorage({ blockedApps: [...presetApps, ...customApps] });
-}
-
-function addCustomBlockedApp() {
-  const nameInput = document.getElementById('custom-blocked-app-name');
-  const processInput = document.getElementById('custom-blocked-app-process');
-
-  const name = nameInput.value.trim();
-  const process = processInput.value.trim();
-
-  if (!name || !process) {
-    alert('Please enter both app name and process name');
-    return;
-  }
-
-  getStorage(['blockedApps']).then(result => {
-    const blockedApps = result.blockedApps || [];
-    if (blockedApps.some(app => app.process === process)) {
-      alert('This app is already in your blocked list');
-      return;
-    }
-
-    blockedApps.push({ name, process });
-    setStorage({ blockedApps }).then(() => {
-      nameInput.value = '';
-      processInput.value = '';
-      loadBlockedApps();
-      showSavedIndicator();
-    });
-  });
-}
-
-function getSitePresetDomains(site) {
-  return site.domains || [site.domain];
-}
-
-function getSitePresetId(site) {
-  return 'site-' + (site.domain || site.domains[0]);
-}
-
-async function loadBlockedSites() {
-  const result = await getStorage(['rewardSites']);
-  let storedSites = result.rewardSites;
-
-  // First-time init: persist defaults from preset checked values
-  if (storedSites === undefined) {
-    storedSites = [];
-    PRESET_BLOCKED_SITES.forEach(site => {
-      if (site.checked) storedSites.push(...getSitePresetDomains(site));
-    });
-    await setStorage({ rewardSites: storedSites });
-  }
-
-  const allPresetDomains = new Set();
-  PRESET_BLOCKED_SITES.forEach(site => getSitePresetDomains(site).forEach(d => allPresetDomains.add(d)));
-  const customSites = storedSites.filter(d => !allPresetDomains.has(d));
-
-  const grid = document.getElementById('blockedSitesList');
-  grid.innerHTML = '';
-
-  const categories = [...new Set(PRESET_BLOCKED_SITES.map(s => s.category))];
-  categories.forEach(category => {
-    const header = document.createElement('div');
-    header.className = 'app-category-header';
-    header.textContent = category;
-    grid.appendChild(header);
-
-    PRESET_BLOCKED_SITES.filter(s => s.category === category).forEach(site => {
-      const domains = getSitePresetDomains(site);
-      const item = document.createElement('div');
-      item.className = 'app-checkbox-item';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = getSitePresetId(site);
-      checkbox.checked = domains.some(d => storedSites.includes(d));
-
-      const label = document.createElement('span');
-      label.textContent = site.name;
-
-      item.appendChild(checkbox);
-      item.appendChild(label);
-      item.addEventListener('click', (e) => {
-        if (e.target !== checkbox) {
-          checkbox.checked = !checkbox.checked;
-          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
-      grid.appendChild(item);
-    });
-  });
-
-  document.getElementById('customBlockedSites').value = customSites.join('\n');
-}
-
-async function saveBlockedSites() {
-  const sites = [];
-  PRESET_BLOCKED_SITES.forEach(site => {
-    const checkbox = document.getElementById(getSitePresetId(site));
-    if (checkbox && checkbox.checked) sites.push(...getSitePresetDomains(site));
-  });
-  const customText = document.getElementById('customBlockedSites').value;
-  sites.push(...customText.split('\n').map(s => s.trim()).filter(s => s.length > 0));
-
-  await setStorage({ rewardSites: sites });
-  chrome.runtime.sendMessage({ action: 'updateRewardSites', sites });
-  showSavedIndicator();
-}
-
-async function loadProductiveSites() {
-  const result = await getStorage(['productiveSites']);
-  let storedSites = result.productiveSites;
-
-  // First-time init: persist defaults from preset checked values
-  if (storedSites === undefined) {
-    storedSites = PRESET_PRODUCTIVE_SITES.filter(s => s.checked).map(s => s.domain);
-    await setStorage({ productiveSites: storedSites });
-  }
-
-  const presetDomains = new Set(PRESET_PRODUCTIVE_SITES.map(s => s.domain));
-  const customSites = storedSites.filter(d => !presetDomains.has(d));
-
-  const grid = document.getElementById('productiveSitesList');
-  grid.innerHTML = '';
-
-  const categories = [...new Set(PRESET_PRODUCTIVE_SITES.map(s => s.category))];
-  categories.forEach(category => {
-    const header = document.createElement('div');
-    header.className = 'app-category-header';
-    header.textContent = category;
-    grid.appendChild(header);
-
-    PRESET_PRODUCTIVE_SITES.filter(s => s.category === category).forEach(site => {
-      const item = document.createElement('div');
-      item.className = 'app-checkbox-item';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = 'productive-site-' + site.domain;
-      checkbox.checked = storedSites.includes(site.domain);
-
-      const label = document.createElement('span');
-      label.textContent = site.name;
-
-      item.appendChild(checkbox);
-      item.appendChild(label);
-      item.addEventListener('click', (e) => {
-        if (e.target !== checkbox) {
-          checkbox.checked = !checkbox.checked;
-          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
-      grid.appendChild(item);
-    });
-  });
-
-  document.getElementById('customProductiveSites').value = customSites.join('\n');
-}
-
-async function saveProductiveSites() {
-  const productiveMode = document.querySelector('input[name="productiveMode"]:checked').value;
-  const sites = [];
-  PRESET_PRODUCTIVE_SITES.forEach(site => {
-    const checkbox = document.getElementById('productive-site-' + site.domain);
-    if (checkbox && checkbox.checked) sites.push(site.domain);
-  });
-  const customText = document.getElementById('customProductiveSites').value;
-  sites.push(...customText.split('\n').map(s => s.trim()).filter(s => s.length > 0));
-
-  await setStorage({ productiveMode, productiveSites: sites });
-  showSavedIndicator();
-}
-
-function toggleProductiveSitesList(mode) {
-  document.getElementById('productiveSitesGroup').style.display =
-    mode === 'whitelist' ? 'block' : 'none';
-}
-
-function toggleAppSections(companionMode) {
-  const visible = companionMode === 'on';
-  document.getElementById('section-productive-apps').style.display = visible ? 'block' : 'none';
-  document.getElementById('section-blocked-apps').style.display = visible ? 'block' : 'none';
 }
 
 function togglePenaltySections(penaltyEnabled) {
@@ -933,10 +574,10 @@ async function handleDeleteAllData() {
   chrome.runtime.sendMessage({ action: 'deleteAllData' }, async (response) => {
     if (response && response.success) {
       await loadSettings();
-      await loadBlockedSites();
-      await loadProductiveSites();
-      await loadProductiveApps();
-      await loadBlockedApps();
+      await loadBreakLists();
+      await loadProductiveLists();
+      await renderActiveBreakLists();
+      await renderActiveProductiveLists();
       await loadNuclearBlock();
       showSavedIndicator();
       alert('All Brainrot Blocker data was deleted. Nuclear Block data was preserved.');
@@ -944,6 +585,545 @@ async function handleDeleteAllData() {
       alert('Failed to delete data. Please try again.');
     }
   });
+}
+
+// === Break Lists ===
+
+let editingBreakListId = null;
+
+async function loadBreakLists() {
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+
+  const master = document.getElementById('breakListsMaster');
+  master.innerHTML = '';
+
+  breakLists.forEach(list => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px;';
+
+    const name = document.createElement('span');
+    name.style.cssText = 'flex:1; font-size:14px; color:#e0e0e0; font-weight:500;';
+    name.textContent = list.name;
+
+    const siteCount = document.createElement('span');
+    siteCount.style.cssText = 'font-size:12px; color:#666;';
+    siteCount.textContent = `${list.sites.length} sites, ${list.apps.length} apps`;
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-secondary';
+    editBtn.style.cssText = 'padding:6px 14px; font-size:12px;';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => openBreakListEditor(list.id));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-secondary';
+    deleteBtn.style.cssText = 'padding:6px 14px; font-size:12px; color:#ff6b7a; border-color:rgba(255,71,87,0.3);';
+    deleteBtn.textContent = 'Delete';
+    if (list.id === 'break-default') {
+      deleteBtn.disabled = true;
+      deleteBtn.title = 'Default list cannot be deleted';
+      deleteBtn.style.opacity = '0.4';
+    }
+    deleteBtn.addEventListener('click', () => deleteBreakList(list.id));
+
+    row.appendChild(name);
+    row.appendChild(siteCount);
+    row.appendChild(editBtn);
+    row.appendChild(deleteBtn);
+    master.appendChild(row);
+  });
+}
+
+function openBreakListEditor(listId) {
+  editingBreakListId = listId;
+  const editor = document.getElementById('breakListEditor');
+  editor.style.display = 'block';
+
+  getStorage(['breakLists', 'companionMode']).then(result => {
+    const breakLists = result.breakLists || DEFAULTS.breakLists;
+    const list = breakLists.find(l => l.id === listId);
+    if (!list) return;
+
+    document.getElementById('breakListEditorName').value = list.name;
+
+    // Show/hide apps section based on companion mode
+    const companionMode = result.companionMode || DEFAULTS.companionMode;
+    document.getElementById('breakListEditorAppsSection').style.display = companionMode === 'on' ? 'block' : 'none';
+
+    // Render site presets
+    renderSitePresets('breakListEditorSites', PRESET_BREAK_SITES, list.sites);
+
+    // Render custom sites (sites not in any preset)
+    const allPresetDomains = new Set();
+    PRESET_BREAK_SITES.forEach(s => {
+      if (s.domains) s.domains.forEach(d => allPresetDomains.add(d));
+      else if (s.domain) allPresetDomains.add(s.domain);
+    });
+    const customSites = list.sites.filter(d => !allPresetDomains.has(d));
+    document.getElementById('breakListEditorCustomSites').value = customSites.join('\n');
+
+    // Render app presets
+    renderAppPresets('breakListEditorApps', PRESET_BREAK_APPS, list.apps);
+
+    // Render custom apps
+    const presetProcessNames = new Set(PRESET_BREAK_APPS.map(a => a.process));
+    const customApps = list.apps.filter(a => {
+      const proc = typeof a === 'string' ? a : a.process;
+      return !presetProcessNames.has(proc);
+    });
+    document.getElementById('breakListEditorCustomApps').value = customApps.map(a => {
+      if (typeof a === 'string') return a;
+      return `${a.name}:${a.process}`;
+    }).join('\n');
+  });
+}
+
+async function saveBreakList() {
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+
+  const name = document.getElementById('breakListEditorName').value.trim();
+  if (!name) { alert('Please enter a list name'); return; }
+
+  // Collect sites
+  const sites = collectSitesFromEditor('breakListEditorSites', PRESET_BREAK_SITES, 'breakListEditorCustomSites');
+
+  // Collect apps
+  const apps = collectBreakAppsFromEditor('breakListEditorApps', PRESET_BREAK_APPS, 'breakListEditorCustomApps');
+
+  if (editingBreakListId) {
+    const list = breakLists.find(l => l.id === editingBreakListId);
+    if (list) {
+      list.name = name;
+      list.sites = sites;
+      list.apps = apps;
+    }
+  } else {
+    const newList = createNewList('break', name);
+    newList.sites = sites;
+    newList.apps = apps;
+    breakLists.push(newList);
+  }
+
+  await setStorage({ breakLists });
+  closeBreakListEditor();
+  await loadBreakLists();
+  await renderActiveBreakLists();
+  chrome.runtime.sendMessage({ action: 'updateRewardSites' });
+  showSavedIndicator();
+}
+
+async function deleteBreakList(listId) {
+  if (listId === 'break-default') return;
+  if (!confirm('Delete this break list?')) return;
+
+  const result = await getStorage(['breakLists']);
+  const breakLists = (result.breakLists || DEFAULTS.breakLists).filter(l => l.id !== listId);
+  await setStorage({ breakLists });
+  await loadBreakLists();
+  await renderActiveBreakLists();
+  chrome.runtime.sendMessage({ action: 'updateRewardSites' });
+  showSavedIndicator();
+}
+
+function closeBreakListEditor() {
+  editingBreakListId = null;
+  document.getElementById('breakListEditor').style.display = 'none';
+}
+
+// === Productive Lists ===
+
+let editingProductiveListId = null;
+
+async function loadProductiveLists() {
+  const result = await getStorage(['productiveLists']);
+  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+
+  const master = document.getElementById('productiveListsMaster');
+  master.innerHTML = '';
+
+  if (productiveLists.length === 0) {
+    master.innerHTML = '<p style="color:#666; font-size:13px; font-style:italic;">No productive lists yet. Create one to get started.</p>';
+    return;
+  }
+
+  productiveLists.forEach(list => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px;';
+
+    const name = document.createElement('span');
+    name.style.cssText = 'flex:1; font-size:14px; color:#e0e0e0; font-weight:500;';
+    name.textContent = list.name;
+
+    const siteCount = document.createElement('span');
+    siteCount.style.cssText = 'font-size:12px; color:#666;';
+    siteCount.textContent = `${list.sites.length} sites, ${list.apps.length} apps`;
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-secondary';
+    editBtn.style.cssText = 'padding:6px 14px; font-size:12px;';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => openProductiveListEditor(list.id));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-secondary';
+    deleteBtn.style.cssText = 'padding:6px 14px; font-size:12px; color:#ff6b7a; border-color:rgba(255,71,87,0.3);';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => deleteProductiveList(list.id));
+
+    row.appendChild(name);
+    row.appendChild(siteCount);
+    row.appendChild(editBtn);
+    row.appendChild(deleteBtn);
+    master.appendChild(row);
+  });
+}
+
+function openProductiveListEditor(listId) {
+  editingProductiveListId = listId;
+  const editor = document.getElementById('productiveListEditor');
+  editor.style.display = 'block';
+
+  getStorage(['productiveLists', 'companionMode']).then(result => {
+    const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+    const list = listId ? productiveLists.find(l => l.id === listId) : null;
+
+    document.getElementById('productiveListEditorName').value = list ? list.name : '';
+
+    // Show/hide apps section based on companion mode
+    const companionMode = result.companionMode || DEFAULTS.companionMode;
+    document.getElementById('productiveListEditorAppsSection').style.display = companionMode === 'on' ? 'block' : 'none';
+
+    // Render site presets
+    renderSitePresets('productiveListEditorSites', PRESET_PRODUCTIVE_SITES, list ? list.sites : []);
+
+    // Render custom sites
+    const presetDomains = new Set(PRESET_PRODUCTIVE_SITES.map(s => s.domain));
+    const customSites = list ? list.sites.filter(d => !presetDomains.has(d)) : [];
+    document.getElementById('productiveListEditorCustomSites').value = customSites.join('\n');
+
+    // Render app presets
+    renderProductiveAppPresets('productiveListEditorApps', CURATED_APPS, list ? list.apps : []);
+
+    // Render custom apps
+    const presetProcessNames = new Set(CURATED_APPS.map(a => a.process));
+    const customApps = list ? list.apps.filter(p => !presetProcessNames.has(p)) : [];
+    document.getElementById('productiveListEditorCustomApps').value = customApps.join('\n');
+  });
+}
+
+async function saveProductiveList() {
+  const result = await getStorage(['productiveLists']);
+  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+
+  const name = document.getElementById('productiveListEditorName').value.trim();
+  if (!name) { alert('Please enter a list name'); return; }
+
+  const sites = collectSitesFromEditor('productiveListEditorSites', PRESET_PRODUCTIVE_SITES, 'productiveListEditorCustomSites');
+  const apps = collectProductiveAppsFromEditor('productiveListEditorApps', CURATED_APPS, 'productiveListEditorCustomApps');
+
+  if (editingProductiveListId) {
+    const list = productiveLists.find(l => l.id === editingProductiveListId);
+    if (list) {
+      list.name = name;
+      list.sites = sites;
+      list.apps = apps;
+    }
+  } else {
+    const newList = createNewList('productive', name);
+    newList.sites = sites;
+    newList.apps = apps;
+    productiveLists.push(newList);
+  }
+
+  await setStorage({ productiveLists });
+  closeProductiveListEditor();
+  await loadProductiveLists();
+  await renderActiveProductiveLists();
+  showSavedIndicator();
+}
+
+async function deleteProductiveList(listId) {
+  if (!confirm('Delete this productive list?')) return;
+  const result = await getStorage(['productiveLists']);
+  const productiveLists = (result.productiveLists || DEFAULTS.productiveLists).filter(l => l.id !== listId);
+  await setStorage({ productiveLists });
+  await loadProductiveLists();
+  await renderActiveProductiveLists();
+  showSavedIndicator();
+}
+
+function closeProductiveListEditor() {
+  editingProductiveListId = null;
+  document.getElementById('productiveListEditor').style.display = 'none';
+}
+
+// === Active Lists Rendering ===
+
+async function renderActiveBreakLists() {
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+
+  const container = document.getElementById('activeBreakLists');
+  container.innerHTML = '';
+
+  breakLists.forEach(list => {
+    const item = document.createElement('div');
+    item.className = 'app-checkbox-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = list.isActive;
+    checkbox.dataset.listId = list.id;
+
+    const label = document.createElement('span');
+    label.textContent = list.name;
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    item.addEventListener('click', (e) => {
+      if (e.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    container.appendChild(item);
+  });
+}
+
+async function renderActiveProductiveLists() {
+  const result = await getStorage(['productiveLists', 'productiveMode']);
+  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+  const mode = result.productiveMode || DEFAULTS.productiveMode;
+
+  const wrapper = document.getElementById('activeProductiveLists');
+  const inner = document.getElementById('activeProductiveListsInner');
+  const noListsMsg = document.getElementById('noProductiveListsMsg');
+
+  // Show/hide based on productive mode
+  wrapper.style.display = mode === 'lists' ? 'block' : 'none';
+
+  inner.innerHTML = '';
+
+  if (productiveLists.length === 0) {
+    noListsMsg.style.display = 'block';
+    return;
+  }
+  noListsMsg.style.display = 'none';
+
+  productiveLists.forEach(list => {
+    const item = document.createElement('div');
+    item.className = 'app-checkbox-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = list.isActive;
+    checkbox.dataset.listId = list.id;
+
+    const label = document.createElement('span');
+    label.textContent = list.name;
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    item.addEventListener('click', (e) => {
+      if (e.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    inner.appendChild(item);
+  });
+}
+
+// === Shared Preset Rendering Helpers ===
+
+function renderSitePresets(containerId, presets, selectedSites) {
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+
+  const categories = [...new Set(presets.map(s => s.category))];
+  categories.forEach(category => {
+    const header = document.createElement('div');
+    header.className = 'app-category-header';
+    header.textContent = category;
+    grid.appendChild(header);
+
+    presets.filter(s => s.category === category).forEach(site => {
+      const domains = site.domains || [site.domain];
+      const item = document.createElement('div');
+      item.className = 'app-checkbox-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.dataset.domains = JSON.stringify(domains);
+      checkbox.checked = domains.some(d => selectedSites.includes(d));
+
+      const label = document.createElement('span');
+      label.textContent = site.name;
+
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      item.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+      });
+      grid.appendChild(item);
+    });
+  });
+}
+
+function renderAppPresets(containerId, presets, selectedApps) {
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+
+  const categories = [...new Set(presets.map(a => a.category))];
+  categories.forEach(category => {
+    const header = document.createElement('div');
+    header.className = 'app-category-header';
+    header.textContent = category;
+    grid.appendChild(header);
+
+    presets.filter(a => a.category === category).forEach(app => {
+      const item = document.createElement('div');
+      item.className = 'app-checkbox-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.dataset.process = app.process;
+      checkbox.checked = selectedApps.some(a => {
+        const proc = typeof a === 'string' ? a : a.process;
+        return proc === app.process;
+      });
+
+      const label = document.createElement('span');
+      label.textContent = app.name;
+
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      item.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+      });
+      grid.appendChild(item);
+    });
+  });
+}
+
+function renderProductiveAppPresets(containerId, presets, selectedApps) {
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+
+  const categories = [...new Set(presets.map(a => a.category))];
+  categories.forEach(category => {
+    const header = document.createElement('div');
+    header.className = 'app-category-header';
+    header.textContent = category;
+    grid.appendChild(header);
+
+    presets.filter(a => a.category === category).forEach(app => {
+      const item = document.createElement('div');
+      item.className = 'app-checkbox-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.dataset.process = app.process;
+      checkbox.checked = selectedApps.includes(app.process);
+
+      const label = document.createElement('span');
+      label.textContent = app.name;
+
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      item.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+      });
+      grid.appendChild(item);
+    });
+  });
+}
+
+// === Collecting from Editors ===
+
+function collectSitesFromEditor(presetContainerId, presets, customTextareaId) {
+  const sites = [];
+  const grid = document.getElementById(presetContainerId);
+  grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    if (cb.checked && cb.dataset.domains) {
+      sites.push(...JSON.parse(cb.dataset.domains));
+    }
+  });
+  const customText = document.getElementById(customTextareaId).value;
+  sites.push(...customText.split('\n').map(s => s.trim()).filter(s => s.length > 0));
+  return sites;
+}
+
+function collectBreakAppsFromEditor(presetContainerId, presets, customTextareaId) {
+  const apps = [];
+  const grid = document.getElementById(presetContainerId);
+  grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    if (cb.checked && cb.dataset.process) {
+      const preset = presets.find(p => p.process === cb.dataset.process);
+      if (preset) {
+        const entry = { name: preset.name, process: preset.process };
+        if (preset.detectProcesses) entry.detectProcesses = preset.detectProcesses;
+        if (preset.killProcesses) entry.killProcesses = preset.killProcesses;
+        apps.push(entry);
+      }
+    }
+  });
+  const customText = document.getElementById(customTextareaId).value;
+  customText.split('\n').map(s => s.trim()).filter(s => s.length > 0).forEach(line => {
+    const parts = line.split(':');
+    if (parts.length >= 2) {
+      apps.push({ name: parts[0].trim(), process: parts[1].trim() });
+    } else {
+      apps.push({ name: line, process: line });
+    }
+  });
+  return apps;
+}
+
+function collectProductiveAppsFromEditor(presetContainerId, presets, customTextareaId) {
+  const apps = [];
+  const grid = document.getElementById(presetContainerId);
+  grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    if (cb.checked && cb.dataset.process) {
+      apps.push(cb.dataset.process);
+    }
+  });
+  const customText = document.getElementById(customTextareaId).value;
+  apps.push(...customText.split('\n').map(s => s.trim()).filter(s => s.length > 0));
+  return apps;
+}
+
+// === Toggle active list ===
+
+async function toggleBreakListActive(listId, isActive) {
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const list = breakLists.find(l => l.id === listId);
+  if (list) {
+    list.isActive = isActive;
+    await setStorage({ breakLists });
+    chrome.runtime.sendMessage({ action: 'updateRewardSites' });
+    showSavedIndicator();
+  }
+}
+
+async function toggleProductiveListActive(listId, isActive) {
+  const result = await getStorage(['productiveLists']);
+  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+  const list = productiveLists.find(l => l.id === listId);
+  if (list) {
+    list.isActive = isActive;
+    await setStorage({ productiveLists });
+    showSavedIndicator();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -955,11 +1135,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await setApiBaseUrlFromConfig();
   await loadSettings();
-  await loadBlockedSites();
-  await loadProductiveSites();
-  await loadProductiveApps();
-  await loadBlockedApps();
-  scheduleNativeHostStatusChecks();
+  await loadNuclearBlock();
+
+  await loadBreakLists();
+  await loadProductiveLists();
+  await renderActiveBreakLists();
+  await renderActiveProductiveLists();
+
+  // Load productive mode for initial render
+  const prodModeResult = await getStorage(['productiveMode']);
+  const productiveMode = prodModeResult.productiveMode || DEFAULTS.productiveMode;
+  document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
+    radio.checked = radio.value === productiveMode;
+  });
+  renderActiveProductiveLists();
 
   // Lock sections if session is active
   chrome.runtime.sendMessage({ action: 'getStatus' }, (status) => {
@@ -972,78 +1161,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (message.action === 'sessionEnded') lockSiteSections(false);
   });
 
-  // Auto-save for blocked sites checkboxes
-  document.getElementById('blockedSitesList').addEventListener('change', async (e) => {
-    if (e.target.type === 'checkbox') {
-      await saveBlockedSites();
-    }
-  });
-
-  // Auto-save for custom blocked sites textarea
-  let customBlockedSitesTimeout;
-  document.getElementById('customBlockedSites').addEventListener('input', () => {
-    if (customBlockedSitesTimeout) clearTimeout(customBlockedSitesTimeout);
-    customBlockedSitesTimeout = setTimeout(() => saveBlockedSites(), 500);
-  });
-
   // Auto-save for allowed paths
   document.getElementById('allowedPaths').addEventListener('input', (e) => {
     const paths = e.target.value.split('\n').map(p => p.trim()).filter(p => p.length > 0);
     autoSave('allowedPaths', paths);
   });
 
-  // Auto-save for productive mode
-  document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      toggleProductiveSitesList(e.target.value);
-      saveProductiveSites();
-    });
-  });
-
-  // Auto-save for productive sites checkboxes
-  document.getElementById('productiveSitesList').addEventListener('change', async (e) => {
-    if (e.target.type === 'checkbox') {
-      await saveProductiveSites();
-    }
-  });
-
-  // Auto-save for custom productive sites textarea
-  let customProductiveSitesTimeout;
-  document.getElementById('customProductiveSites').addEventListener('input', () => {
-    if (customProductiveSitesTimeout) clearTimeout(customProductiveSitesTimeout);
-    customProductiveSitesTimeout = setTimeout(() => saveProductiveSites(), 500);
-  });
-
   // Auto-save for skip productivity check popup sites
   document.getElementById('skipProductivityCheck').addEventListener('input', (e) => {
     const sites = e.target.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
     autoSave('skipProductivityCheck', sites);
-  });
-
-  // Auto-save for productive apps checkboxes
-  document.getElementById('curatedAppsList').addEventListener('change', async (e) => {
-    if (e.target.type === 'checkbox') {
-      await saveProductiveApps();
-      showSavedIndicator();
-    }
-  });
-
-  // Auto-save for custom productive apps
-  let customAppsTimeout;
-  document.getElementById('customApps').addEventListener('input', () => {
-    if (customAppsTimeout) clearTimeout(customAppsTimeout);
-    customAppsTimeout = setTimeout(async () => {
-      await saveProductiveApps();
-      showSavedIndicator();
-    }, 500);
-  });
-
-  // Auto-save for blocked apps checkboxes
-  document.getElementById('blockedAppsList').addEventListener('change', async (e) => {
-    if (e.target.type === 'checkbox') {
-      await saveBlockedApps();
-      showSavedIndicator();
-    }
   });
 
   // Auto-save for strict mode
@@ -1065,11 +1192,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="companionMode"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       const mode = e.target.value;
-      toggleAppSections(mode);
       autoSave('companionMode', mode);
       chrome.runtime.sendMessage({ action: 'setCompanionMode', mode }, (response) => {
         if (response && response.success) {
-          loadProductiveApps();
           scheduleNativeHostStatusChecks();
           setSyncStatus(
             mode === 'on'
@@ -1109,20 +1234,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoSave('paymentMethod', e.target.value.trim());
   });
 
-  // Keep add blocked app button functionality
-  document.getElementById('add-blocked-app').addEventListener('click', addCustomBlockedApp);
-
-  // Keep install instructions link
-  document.getElementById('installInstructions').addEventListener('click', (e) => {
-    e.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL('install-guide.html') });
-  });
-
   document.getElementById('btn-delete-all-data').addEventListener('click', handleDeleteAllData);
 
   // Nuclear Block
-  await loadNuclearBlock();
-
   document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(radio => {
     radio.addEventListener('change', () => saveNuclearSettings());
   });
@@ -1140,8 +1254,66 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Refresh nuclear countdowns every minute
   setInterval(() => loadNuclearBlock(), 60 * 1000);
 
-  // Collapsible sections — all start collapsed, click h2 to expand/collapse
-  document.querySelectorAll('.section h2').forEach(h2 => {
+  // Active break list toggles
+  document.getElementById('activeBreakLists').addEventListener('change', async (e) => {
+    if (e.target.type === 'checkbox' && e.target.dataset.listId) {
+      await toggleBreakListActive(e.target.dataset.listId, e.target.checked);
+    }
+  });
+
+  // Active productive list toggles
+  document.getElementById('activeProductiveListsInner').addEventListener('change', async (e) => {
+    if (e.target.type === 'checkbox' && e.target.dataset.listId) {
+      await toggleProductiveListActive(e.target.dataset.listId, e.target.checked);
+    }
+  });
+
+  // Productive mode radio
+  document.querySelectorAll('input[name="productiveMode"]').forEach(radio => {
+    radio.addEventListener('change', async (e) => {
+      const mode = e.target.value;
+      await setStorage({ productiveMode: mode });
+      renderActiveProductiveLists();
+      showSavedIndicator();
+    });
+  });
+
+  // Break list CRUD buttons
+  document.getElementById('btn-create-break-list').addEventListener('click', () => {
+    editingBreakListId = null;
+    document.getElementById('breakListEditor').style.display = 'block';
+    document.getElementById('breakListEditorName').value = '';
+    renderSitePresets('breakListEditorSites', PRESET_BREAK_SITES, []);
+    document.getElementById('breakListEditorCustomSites').value = '';
+    renderAppPresets('breakListEditorApps', PRESET_BREAK_APPS, []);
+    document.getElementById('breakListEditorCustomApps').value = '';
+    // Show/hide apps section
+    getStorage(['companionMode']).then(r => {
+      document.getElementById('breakListEditorAppsSection').style.display = (r.companionMode || DEFAULTS.companionMode) === 'on' ? 'block' : 'none';
+    });
+  });
+  document.getElementById('btn-save-break-list').addEventListener('click', saveBreakList);
+  document.getElementById('btn-cancel-break-list').addEventListener('click', closeBreakListEditor);
+
+  // Productive list CRUD buttons
+  document.getElementById('btn-create-productive-list').addEventListener('click', () => {
+    editingProductiveListId = null;
+    document.getElementById('productiveListEditor').style.display = 'block';
+    document.getElementById('productiveListEditorName').value = '';
+    renderSitePresets('productiveListEditorSites', PRESET_PRODUCTIVE_SITES, []);
+    document.getElementById('productiveListEditorCustomSites').value = '';
+    renderProductiveAppPresets('productiveListEditorApps', CURATED_APPS, []);
+    document.getElementById('productiveListEditorCustomApps').value = '';
+    getStorage(['companionMode']).then(r => {
+      document.getElementById('productiveListEditorAppsSection').style.display = (r.companionMode || DEFAULTS.companionMode) === 'on' ? 'block' : 'none';
+    });
+  });
+  document.getElementById('btn-save-productive-list').addEventListener('click', saveProductiveList);
+  document.getElementById('btn-cancel-productive-list').addEventListener('click', closeProductiveListEditor);
+
+  // Collapsible sections — disabled for now, but handler kept for future use
+  // To re-enable: add class="collapsible" to .section elements that should collapse
+  document.querySelectorAll('.section.collapsible h2').forEach(h2 => {
     h2.addEventListener('click', () => {
       h2.closest('.section').classList.toggle('expanded');
     });

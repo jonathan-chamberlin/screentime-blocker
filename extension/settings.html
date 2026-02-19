@@ -77,6 +77,10 @@
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 0;
+        }
+
+        /* Collapsible section support — kept for future use but not active */
+        .section.collapsible h2 {
             cursor: pointer;
             user-select: none;
             display: flex;
@@ -84,7 +88,7 @@
             justify-content: space-between;
         }
 
-        .section h2::after {
+        .section.collapsible h2::after {
             content: '';
             display: inline-block;
             width: 8px;
@@ -98,17 +102,20 @@
             margin-bottom: 2px;
         }
 
-        .section.expanded h2::after {
+        .section.collapsible.expanded h2::after {
             transform: rotate(45deg);
             margin-bottom: 6px;
         }
 
         .section-body {
-            display: none;
             padding-top: 20px;
         }
 
-        .section.expanded .section-body {
+        .section.collapsible .section-body {
+            display: none;
+        }
+
+        .section.collapsible.expanded .section-body {
             display: block;
         }
 
@@ -628,12 +635,88 @@
             font-style: italic;
             padding: 12px 0;
         }
+
+        /* Companion App notification banner */
+        .companion-banner {
+            border-color: rgba(0, 200, 255, 0.25);
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.06), rgba(0, 150, 255, 0.03));
+        }
+
+        .companion-banner h2 {
+            color: #00c8ff;
+            font-size: 16px;
+        }
+
+        .companion-banner .banner-hint {
+            color: #00c8ff;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-left: auto;
+            font-weight: 400;
+        }
+
+        .companion-banner.expanded .banner-hint {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Brainrot Blocker Settings</h1>
+        </div>
+
+        <div class="section companion-banner collapsible" data-lockable>
+            <h2>🖥️ Want to block or track time on desktop apps too? <span class="banner-hint">Click to expand</span></h2>
+            <div class="section-body">
+            <p style="color: #aaa; font-size: 14px; margin-bottom: 16px;">
+                Enable Companion App mode to track and block desktop applications during work sessions. Requires installing the native host helper.
+            </p>
+            <div class="form-group">
+                <label>Web &amp; Application Tracking</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="companionMode" value="off" checked>
+                        <span>Web Tracking Only</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="companionMode" value="on">
+                        <span>Companion App mode (track/block desktop apps)</span>
+                    </label>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="section" style="border-color: rgba(240, 147, 251, 0.2); background: linear-gradient(135deg, rgba(240, 147, 251, 0.06), rgba(245, 87, 108, 0.03));" data-lockable>
+            <h2 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px;">Choose Your Active Lists</h2>
+            <div class="section-body">
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Check which break lists and productive lists are active. Sites and apps from active break lists are blocked during sessions. You can create and edit break lists in the <strong>Break Lists</strong> section below, and productive lists in the <strong>Productive Lists</strong> section.</p>
+
+            <div class="form-group">
+                <label>Break Lists</label>
+                <div id="activeBreakLists" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>What counts as productive?</label>
+                <div class="radio-group" style="flex-direction: column; gap: 10px;">
+                    <label>
+                        <input type="radio" name="productiveMode" value="all-except-blocked" checked>
+                        <span>Everything except my blocked sites/apps</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="productiveMode" value="lists">
+                        <span>Only sites and apps from my productive lists</span>
+                    </label>
+                </div>
+            </div>
+            <div id="activeProductiveLists" style="display: none;">
+                <label style="display: block; color: #888; font-size: 15px; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Productive Lists</label>
+                <div id="activeProductiveListsInner" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <p id="noProductiveListsMsg" style="color: #666; font-size: 13px; font-style: italic; margin-top: 8px;">No productive lists created yet. Create one below.</p>
+            </div>
+            </div>
         </div>
 
         <div class="section" data-lockable>
@@ -657,29 +740,55 @@
 
         <div class="section-group-label">
             <span>What is Distracting?</span>
-            <p>Sites blocked during work sessions or permanently.</p>
+            <p>Manage your break lists and choose which are active.</p>
         </div>
 
         <div class="section" data-lockable>
-            <h2>Break Only Sites</h2>
+            <h2>Break Lists</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">These sites are blocked during work sessions. After completing a work cycle, you earn break time to visit them.</p>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Create and manage your break lists. Each list can contain sites and apps that are blocked during work sessions.</p>
+            <div id="breakListsMaster" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;"></div>
+            <button type="button" id="btn-create-break-list" class="btn-secondary" style="padding: 10px 20px;">+ Create New Break List</button>
+
+            <div id="breakListEditor" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div class="form-group">
+                    <label for="breakListEditorName">List Name</label>
+                    <input type="text" id="breakListEditorName" placeholder="e.g., Social Media, Gaming">
+                </div>
+                <div class="form-group">
+                    <label>Sites to block</label>
+                    <div id="breakListEditorSites" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                    <label for="breakListEditorCustomSites" style="margin-top: 8px;">Custom sites (one per line)</label>
+                    <textarea id="breakListEditorCustomSites" style="min-height: 80px;" placeholder="mysite.com&#10;othersite.com"></textarea>
+                </div>
+                <div id="breakListEditorAppsSection">
+                    <div class="form-group">
+                        <label>Apps to block</label>
+                        <div id="breakListEditorApps" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                        <label for="breakListEditorCustomApps" style="margin-top: 8px;">Custom apps (name:process, one per line)</label>
+                        <textarea id="breakListEditorCustomApps" style="min-height: 60px;" placeholder="MyGame:mygame.exe"></textarea>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 12px;">
+                    <button type="button" id="btn-save-break-list">Save List</button>
+                    <button type="button" id="btn-cancel-break-list" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="section" data-lockable>
+            <h2>Allowed Exceptions</h2>
+            <div class="section-body">
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Specific pages that bypass the block, even if their domain is in a break list.</p>
             <div class="form-group">
-                <label>Select sites to block</label>
-                <div id="blockedSitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px;"></div>
-            </div>
-            <div class="form-group" style="margin-top: 12px;">
-                <label for="customBlockedSites">Custom blocked sites (one per line)</label>
-                <textarea id="customBlockedSites" style="min-height: 80px;" placeholder="mysite.com&#10;othersite.com"></textarea>
-            </div>
-            <div class="form-group" style="margin-top: 18px;">
-                <label for="allowedPaths">Allowed exceptions (specific pages that bypass the block, one per line)</label>
+                <label for="allowedPaths">Allowed pages (one per line)</label>
                 <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
             </div>
             </div>
         </div>
 
-        <div class="section nuclear-zone">
+        <div class="section nuclear-zone collapsible">
             <h2>☢️ Nuclear Block</h2>
             <div class="section-body">
             <p class="section-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it. These sites will remain blocked even if you delete your data or uninstall and reinstall the extension.</p>
@@ -757,58 +866,41 @@
             </div>
         </div>
 
-        <div id="section-blocked-apps" class="section" data-lockable style="display: none;">
-            <h2>Blocked Applications</h2>
-            <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Apps that will be closed during work sessions (accessible during breaks)</p>
-
-            <div class="form-group">
-                <label>Select apps to block during work</label>
-                <div id="blockedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Add custom blocked app</label>
-                <div class="input-row">
-                    <div class="form-group">
-                        <input type="text" id="custom-blocked-app-name" placeholder="App name (e.g., Steam)">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="custom-blocked-app-process" placeholder="Process name (e.g., steam)">
-                    </div>
-                </div>
-                <button id="add-blocked-app" style="margin-top: 8px;">Add Blocked App</button>
-            </div>
-            </div>
-        </div>
-
         <div class="section-group-label">
             <span>What is Productive?</span>
-            <p>Control what counts as productive and which sites trigger the productivity check popup.</p>
+            <p>Control what counts as productive during work sessions.</p>
         </div>
 
         <div class="section" data-lockable>
-            <h2>Productive Sites</h2>
+            <h2>Productive Lists</h2>
             <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Your work timer only counts when you're on a productive site or app. Choose what counts as productive below.</p>
-            <div class="form-group">
-                <label>What counts as productive?</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="productiveMode" value="whitelist">
-                        <span>Only the specific sites I list below</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="productiveMode" value="all-except-blocked" checked>
-                        <span>Everything counts as productive (except my blocked sites above)</span>
-                    </label>
+            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Create and manage your productive lists. Your work timer only runs when you're on a site or app from an active productive list.</p>
+            <div id="productiveListsMaster" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;"></div>
+            <button type="button" id="btn-create-productive-list" class="btn-secondary" style="padding: 10px 20px;">+ Create New Productive List</button>
+
+            <div id="productiveListEditor" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div class="form-group">
+                    <label for="productiveListEditorName">List Name</label>
+                    <input type="text" id="productiveListEditorName" placeholder="e.g., Work Tools, Study Sites">
                 </div>
-            </div>
-            <div id="productiveSitesGroup" class="form-group">
-                <label>Select productive sites — your timer only runs on these</label>
-                <div id="productiveSitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 12px;"></div>
-                <label for="customProductiveSites" style="margin-top: 8px;">Custom sites (one per line)</label>
-                <textarea id="customProductiveSites" style="min-height: 80px;" placeholder="docs.google.com&#10;notion.so"></textarea>
+                <div class="form-group">
+                    <label>Productive sites</label>
+                    <div id="productiveListEditorSites" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                    <label for="productiveListEditorCustomSites" style="margin-top: 8px;">Custom sites (one per line)</label>
+                    <textarea id="productiveListEditorCustomSites" style="min-height: 80px;" placeholder="docs.google.com&#10;notion.so"></textarea>
+                </div>
+                <div id="productiveListEditorAppsSection">
+                    <div class="form-group">
+                        <label>Productive apps</label>
+                        <div id="productiveListEditorApps" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 8px;"></div>
+                        <label for="productiveListEditorCustomApps" style="margin-top: 8px;">Custom app process names (one per line)</label>
+                        <textarea id="productiveListEditorCustomApps" style="min-height: 60px;" placeholder="MyApp&#10;CustomTool"></textarea>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 12px;">
+                    <button type="button" id="btn-save-productive-list">Save List</button>
+                    <button type="button" id="btn-cancel-productive-list" class="btn-secondary">Cancel</button>
+                </div>
             </div>
             </div>
         </div>
@@ -820,55 +912,6 @@
             <div class="form-group">
                 <label for="skipProductivityCheck">Approved sites (one per line)</label>
                 <textarea id="skipProductivityCheck" placeholder="github.com&#10;docs.google.com&#10;notion.so"></textarea>
-            </div>
-            </div>
-        </div>
-
-        <div id="section-productive-apps" class="section" data-lockable style="display: none;">
-            <h2>Productive Applications</h2>
-            <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">Desktop apps that count as productive. Your work timer runs while these are in the foreground, even when the browser isn't active.</p>
-
-            <div id="nativeHostWarning" style="display: none; background-color: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #ff6b7a;">
-                Application detection is unavailable. <a href="#" id="installInstructions" style="color: #f093fb; text-decoration: underline; margin-left: 4px;">Install the native host</a> to track desktop apps.
-            </div>
-
-            <div class="form-group">
-                <label>Select apps that count as productive</label>
-                <div id="curatedAppsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label for="customApps">Custom process names (one per line)</label>
-                <textarea id="customApps" style="min-height: 80px;" placeholder="MyApp&#10;CustomTool"></textarea>
-                <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">Find process names in Task Manager &gt; Details tab (without .exe)</small>
-            </div>
-            </div>
-        </div>
-
-        <div class="section-group-label">
-            <span>Desktop App Tracking</span>
-            <p>Enable Companion App mode below to configure productive and blocked desktop applications.</p>
-        </div>
-
-        <div class="section" data-lockable>
-            <h2>Companion App</h2>
-            <div class="section-body">
-            <p style="color: #888; font-size: 14px; margin-bottom: 16px;">
-                Website blocking works with extension-only mode. Turn on Companion App mode only if you also install the desktop app/native host.
-            </p>
-            <div class="form-group">
-                <label>Web &amp; Application Tracking</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="companionMode" value="off" checked>
-                        <span>Web Tracking Only</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="companionMode" value="on">
-                        <span>Companion App mode (track/block desktop apps)</span>
-                    </label>
-                </div>
             </div>
             </div>
         </div>
@@ -949,6 +992,7 @@
 
     <script src="constants.js"></script>
     <script src="storage.js"></script>
+    <script src="list-utils.js"></script>
     <script src="config.default.js"></script>
     <script src="config.js"></script>
     <script src="settings.js"></script>

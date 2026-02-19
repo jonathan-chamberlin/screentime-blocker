@@ -95,13 +95,19 @@
 - **Dependencies**: Phase 6
 - **Status**: complete
 
-## Phase 8: expanded-site-lists
-- **Goal**: Add more default blocked site options and music/music production category to productive sites
+## Phase 8: break-productive-lists
+- **Goal**: Replace flat site/app sections with named, reusable break lists and productive lists that users can create, edit, and activate in any combination
 - **Success Criteria**:
-  - Default blocked sites list expanded with more common distracting websites (social media, video platforms, news, shopping)
-  - New "Music & Production" category added to productive sites with common DAWs, streaming platforms, tutorial sites
-  - Settings UI shows new options with clear categorization
-  - All new sites properly matched by URL detection logic
+  - Data model: lists stored in chrome.storage with unique IDs, each containing sites and apps
+  - Default "Default" break list ships with Instagram, Facebook, YouTube, Steam (site+app), Adult Sites, Gambling Sites, News Sites
+  - Settings UI: "Create new break list" / "Create new productive list" buttons that expand an editing section
+  - Category header checkboxes toggle all items in that category
+  - List selection at top of settings (below Strict Mode): checkboxes to activate any combination of break/productive lists
+  - Productive mode rework: "All sites (except blocked)" option + one option per user-created productive list (multi-selectable)
+  - Popup shows active break list name(s); shows active productive list name(s) only when not using "All sites" mode
+  - Nuclear Block section unchanged
+  - Session blocking logic uses the union of all active break lists' sites/apps
+  - Productive detection logic uses the union of all active productive lists' sites/apps (or all-except-blocked if that option selected)
 - **Dependencies**: Phase 7
 - **Status**: not-started
 
@@ -114,7 +120,7 @@
   - During reward burn, blocked apps are accessible
   - Steam specifically can be used as a reward app
   - Graceful fallback when native host unavailable
-- **Dependencies**: Phase 7
+- **Dependencies**: Phase 8
 - **Status**: not-started
 
 ## Phase 10: unified-settings-save
@@ -126,7 +132,7 @@
   - Banner shows clear visual feedback (unsaved changes indicator)
   - Clicking "Save" persists all changed settings at once
   - Banner disappears after successful save with confirmation message
-- **Dependencies**: Phase 7
+- **Dependencies**: Phase 8
 - **Status**: not-started
 
 ## Phase 11: chrome-web-store
@@ -138,5 +144,5 @@
   - Store listing copy written with clear value proposition
   - Extension submitted and passing Chrome Web Store review
   - Public store link available
-- **Dependencies**: Phases 8, 9, 10
+- **Dependencies**: Phases 9, 10
 - **Status**: not-started

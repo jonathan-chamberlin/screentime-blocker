@@ -51,11 +51,12 @@ function resetSessionState() {
   state.rewardGrantCount = 0;
 }
 
-// Load blocked sites + allowed paths from storage
+// Load blocked sites + allowed paths from storage (reads from break lists)
 async function loadSiteConfig() {
-  const result = await getStorage(['rewardSites', 'allowedPaths']);
+  const result = await getStorage(['breakLists', 'allowedPaths']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
   return {
-    sites: result.rewardSites || DEFAULTS.rewardSites,
+    sites: getActiveBreakSites(breakLists),
     allowedPaths: result.allowedPaths || DEFAULTS.allowedPaths,
   };
 }

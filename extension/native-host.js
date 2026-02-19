@@ -92,8 +92,9 @@ async function processAppUpdate(appName) {
   // not as top-level storage keys, so reading them from storage always returns undefined
   if (!state.sessionActive || state.rewardActive) return;
 
-  const result = await getStorage(['blockedApps']);
-  const blockedApps = result.blockedApps || [];
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const blockedApps = getActiveBreakApps(breakLists);
 
   const appNameLower = (appName || '').toLowerCase();
   const blockedApp = blockedApps.find(app => {
@@ -111,8 +112,9 @@ async function processAppUpdate(appName) {
 
 async function isBlockedApp(processName) {
   if (!processName) return false;
-  const result = await getStorage(['blockedApps']);
-  const blockedApps = result.blockedApps || [];
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const blockedApps = getActiveBreakApps(breakLists);
   const appNameLower = processName.toLowerCase();
   return blockedApps.some(app => {
     const detects = app.detectProcesses || [app.process];
@@ -122,8 +124,9 @@ async function isBlockedApp(processName) {
 
 async function killCurrentBlockedApp() {
   if (!currentAppName || !nativePort) return;
-  const result = await getStorage(['blockedApps']);
-  const blockedApps = result.blockedApps || [];
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const blockedApps = getActiveBreakApps(breakLists);
   const appNameLower = currentAppName.toLowerCase();
   const blockedApp = blockedApps.find(app => {
     const detects = app.detectProcesses || [app.process];
@@ -138,16 +141,17 @@ async function killCurrentBlockedApp() {
 }
 
 async function isProductiveApp(processName) {
-  const result = await getStorage(['productiveApps', 'productiveMode']);
+  const result = await getStorage(['productiveLists', 'productiveMode']);
   const mode = result.productiveMode || DEFAULTS.productiveMode;
 
   // "Always counting" mode: everything is productive (sites + apps)
   if (mode === 'all-except-blocked') return true;
 
-  // Whitelist mode: need native host and a matching process name
+  // List mode: need native host and a matching process name
   if (!companionModeEnabled || !processName || !nativeHostAvailable) return false;
 
-  const productiveApps = result.productiveApps || DEFAULTS.productiveApps;
+  const productiveLists = result.productiveLists || DEFAULTS.productiveLists;
+  const productiveApps = getActiveProductiveApps(productiveLists);
   return productiveApps.some(app =>
     app.toLowerCase() === processName.toLowerCase()
   );

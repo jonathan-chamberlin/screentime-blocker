@@ -251,12 +251,10 @@
       box-shadow: 0 4px 15px rgba(255,170,0,0.25);
     }
     .btn-reward:hover { box-shadow: 0 6px 20px rgba(255,170,0,0.35); }
-    .btn-login {
-      background: rgba(255,255,255,0.06);
-      color: #888;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn-login:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+    .auth-status.clickable { cursor: pointer; }
+    .auth-status.clickable:hover .auth-link { text-decoration: underline; }
+    .auth-link { color: #4a9eff; }
+    .auth-email { color: #888; }
     .btn-leaderboard {
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
@@ -457,6 +455,10 @@
     </div>
   </div>
 
+  <div id="active-lists-display" style="padding: 0 16px; margin-bottom: 4px;">
+    <div id="active-lists-content" style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;"></div>
+  </div>
+
   <div id="streak-title"></div>
 
   <div class="actions">
@@ -464,11 +466,10 @@
     <button type="button" class="btn-end" id="btn-end" style="display:none">Quit Early (coward)</button>
     <button type="button" class="btn-reward" id="btn-reward" style="display:none">Use Break Time</button>
     <button type="button" class="btn-pause" id="btn-pause" style="display:none">Pause Break</button>
-    <button type="button" class="btn-login" id="btn-login">Sign In for Leaderboard</button>
   </div>
 
   <div class="footer">
-    <div class="auth-status">
+    <div class="auth-status" id="auth-status">
       <span class="auth-dot disconnected" id="auth-dot"></span>
       <span id="auth-text">offline</span>
     </div>
@@ -499,6 +500,7 @@
 
   <script src="constants.js"></script>
   <script src="storage.js"></script>
+  <script src="list-utils.js"></script>
   <script src="config.default.js"></script>
   <script src="config.js"></script>
   <script src="auth.js"></script>

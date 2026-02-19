@@ -1,18 +1,14 @@
 # Project State
 
 ## Current Position
-- **Phase**: ready for new phases (8-11)
-- **Stage**: planning
-- **Plan**: —
+- **Phase**: break-productive-lists (Phase 8)
+- **Stage**: plan-complete → ready for execution
+- **Plan**: break-productive-lists-1-PLAN.md
 - **Wave**: —
-- **Last Updated**: 2026-02-16
+- **Last Updated**: 2026-02-18
 
 ## Session Context
-Phase 7 (ai-readability-refactor) completed and merged to main. Ready to plan parallel execution of Phases 8-10 using worktrees:
-- Phase 8: expanded-site-lists (simple data additions)
-- Phase 9: application-blocking (native host enhancement)
-- Phase 10: unified-settings-save (UI refactor)
-- Phase 11: chrome-web-store (deployment - depends on 8-10)
+Discussion complete for Phase 8 (break-productive-lists). Key decisions captured in DISCUSSION.md. Ready for plan generation.
 
 ## Key Decisions Made
 | When | Decision | Rationale |
@@ -26,6 +22,11 @@ Phase 7 (ai-readability-refactor) completed and merged to main. Ready to plan pa
 | 2026-02-16 | Self-contained test.html for unit tests | No npm/node; runs in browser |
 | 2026-02-16 | Handler map for message routing | Single-line registration vs 100-line if/else |
 | 2026-02-16 | 4-wave execution | Tests first, then small refactors, then big split, then popup cleanup |
+| 2026-02-18 | Lists contain both sites AND apps | Simpler mental model; one list = one activity context |
+| 2026-02-18 | Multiple lists active simultaneously | Composability — e.g., "Social Media" + "Gaming" both blocked |
+| 2026-02-18 | Category header toggles all items | Faster bulk selection UX |
+| 2026-02-18 | No migration from old format | Start fresh; avoid edge cases |
+| 2026-02-18 | Default break list ships pre-populated | Out-of-box useful experience |
 
 ## Blockers
 - None
@@ -40,7 +41,7 @@ Phase 7 (ai-readability-refactor) completed and merged to main. Ready to plan pa
 | refactor | complete | 4-wave refactor: shared utilities, async/await, deduplication |
 | application-detection | complete | Native messaging host + productive apps tracking |
 | ai-readability-refactor | complete | Modular architecture: background.js split into 8 focused modules, timer drift fixed, all tests passing |
-| expanded-site-lists | not-started | More blocked sites + music production category |
+| break-productive-lists | discussion-complete | Named lists for break sites/apps and productive sites/apps |
 | application-blocking | not-started | Block desktop apps, Steam as reward app |
 | unified-settings-save | not-started | Single floating save banner in settings |
 | chrome-web-store | not-started | Package and deploy to Chrome Web Store |

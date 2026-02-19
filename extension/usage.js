@@ -1,43 +1,68 @@
 // Usage page — loads data once on page open, renders charts and metrics
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const result = await getStorage(['sessionHistory', 'dailySummaries', 'streakData']);
-  const history = result.sessionHistory || [];
-  const summaries = result.dailySummaries || {};
-  const streakData = result.streakData || { currentStreak: 0, longestStreak: 0, lastActiveDate: null };
-
   const content = document.getElementById('content');
+  const realData = await loadRealData();
+  let showingTest = false;
+
+  const onToggle = () => {
+    showingTest = !showingTest;
+    renderPage(content, showingTest ? generateTestData() : realData, onToggle);
+  };
+
+  renderPage(content, realData, onToggle);
+});
+
+async function loadRealData() {
+  const result = await getStorage(['sessionHistory', 'dailySummaries', 'streakData']);
+  return {
+    history: result.sessionHistory || [],
+    summaries: result.dailySummaries || {},
+    streakData: result.streakData || { currentStreak: 0, longestStreak: 0, lastActiveDate: null },
+  };
+}
+
+function renderPage(content, { history, summaries, streakData }, onToggleTest) {
+  content.innerHTML = '';
+
+  // Test data toggle button
+  const toggle = document.createElement('button');
+  toggle.textContent = history.length > 0 && history[0].sessionId?.startsWith('test-') ? 'Show Real Data' : 'Show Test Data';
+  toggle.style.cssText = 'background: rgba(255,255,255,0.06); color: #888; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 16px; font-size: 12px; cursor: pointer; font-family: inherit; margin-bottom: 16px;';
+  toggle.addEventListener('click', onToggleTest);
+  content.appendChild(toggle);
 
   if (history.length === 0) {
-    content.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📊</div>
-        <p>No usage data yet. Complete your first session to start tracking!</p>
-      </div>`;
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `<div class="empty-icon">📊</div><p>No usage data yet. Complete your first session to start tracking!</p>`;
+    content.appendChild(empty);
     return;
   }
 
-  // Adjust current streak if it's stale (last active date is older than yesterday)
-  const today = new Date().toLocaleDateString('en-CA');
-  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA');
-  let displayStreak = streakData.currentStreak;
-  if (streakData.lastActiveDate && streakData.lastActiveDate !== today && streakData.lastActiveDate !== yesterday) {
-    displayStreak = 0;
-  }
-
-  // Compute all metrics
+  const displayStreak = computeDisplayStreak(streakData);
   const metrics = computeMetrics(history, summaries, streakData, displayStreak);
 
-  content.innerHTML = '';
   content.appendChild(renderStreakBanner(displayStreak, streakData.longestStreak));
   content.appendChild(renderWeekComparison(metrics));
+  content.appendChild(renderProductiveHeatmap(summaries));
+  content.appendChild(renderBlockedHeatmap(summaries));
   content.appendChild(renderBlockedTrend(summaries));
   content.appendChild(renderTopBlockedSites(history));
   content.appendChild(renderDailyMinutes(summaries));
   content.appendChild(renderStatsGrid(metrics));
   content.appendChild(renderDayOfWeek(summaries));
   content.appendChild(renderAvgSession(metrics));
-});
+}
+
+function computeDisplayStreak(streakData) {
+  const today = new Date().toLocaleDateString('en-CA');
+  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA');
+  if (streakData.lastActiveDate && streakData.lastActiveDate !== today && streakData.lastActiveDate !== yesterday) {
+    return 0;
+  }
+  return streakData.currentStreak;
+}
 
 function computeMetrics(history, summaries, streakData, displayStreak) {
   const totalSessions = history.length;
@@ -81,6 +106,102 @@ function getStartOfWeek(date) {
   d.setDate(d.getDate() - diff);
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+// --- Test data generator (pure) ---
+
+function generateTestData() {
+  const domains = ['youtube.com', 'reddit.com', 'twitter.com', 'instagram.com', 'tiktok.com', 'netflix.com', 'twitch.tv', 'facebook.com'];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Seed-able pseudo-random for consistent test data
+  const seed = 42;
+  const rand = mulberry32(seed);
+
+  const history = [];
+  const summaries = {};
+
+  // Generate 6 months of daily data
+  for (let i = 180; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = date.toLocaleDateString('en-CA');
+
+    // ~70% chance of having a session on any given day
+    if (rand() > 0.7) continue;
+
+    const sessionsToday = rand() > 0.7 ? 2 : 1;
+    let dayMinutes = 0;
+    let dayBlocked = 0;
+    const dayBlockedDomains = {};
+
+    for (let s = 0; s < sessionsToday; s++) {
+      const productiveMinutes = Math.floor(rand() * 90) + 10; // 10–100 min
+      const blockedAttempts = rand() > 0.4 ? Math.floor(rand() * 15) : 0;
+      const endedEarly = rand() > 0.8;
+
+      // Pick 1-3 random domains for blocked attempts
+      const sessionBlockedDomains = {};
+      let remaining = blockedAttempts;
+      const shuffled = [...domains].sort(() => rand() - 0.5).slice(0, Math.ceil(rand() * 3));
+      shuffled.forEach((domain, idx) => {
+        const count = idx === shuffled.length - 1 ? remaining : Math.floor(rand() * remaining);
+        if (count > 0) {
+          sessionBlockedDomains[domain] = count;
+          dayBlockedDomains[domain] = (dayBlockedDomains[domain] || 0) + count;
+          remaining -= count;
+        }
+      });
+
+      dayMinutes += productiveMinutes;
+      dayBlocked += blockedAttempts;
+
+      const endTime = date.getTime() + 8 * 3600000 + s * 3600000 + productiveMinutes * 60000;
+      history.push({
+        sessionId: `test-${dateStr}-${s}`,
+        startTime: endTime - productiveMinutes * 60000,
+        endTime,
+        workMinutes: Math.ceil(productiveMinutes / 5) * 5,
+        rewardMinutes: 5,
+        productiveMillis: productiveMinutes * 60 * 1000,
+        blockedAttempts,
+        blockedDomains: sessionBlockedDomains,
+        rewardGrantCount: endedEarly ? 0 : 1,
+        endedEarly,
+      });
+    }
+
+    summaries[dateStr] = {
+      date: dateStr,
+      totalProductiveMinutes: dayMinutes,
+      sessionsCompleted: sessionsToday,
+      sessionsEndedEarly: history.filter(s => s.endTime >= date.getTime() && s.endTime < date.getTime() + 86400000 && s.endedEarly).length,
+      totalBlockedAttempts: dayBlocked,
+      blockedDomains: dayBlockedDomains,
+    };
+  }
+
+  const todayStr = today.toLocaleDateString('en-CA');
+  return {
+    history,
+    summaries,
+    streakData: {
+      currentStreak: 5,
+      longestStreak: 14,
+      lastActiveDate: todayStr,
+    },
+  };
+}
+
+function mulberry32(seed) {
+  let s = seed | 0;
+  return () => {
+    s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 }
 
 // --- Render functions ---
@@ -321,6 +442,182 @@ function renderAvgSession(metrics) {
     <h2>Average Session Duration</h2>
     <div class="stat-value" style="font-size: 36px; margin-top: 8px;">${metrics.avgSessionMinutes} <span style="font-size: 18px; color: #888;">min</span></div>`;
   return section;
+}
+
+// --- Heatmap ---
+
+function renderHeatmap(summaries, { title, colorPrefix, valueKey, unitLabel }) {
+  const section = document.createElement('div');
+  section.className = 'section';
+  section.innerHTML = `<h2>${title}</h2>`;
+
+  // Build date range: ~26 weeks ending on today's week
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayOfWeek = today.getDay(); // 0=Sun
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (6 - dayOfWeek)); // Saturday end
+  const totalWeeks = 26;
+  const startDate = new Date(endOfWeek);
+  startDate.setDate(endOfWeek.getDate() - (totalWeeks * 7 - 1));
+
+  // Collect values for the range
+  const dayValues = [];
+  const allValues = [];
+  const cursor = new Date(startDate);
+  while (cursor <= endOfWeek) {
+    const dateStr = cursor.toLocaleDateString('en-CA');
+    const val = (summaries[dateStr] || {})[valueKey] || 0;
+    dayValues.push({ date: new Date(cursor), dateStr, value: val });
+    if (val > 0) allValues.push(val);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  // Compute quartile thresholds from non-zero values
+  let thresholds;
+  if (allValues.length === 0) {
+    thresholds = [1, 2, 3, 4];
+  } else {
+    allValues.sort((a, b) => a - b);
+    const q1 = allValues[Math.floor(allValues.length * 0.25)] || 1;
+    const q2 = allValues[Math.floor(allValues.length * 0.5)] || q1;
+    const q3 = allValues[Math.floor(allValues.length * 0.75)] || q2;
+    thresholds = [q1, q2, q3, q3 + 1];
+  }
+
+  function getLevel(val) {
+    if (val <= 0) return 0;
+    if (val <= thresholds[0]) return 1;
+    if (val <= thresholds[1]) return 2;
+    if (val <= thresholds[2]) return 3;
+    return 4;
+  }
+
+  // Group into weeks (columns), each week is Sun–Sat
+  const weeks = [];
+  let currentWeek = [];
+  for (const dv of dayValues) {
+    if (dv.date.getDay() === 0 && currentWeek.length > 0) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+    currentWeek.push(dv);
+  }
+  if (currentWeek.length > 0) weeks.push(currentWeek);
+
+  // Scroll wrapper
+  const scroll = document.createElement('div');
+  scroll.className = 'heatmap-scroll';
+
+  const outer = document.createElement('div');
+  outer.className = 'heatmap-outer';
+
+  // Day labels (Sun, Mon, ..., Sat — show Mon, Wed, Fri)
+  const dayLabels = document.createElement('div');
+  dayLabels.className = 'heatmap-day-labels';
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  for (let i = 0; i < 7; i++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'heatmap-day-label';
+    lbl.textContent = (i === 1 || i === 3 || i === 5) ? dayNames[i] : '';
+    dayLabels.appendChild(lbl);
+  }
+  outer.appendChild(dayLabels);
+
+  // Main area (month labels + grid)
+  const main = document.createElement('div');
+  main.className = 'heatmap-main';
+
+  // Month labels
+  const monthRow = document.createElement('div');
+  monthRow.className = 'heatmap-months';
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let lastMonth = -1;
+  for (let w = 0; w < weeks.length; w++) {
+    const firstDay = weeks[w][0].date;
+    const month = firstDay.getMonth();
+    const lbl = document.createElement('div');
+    lbl.className = 'heatmap-month-label';
+    lbl.style.width = '14px'; // 12px cell + 2px gap
+    if (month !== lastMonth) {
+      lbl.textContent = monthNames[month];
+      lastMonth = month;
+    }
+    monthRow.appendChild(lbl);
+  }
+  main.appendChild(monthRow);
+
+  // Grid
+  const grid = document.createElement('div');
+  grid.className = 'heatmap-grid';
+  for (const week of weeks) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-week';
+    // Pad first week if it doesn't start on Sunday
+    if (week === weeks[0]) {
+      const firstDow = week[0].date.getDay();
+      for (let p = 0; p < firstDow; p++) {
+        const empty = document.createElement('div');
+        empty.className = 'heatmap-cell';
+        empty.style.visibility = 'hidden';
+        col.appendChild(empty);
+      }
+    }
+    for (const dv of week) {
+      const cell = document.createElement('div');
+      const level = getLevel(dv.value);
+      cell.className = `heatmap-cell${level > 0 ? ` ${colorPrefix}-${level}` : ''}`;
+      const d = dv.date;
+      const dateLabel = `${monthNames[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+      cell.setAttribute('data-tip', dv.value > 0 ? `${dv.value} ${unitLabel} on ${dateLabel}` : `No ${unitLabel} on ${dateLabel}`);
+      col.appendChild(cell);
+    }
+    // Pad last week if it doesn't end on Saturday
+    if (week === weeks[weeks.length - 1]) {
+      const lastDow = week[week.length - 1].date.getDay();
+      for (let p = lastDow + 1; p <= 6; p++) {
+        const empty = document.createElement('div');
+        empty.className = 'heatmap-cell';
+        empty.style.visibility = 'hidden';
+        col.appendChild(empty);
+      }
+    }
+    grid.appendChild(col);
+  }
+  main.appendChild(grid);
+  outer.appendChild(main);
+  scroll.appendChild(outer);
+  section.appendChild(scroll);
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.className = 'heatmap-legend';
+  legend.innerHTML = `<span>Less</span>`;
+  for (let i = 0; i <= 4; i++) {
+    legend.innerHTML += `<div class="heatmap-legend-cell ${i > 0 ? `${colorPrefix}-${i}` : ''}" style="${i === 0 ? 'background:#161b22' : ''}"></div>`;
+  }
+  legend.innerHTML += `<span>More</span>`;
+  section.appendChild(legend);
+
+  return section;
+}
+
+function renderProductiveHeatmap(summaries) {
+  return renderHeatmap(summaries, {
+    title: 'Lock-in Activity',
+    colorPrefix: 'heatmap-green',
+    valueKey: 'totalProductiveMinutes',
+    unitLabel: 'min',
+  });
+}
+
+function renderBlockedHeatmap(summaries) {
+  return renderHeatmap(summaries, {
+    title: 'Blocked Attempts',
+    colorPrefix: 'heatmap-red',
+    valueKey: 'totalBlockedAttempts',
+    unitLabel: 'blocked',
+  });
 }
 
 // --- Helpers ---

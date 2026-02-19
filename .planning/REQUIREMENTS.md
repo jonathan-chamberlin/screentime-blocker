@@ -294,3 +294,53 @@
   - avatarSrc set via DOM property
   - Shame thresholds use named constants
 - **Priority**: Nice-to-have
+
+## Phase: break-productive-lists
+
+### REQ-035: Break & Productive List Data Model
+- **Description**: Storage schema for named lists, each containing sites and apps, with unique IDs and activation state
+- **Acceptance Criteria**:
+  - Lists stored in chrome.storage.local under `breakLists` and `productiveLists` keys
+  - Each list has: id, name, sites[], apps[], isActive boolean
+  - A default break list ships pre-populated (Instagram, Facebook, YouTube, Steam site+app, Adult Sites, Gambling Sites, News Sites)
+  - Multiple lists can be active simultaneously
+- **Priority**: Must-have
+
+### REQ-036: List Creation & Editing UI
+- **Description**: Settings UI for creating and editing break lists and productive lists
+- **Acceptance Criteria**:
+  - "Create new break list" and "Create new productive list" buttons
+  - Clicking expands an editing section with site/app selection
+  - Category header checkboxes toggle all items in that category
+  - Existing preset categories available as checkbox groups
+  - Custom site/app text inputs available
+  - Lists can be renamed, edited, and deleted
+- **Priority**: Must-have
+
+### REQ-037: List Selection UI
+- **Description**: Top-of-settings UI for selecting which lists are active
+- **Acceptance Criteria**:
+  - Placed below Strict Mode section
+  - Break lists shown with checkboxes (multi-select)
+  - Productive options: "All sites (except blocked)" + one checkbox per productive list
+  - Selection persisted to storage
+  - Locked during active sessions (data-lockable)
+- **Priority**: Must-have
+
+### REQ-038: Popup Active List Display
+- **Description**: Popup shows which break/productive lists would apply
+- **Acceptance Criteria**:
+  - Shows active break list name(s)
+  - Shows active productive list name(s) only when "All sites" is NOT selected
+  - When no lists exist, shows guidance to create one
+- **Priority**: Must-have
+
+### REQ-039: Session Integration
+- **Description**: Session blocking and productive detection use active lists instead of flat arrays
+- **Acceptance Criteria**:
+  - `blockSites()` unions all active break lists' sites
+  - `blockedApps` unions all active break lists' apps
+  - Productive site detection uses union of active productive lists' sites (or all-except-blocked)
+  - Productive app detection uses union of active productive lists' apps
+  - Existing session flow unchanged (start → work → break → end)
+- **Priority**: Must-have
