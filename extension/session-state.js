@@ -7,6 +7,7 @@ let state = {
   sessionStartTime: null,
   rewardActive: false,
   blockedAttempts: 0,
+  blockedDomainsMap: {},
   productiveMillis: 0,  // Changed from productiveSeconds
   lastProductiveTick: null,
   isOnProductiveSite: false,
@@ -43,6 +44,7 @@ function resetSessionState() {
   state.sessionId = null;
   state.sessionStartTime = null;
   state.blockedAttempts = 0;
+  state.blockedDomainsMap = {};
   state.productiveMillis = 0;
   state.lastProductiveTick = null;
   state.isOnProductiveSite = false;

@@ -63,7 +63,7 @@ function showInfoScreen(title, subtitle) {
 }
 
 function showAppBlockedScreen(appName) {
-  chrome.runtime.sendMessage({ action: 'blockedPageLoaded' });
+  chrome.runtime.sendMessage({ action: 'blockedPageLoaded', domain: 'app:' + appName });
 
   const container = document.querySelector('.container');
   document.body.style.background = 'linear-gradient(135deg, #2d1b3d 0%, #1a0f29 100%)';
@@ -94,7 +94,8 @@ function pickNonRepeating(items, lastIndex, key) {
 }
 
 function showShameScreen() {
-  chrome.runtime.sendMessage({ action: 'blockedPageLoaded' });
+  const blockedDomain = urlParams.get('domain');
+  chrome.runtime.sendMessage({ action: 'blockedPageLoaded', domain: blockedDomain });
 
   chrome.storage.local.get(['shameLevel', 'lastShameIndex'], (result) => {
     const attempts = (result.shameLevel || 0) + 1;

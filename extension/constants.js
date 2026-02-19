@@ -352,7 +352,7 @@ const PRESET_PRODUCTIVE_SITES = [
   { name: 'ProducerTech', domain: 'producertech.com', category: 'Music Production', checked: false },
 ];
 
-const PRODUCTIVITY_CHECK_MINUTES = 10; // minutes before "Are you really working?" popup
+const PRODUCTIVITY_CHECK_MINUTES = 5; // minutes of focused time before "Are you really working?" popup
 
 const NATIVE_HOST_NAME = 'com.brainrotblocker.native';
 

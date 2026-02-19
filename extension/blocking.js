@@ -14,7 +14,7 @@ async function blockSites() {
     .map((site, i) => ({
       id: i + 1,
       priority: 1,
-      action: { type: 'redirect', redirect: { extensionPath: '/blocked.html' } },
+      action: { type: 'redirect', redirect: { extensionPath: `/blocked.html?domain=${encodeURIComponent(site)}` } },
       condition: { requestDomains: [site], resourceTypes: ['main_frame'] },
     }));
 

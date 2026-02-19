@@ -1,10 +1,11 @@
 // Productivity Check — "Are you really working?" popup
 // Injected into all pages during active sessions.
-// Uses per-site timer that resets when navigating to a different domain.
+// Tracks focused time on the tab (pauses when tab/window loses focus).
 
 (function() {
   const THRESHOLD_MS = PRODUCTIVITY_CHECK_MINUTES * 60 * 1000;
-  let startTime = Date.now();
+  let focusedMs = 0;
+  let focusStart = document.hasFocus() ? Date.now() : null;
   let prompted = false;
   let skipDomains = [];
 
@@ -14,6 +15,22 @@
   });
 
   const currentDomain = window.location.hostname.replace(/^www\./, '');
+
+  function getFocusedTime() {
+    if (focusStart) return focusedMs + (Date.now() - focusStart);
+    return focusedMs;
+  }
+
+  window.addEventListener('focus', () => {
+    if (!focusStart) focusStart = Date.now();
+  });
+
+  window.addEventListener('blur', () => {
+    if (focusStart) {
+      focusedMs += Date.now() - focusStart;
+      focusStart = null;
+    }
+  });
 
   function checkTime() {
     if (prompted) return;
@@ -34,9 +51,8 @@
       // Don't show on blocked.html or extension pages
       if (window.location.protocol === 'chrome-extension:') return;
 
-      // Check if we've been on this site long enough
-      const elapsed = Date.now() - startTime;
-      if (elapsed >= THRESHOLD_MS) {
+      // Check if tab has been focused long enough
+      if (getFocusedTime() >= THRESHOLD_MS) {
         prompted = true;
         showProductivityCheck();
       }
@@ -51,7 +67,7 @@
       <div class="brainrot-modal-backdrop">
         <div class="brainrot-modal">
           <h2>Are you really working right now?</h2>
-          <p>You've been on <strong>${window.location.hostname}</strong> for over ${PRODUCTIVITY_CHECK_MINUTES} minute${PRODUCTIVITY_CHECK_MINUTES !== 1 ? 's' : ''}.</p>
+          <p>You've been focused on <strong>${window.location.hostname}</strong> for over ${PRODUCTIVITY_CHECK_MINUTES} minute${PRODUCTIVITY_CHECK_MINUTES !== 1 ? 's' : ''}.</p>
           <div class="brainrot-modal-buttons">
             <button id="brainrot-yes-working" class="brainrot-btn brainrot-btn-yes">Yes, I'm working</button>
             <button id="brainrot-not-working" class="brainrot-btn brainrot-btn-no">No, block this site</button>
@@ -181,6 +197,4 @@
 
   // Check every 30 seconds
   setInterval(checkTime, 30000);
-  // Also check after threshold exactly
-  setTimeout(checkTime, THRESHOLD_MS);
 })();

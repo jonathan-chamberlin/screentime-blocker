@@ -566,7 +566,7 @@ function getNuclearSiteStage(site) {
   if (now - site.addedAt < site.cooldown1Ms) return 'locked';
   if (!site.unblockClickedAt) return 'ready';
   if (now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
-  return 'expired';
+  return 'confirm';
 }
 
 function getNuclearCountdownMs(site) {
@@ -639,7 +639,6 @@ async function loadNuclearBlock() {
     } else {
       data.sites.forEach(site => {
         const stage = getNuclearSiteStage(site);
-        if (stage === 'expired') return;
 
         const card = document.createElement('div');
         card.className = 'nuclear-site-card';
@@ -665,18 +664,33 @@ async function loadNuclearBlock() {
           const fuzzy = fuzzyTimeLeft(ms) || '1 day';
           countdownEl.textContent = fuzzy + ' until site is removed';
           countdownEl.className = 'site-countdown unblocking';
+        } else if (stage === 'confirm') {
+          countdownEl.textContent = 'Waiting for your final decision';
+          countdownEl.className = 'site-countdown ready';
         }
 
         info.appendChild(nameEl);
         info.appendChild(countdownEl);
         card.appendChild(info);
 
-        if (stage === 'ready') {
+        if (stage === 'ready' || stage === 'confirm') {
           const btn = document.createElement('button');
           btn.className = 'btn-unblock';
-          btn.textContent = 'Unblock';
+          if (stage === 'confirm') {
+            btn.textContent = 'Unblock Now';
+          } else if (site.cooldown2Ms > 0) {
+            btn.textContent = 'Unblock';
+          } else {
+            btn.textContent = 'Unblock Now';
+          }
           btn.dataset.siteId = site.id;
-          btn.addEventListener('click', () => handleUnblockNuclear(site.id));
+          btn.addEventListener('click', () => {
+            if (stage === 'confirm') {
+              window.location.href = chrome.runtime.getURL('nuclear-block-last-chance.html');
+            } else {
+              handleUnblockNuclear(site.id);
+            }
+          });
           card.appendChild(btn);
 
           const blockAgainSelect = document.createElement('select');
@@ -826,6 +840,88 @@ function handleBlockAgainNuclear(id, cooldown1Ms) {
     loadNuclearBlock();
     showSavedIndicator();
   });
+}
+
+const NUCLEAR_CONFIRM_PHRASE = 'You can change. I love you.';
+
+function showTypingConfirmation(siteId) {
+  // Remove existing modal if any
+  const existing = document.getElementById('nuclear-confirm-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'nuclear-confirm-modal';
+  overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background: #1a1a2e; border: 1px solid rgba(255,140,0,0.3); border-radius: 14px; padding: 32px; max-width: 460px; width: 90%; text-align: center;';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size: 18px; font-weight: 600; color: #ffaa44; margin-bottom: 16px;';
+  title.textContent = 'Are you sure?';
+
+  const desc = document.createElement('div');
+  desc.style.cssText = 'font-size: 14px; color: #aaa; margin-bottom: 20px; line-height: 1.6;';
+  desc.textContent = 'To unblock this site, type the phrase below exactly as shown.';
+
+  const phrase = document.createElement('div');
+  phrase.style.cssText = 'font-size: 16px; font-weight: 600; color: #e0e0e0; margin-bottom: 16px; padding: 12px 16px; background: rgba(255,140,0,0.08); border: 1px solid rgba(255,140,0,0.2); border-radius: 8px; user-select: none; -webkit-user-select: none;';
+  phrase.textContent = NUCLEAR_CONFIRM_PHRASE;
+  // Block copy via keyboard and context menu
+  phrase.addEventListener('copy', e => e.preventDefault());
+  phrase.addEventListener('contextmenu', e => e.preventDefault());
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.autocomplete = 'off';
+  input.style.cssText = 'width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,140,0,0.25); border-radius: 8px; color: #e0e0e0; font-size: 15px; font-family: inherit; margin-bottom: 16px;';
+  input.placeholder = 'Type the phrase here...';
+  // Block pasting
+  input.addEventListener('paste', e => e.preventDefault());
+
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-secondary';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'padding: 10px 24px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;';
+  cancelBtn.addEventListener('click', () => overlay.remove());
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.textContent = 'Confirm Unblock';
+  confirmBtn.style.cssText = 'padding: 10px 24px; background: linear-gradient(135deg, #ff8c00, #e65c00); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; opacity: 0.4; pointer-events: none; transition: all 0.2s;';
+
+  input.addEventListener('input', () => {
+    const match = input.value === NUCLEAR_CONFIRM_PHRASE;
+    confirmBtn.style.opacity = match ? '1' : '0.4';
+    confirmBtn.style.pointerEvents = match ? 'auto' : 'none';
+  });
+
+  confirmBtn.addEventListener('click', () => {
+    if (input.value !== NUCLEAR_CONFIRM_PHRASE) return;
+    overlay.remove();
+    chrome.runtime.sendMessage({ action: 'confirmUnblockNuclear', id: siteId }, () => {
+      loadNuclearBlock();
+      showSavedIndicator();
+    });
+  });
+
+  // Close on overlay click (not modal)
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  btnRow.appendChild(cancelBtn);
+  btnRow.appendChild(confirmBtn);
+  modal.appendChild(title);
+  modal.appendChild(desc);
+  modal.appendChild(phrase);
+  modal.appendChild(input);
+  modal.appendChild(btnRow);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  input.focus();
 }
 
 async function handleDeleteAllData() {

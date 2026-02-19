@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You Did It</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #041a0e 0%, #0a2e1a 50%, #0d3320 100%);
+      color: #d0f0d8;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 620px;
+      width: 100%;
+    }
+
+    .icon {
+      font-size: 72px;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+    }
+
+    .headline {
+      font-size: 36px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .message {
+      font-size: 18px;
+      color: rgba(208, 240, 216, 0.85);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .affirmation-box {
+      background: rgba(0, 255, 136, 0.06);
+      border: 1px solid rgba(0, 255, 136, 0.15);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .affirmation-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(0, 255, 136, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .affirmation-text {
+      font-size: 16px;
+      color: rgba(208, 240, 216, 0.8);
+      line-height: 1.7;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(0, 255, 136, 0.4);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 36px;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(208, 240, 216, 0.85);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      color: rgba(208, 240, 216, 0.45);
+    }
+
+    .settings-link {
+      display: inline-block;
+      color: rgba(208, 240, 216, 0.4);
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .settings-link:hover {
+      color: rgba(208, 240, 216, 0.7);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.7s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="icon">&#x2728;</div>
+    <h1 class="headline">You are in control.</h1>
+    <p class="message">The site has been unblocked. You made a deliberate, thoughtful choice.<br>That takes real strength.</p>
+
+    <div class="affirmation-box">
+      <div class="affirmation-title">Remember this</div>
+      <p class="affirmation-text">
+        You went through every step. You waited through the cooldowns, you reflected, and you decided with intention. That is not weakness. That is someone who knows what they want and acts on purpose. Keep building the life you actually want.
+      </p>
+    </div>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text"></p>
+      <p class="quote-author" id="quote-author"></p>
+    </div>
+
+    <button class="settings-link" id="open-settings">Open Settings</button>
+  </div>
+  <script src="constants.js"></script>
+  <script src="nuclear-blocked-good-choice.js"></script>
+</body>
+</html>

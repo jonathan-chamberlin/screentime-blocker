@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon16.png" type="image/png">
+    <title>Brainrot Blocker — Usage Stats</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #0f0f1a;
+            padding: 40px 20px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 700px; margin: 0 auto; }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 40px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .header h1 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .section {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        .section:hover { border-color: rgba(255, 255, 255, 0.1); }
+
+        .section h2 {
+            color: #e0e0e0;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Streak banner */
+        .streak-banner {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+        }
+        .streak-item {
+            text-align: center;
+        }
+        .streak-number {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffaa00, #ff6600);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        .streak-label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .streak-fire {
+            font-size: 36px;
+            line-height: 1;
+        }
+        .streak-divider {
+            width: 1px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Weekly comparison */
+        .week-compare {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .week-card {
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .week-card-label {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .week-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ff88;
+        }
+        .week-card-unit {
+            color: #888;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .week-change {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+        .change-up { color: #00ff88; }
+        .change-down { color: #ff4757; }
+        .change-neutral { color: #888; }
+
+        /* Bar chart (vertical) */
+        .chart-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 140px;
+            padding-top: 10px;
+        }
+        .chart-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            min-width: 0;
+        }
+        .chart-bar {
+            width: 100%;
+            max-width: 24px;
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+            transition: height 0.3s;
+        }
+        .chart-bar-green {
+            background: linear-gradient(180deg, #00ff88, #00cc6a);
+        }
+        .chart-bar-red {
+            background: linear-gradient(180deg, #ff4757, #ff3838);
+        }
+        .chart-bar-orange {
+            background: linear-gradient(180deg, #ffaa00, #ff8800);
+        }
+        .chart-label {
+            color: #555;
+            font-size: 10px;
+            margin-top: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .chart-value {
+            color: #888;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        /* Horizontal bar chart (blocked sites) */
+        .h-bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+        .h-bar-domain {
+            color: #ccc;
+            font-size: 13px;
+            width: 140px;
+            text-align: right;
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .h-bar-track {
+            flex: 1;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .h-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            border-radius: 4px;
+            min-width: 2px;
+            transition: width 0.3s;
+        }
+        .h-bar-count {
+            color: #888;
+            font-size: 13px;
+            width: 40px;
+            flex-shrink: 0;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #e0e0e0;
+        }
+        .stat-value-green { color: #00ff88; }
+        .stat-value-orange { color: #ffaa00; }
+        .stat-value-pink { color: #f093fb; }
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* Day of week chart */
+        .dow-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 120px;
+        }
+        .dow-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .dow-bar {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            min-height: 2px;
+            background: linear-gradient(180deg, #00ff88, #00cc6a);
+        }
+        .dow-label {
+            color: #888;
+            font-size: 12px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        .dow-value {
+            color: #888;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 16px;
+        }
+        .empty-state .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Usage Stats</h1>
+            <p>Track your productivity journey</p>
+        </div>
+
+        <div id="content">
+            <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <p>Loading usage data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="usage.js"></script>
+</body>
+</html>

@@ -37,21 +37,11 @@ function getNuclearSiteStage(site) {
   if (now - site.addedAt < site.cooldown1Ms) return 'locked';
   if (!site.unblockClickedAt) return 'ready';
   if (now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
-  return 'expired';
+  return 'confirm';
 }
 
 async function applyNuclearRules() {
   const data = await getNuclearData();
-  const now = Date.now();
-
-  // Auto-remove sites where second cooldown has expired
-  const before = data.sites.length;
-  data.sites = data.sites.filter(site => getNuclearSiteStage(site) !== 'expired');
-  if (data.sites.length !== before) {
-    await saveNuclearData(data);
-  }
-
-  const domains = getNuclearDomains(data);
 
   // Remove existing nuclear rules, add new ones
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -59,15 +49,24 @@ async function applyNuclearRules() {
     .filter(r => r.id >= NUCLEAR_RULE_ID_OFFSET)
     .map(r => r.id);
 
-  const addRules = domains
-    .map(d => d.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, ''))
-    .filter(d => d.length > 0)
-    .map((domain, i) => ({
-      id: NUCLEAR_RULE_ID_OFFSET + i,
-      priority: 3, // beats allow rules (priority 2) and block rules (priority 1)
-      action: { type: 'redirect', redirect: { extensionPath: '/nuclear-blocked.html' } },
-      condition: { requestDomains: [domain], resourceTypes: ['main_frame'] },
-    }));
+  // Build rules per site, routing confirm-stage sites to the last-chance page
+  const addRules = [];
+  let ruleIndex = 0;
+  for (const site of data.sites) {
+    const stage = getNuclearSiteStage(site);
+    const page = stage === 'confirm' ? '/nuclear-block-last-chance.html' : '/nuclear-blocked.html';
+    const domains = site.domains || (site.domain ? [site.domain] : []);
+    for (const d of domains) {
+      const clean = d.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '');
+      if (!clean) continue;
+      addRules.push({
+        id: NUCLEAR_RULE_ID_OFFSET + ruleIndex++,
+        priority: 3,
+        action: { type: 'redirect', redirect: { extensionPath: page } },
+        condition: { requestDomains: [clean], resourceTypes: ['main_frame'] },
+      });
+    }
+  }
 
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: nuclearIds,
@@ -84,6 +83,8 @@ async function addNuclearSite(entry) {
   data.sites.push(entry);
   await saveNuclearData(data);
   await applyNuclearRules();
+  // Schedule rule refresh for when cooldown1 expires (stage changes to ready)
+  if (entry.cooldown1Ms > 0) scheduleNuclearRuleRefresh(entry.cooldown1Ms);
 }
 
 async function clickUnblockNuclear(id) {
@@ -96,9 +97,17 @@ async function clickUnblockNuclear(id) {
     data.sites = data.sites.filter(s => s.id !== id);
   } else {
     site.unblockClickedAt = Date.now();
+    // Schedule a rule refresh for when cooldown2 expires (stage changes to confirm)
+    scheduleNuclearRuleRefresh(site.cooldown2Ms);
   }
   await saveNuclearData(data);
   await applyNuclearRules();
+}
+
+// Schedule a one-shot alarm to refresh nuclear rules at a precise time
+function scheduleNuclearRuleRefresh(delayMs) {
+  const delayMin = Math.max(delayMs / 60000, 0.1); // minimum ~6 seconds
+  chrome.alarms.create('nuclearRuleRefresh', { delayInMinutes: delayMin });
 }
 
 async function blockAgainNuclear(id, cooldown1Ms) {
@@ -108,6 +117,15 @@ async function blockAgainNuclear(id, cooldown1Ms) {
   site.addedAt = Date.now();
   site.cooldown1Ms = cooldown1Ms;
   site.unblockClickedAt = null;
+  await saveNuclearData(data);
+  await applyNuclearRules();
+  // Schedule rule refresh for when cooldown1 expires
+  if (cooldown1Ms > 0) scheduleNuclearRuleRefresh(cooldown1Ms);
+}
+
+async function confirmUnblockNuclear(id) {
+  const data = await getNuclearData();
+  data.sites = data.sites.filter(s => s.id !== id);
   await saveNuclearData(data);
   await applyNuclearRules();
 }

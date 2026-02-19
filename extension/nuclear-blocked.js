@@ -31,7 +31,7 @@ function getNuclearSiteStage(site) {
   if (now - site.addedAt < site.cooldown1Ms) return 'locked';
   if (!site.unblockClickedAt) return 'ready';
   if (now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
-  return 'expired';
+  return 'confirm';
 }
 
 function getCountdownMs(site) {
@@ -59,8 +59,8 @@ function renderCountdown(site) {
     const fuzzy = fuzzyTimeLeft(ms);
     countdownEl.textContent = (fuzzy || '1 day') + ' until site is removed';
     countdownEl.className = 'countdown-value';
-  } else if (stage === 'expired') {
-    countdownEl.textContent = 'Unblocked — this page should not appear';
+  } else if (stage === 'confirm') {
+    countdownEl.textContent = 'Cooldowns complete — visit Settings to make your final decision';
     countdownEl.className = 'countdown-value ready';
   } else {
     const ms = getCountdownMs(site);

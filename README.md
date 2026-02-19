@@ -199,7 +199,8 @@ server/
 ## What's Next?
 - Implement leaderboards
 - Ensure that data is retained between accounts when signing in.
-- Make UI easier to use.
+
+
 
 ---
 

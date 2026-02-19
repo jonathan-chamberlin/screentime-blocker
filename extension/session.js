@@ -13,6 +13,7 @@ async function handleStartSession() {
   state.isOnProductiveSite = false;
   state.rewardGrantCount = 0;
   state.blockedAttempts = 0;
+  state.blockedDomainsMap = {};
   saveState();
 
   await blockSites();
@@ -48,6 +49,7 @@ async function handleEndSession(confirmed) {
 
   flushProductive();
   const minutesCompleted = Math.floor(state.productiveMillis / 1000 / 60);
+  const endedEarly = state.rewardGrantCount < 1;
 
   const todayResult = await getStorage(['todayMinutes']);
   await setStorage({ todayMinutes: (todayResult.todayMinutes || 0) + minutesCompleted });
@@ -55,8 +57,21 @@ async function handleEndSession(confirmed) {
   notifyBackend('end', {
     session_id: state.sessionId,
     minutes_completed: minutesCompleted,
-    ended_early: true,
+    ended_early: endedEarly,
     blocked_attempts: state.blockedAttempts,
+  });
+
+  await saveSessionRecord({
+    sessionId: state.sessionId,
+    startTime: state.sessionStartTime,
+    endTime: Date.now(),
+    workMinutes: state.workMinutes,
+    rewardMinutes: state.rewardMinutes,
+    productiveMillis: state.productiveMillis,
+    blockedAttempts: state.blockedAttempts,
+    blockedDomains: { ...state.blockedDomainsMap },
+    rewardGrantCount: state.rewardGrantCount,
+    endedEarly,
   });
 
   if (state.rewardActive) await bankActiveReward();
@@ -71,5 +86,49 @@ async function handleEndSession(confirmed) {
   // Subscribers: settings.js:174 (lockSiteSections)
   chrome.runtime.sendMessage({ action: 'sessionEnded' }).catch(() => {});
 
-  return { success: true, endedEarly: true, minutesCompleted };
+  return { success: true, endedEarly, minutesCompleted };
+}
+
+async function saveSessionRecord(record) {
+  const result = await getStorage(['sessionHistory', 'dailySummaries', 'streakData']);
+  const history = result.sessionHistory || [];
+  history.push(record);
+
+  // Update daily summary
+  const summaries = result.dailySummaries || {};
+  const dateKey = new Date(record.endTime).toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const day = summaries[dateKey] || {
+    date: dateKey,
+    totalProductiveMinutes: 0,
+    sessionsCompleted: 0,
+    sessionsEndedEarly: 0,
+    totalBlockedAttempts: 0,
+    blockedDomains: {},
+  };
+  day.totalProductiveMinutes += Math.floor(record.productiveMillis / 1000 / 60);
+  day.sessionsCompleted++;
+  if (record.endedEarly) day.sessionsEndedEarly++;
+  day.totalBlockedAttempts += record.blockedAttempts;
+  for (const [domain, count] of Object.entries(record.blockedDomains || {})) {
+    day.blockedDomains[domain] = (day.blockedDomains[domain] || 0) + count;
+  }
+  summaries[dateKey] = day;
+
+  // Update streak (only completed sessions count)
+  const streak = result.streakData || { currentStreak: 0, longestStreak: 0, lastActiveDate: null };
+  if (!record.endedEarly) {
+    const today = new Date(record.endTime).toLocaleDateString('en-CA');
+    if (streak.lastActiveDate !== today) {
+      const yesterday = new Date(record.endTime - 86400000).toLocaleDateString('en-CA');
+      if (streak.lastActiveDate === yesterday) {
+        streak.currentStreak++;
+      } else {
+        streak.currentStreak = 1;
+      }
+      streak.lastActiveDate = today;
+      streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
+    }
+  }
+
+  await setStorage({ sessionHistory: history, dailySummaries: summaries, streakData: streak });
 }

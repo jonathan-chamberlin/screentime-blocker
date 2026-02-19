@@ -140,6 +140,10 @@ const messageHandlers = {
   blockedPageLoaded: (msg, sender, sendResponse) => {
     if (state.sessionActive) {
       state.blockedAttempts++;
+      const domain = msg.domain || 'unknown';
+      if (domain !== 'unknown') {
+        state.blockedDomainsMap[domain] = (state.blockedDomainsMap[domain] || 0) + 1;
+      }
       saveState();
       notifyBackend('blocked-attempt', { session_id: state.sessionId });
     }
@@ -263,6 +267,10 @@ const messageHandlers = {
     blockAgainNuclear(msg.id, msg.cooldown1Ms).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   },
+  confirmUnblockNuclear: (msg, sender, sendResponse) => {
+    confirmUnblockNuclear(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
   removeNuclearSite: (msg, sender, sendResponse) => {
     removeNuclearSite(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
@@ -302,7 +310,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // --- Alarm handler ---
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === 'checkNuclear') {
+  if (alarm.name === 'checkNuclear' || alarm.name === 'nuclearRuleRefresh') {
     await applyNuclearRules();
   }
 

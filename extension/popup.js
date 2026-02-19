@@ -380,6 +380,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     poll();
   });
 
+  document.getElementById('btn-usage').addEventListener('click', () => {
+    chrome.tabs.create({ url: 'usage.html' });
+  });
+
   const btnInfo = document.getElementById('btn-info');
   btnInfo.addEventListener('click', () => {
     chrome.tabs.create({ url: 'how-to.html' });
