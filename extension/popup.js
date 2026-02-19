@@ -50,7 +50,7 @@ function showConfetti() {
   container.className = 'confetti-container';
   document.body.appendChild(container);
 
-  const colors = ['#00ff88', '#f093fb', '#ffaa00', '#ff4757', '#667eea', '#f5576c'];
+  const colors = ['#4ade80', '#f472b6', '#eab308', '#c084fc', '#f9a8d4', '#a78bfa'];
   for (let i = 0; i < 60; i++) {
     const confetti = document.createElement('div');
     confetti.className = 'confetti';
@@ -99,7 +99,7 @@ let strictMode = false;
 // --- Render functions ---
 
 function renderStats(status) {
-  el.todayMinutes.textContent = status.todayMinutes || 0;
+  el.todayMinutes.textContent = `${status.todayMinutes || 0} min`;
   el.rewardBalance.textContent = formatTime(status.unusedRewardSeconds || 0);
   el.streakTitle.textContent = getStreakTitle(status.todayMinutes || 0);
 }
@@ -128,10 +128,10 @@ function renderTimer(status) {
     const remaining = status.rewardRemainingSeconds || 0;
     el.timerDisplay.textContent = formatTime(remaining);
     if (status.isOnRewardSite) {
-      el.timerSection.className = 'timer-section reward';
+      el.timerSection.className = 'timer-hero reward';
       el.timerLabel.textContent = 'break time remaining';
     } else {
-      el.timerSection.className = 'timer-section paused';
+      el.timerSection.className = 'timer-hero paused';
       el.timerLabel.textContent = 'break paused \u2014 visit a blocked site to use your break';
     }
   } else if (status.sessionActive) {
@@ -144,15 +144,15 @@ function renderTimer(status) {
     const remainingMin = Math.ceil(remainingSec / 60);
 
     if (status.isOnProductiveSite) {
-      el.timerSection.className = 'timer-section active';
+      el.timerSection.className = 'timer-hero active';
       const appSuffix = status.currentAppName ? ` (${status.currentAppName})` : '';
       el.timerLabel.textContent = `${remainingMin} min until you earn a break${appSuffix}`;
     } else {
-      el.timerSection.className = 'timer-section paused';
+      el.timerSection.className = 'timer-hero paused';
       el.timerLabel.textContent = 'timer paused \u2014 open a productive site or app to resume';
     }
   } else {
-    el.timerSection.className = 'timer-section';
+    el.timerSection.className = 'timer-hero';
     el.timerDisplay.textContent = '00:00';
     el.timerLabel.textContent = 'ready when you are';
   }
@@ -182,6 +182,39 @@ function renderButtons(status) {
   } else {
     el.btnStart.textContent = 'Lock In';
     el.btnStart.style.display = 'block';
+  }
+}
+
+async function renderActiveLists() {
+  const container = document.getElementById('active-lists-display');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const data = await getStorage(['rewardSites', 'productiveSites', 'productiveMode']);
+  const breakSites = data.rewardSites || DEFAULTS.rewardSites;
+  const productiveMode = data.productiveMode || 'blocklist';
+
+  // Break list row
+  const breakRow = document.createElement('div');
+  breakRow.className = 'row';
+  breakRow.innerHTML = `
+    <div class="row-icon">🚫</div>
+    <div class="row-label">Blocked Sites</div>
+    <span class="row-badge red">${breakSites.length} sites</span>
+  `;
+  container.appendChild(breakRow);
+
+  // Productive list row (only in allowlist mode)
+  if (productiveMode === 'allowlist') {
+    const prodSites = data.productiveSites || DEFAULTS.productiveSites;
+    const prodRow = document.createElement('div');
+    prodRow.className = 'row';
+    prodRow.innerHTML = `
+      <div class="row-icon">✅</div>
+      <div class="row-label">Productive Sites</div>
+      <span class="row-badge green">${prodSites.length} sites</span>
+    `;
+    container.appendChild(prodRow);
   }
 }
 
@@ -441,6 +474,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize
   await poll();
+  renderActiveLists();
   if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive)) {
     startPolling();
   }
