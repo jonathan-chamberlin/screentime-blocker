@@ -387,6 +387,45 @@ async function loadNuclearBlock() {
       if (labelEl) labelEl.textContent = preset.name + (alreadyAdded ? ' ✓' : '');
     });
 
+    // Render break lists as nuclear-blockable options
+    getStorage(['breakLists']).then(result => {
+      const breakLists = result.breakLists || DEFAULTS.breakLists;
+      const breakListsGrid = document.getElementById('nuclearBreakLists');
+      breakListsGrid.innerHTML = '';
+
+      const listsWithSites = breakLists.filter(l => l.sites && l.sites.length > 0);
+      if (listsWithSites.length === 0) {
+        breakListsGrid.innerHTML = '<span style="font-size: 12px; color: #5c5862; font-style: italic;">No break lists with sites yet.</span>';
+        return;
+      }
+
+      listsWithSites.forEach(list => {
+        const item = document.createElement('div');
+        item.className = 'nuclear-preset-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'nuclear-breaklist-' + list.id;
+        checkbox.dataset.domains = JSON.stringify(list.sites);
+        checkbox.dataset.listName = list.name;
+
+        const alreadyAdded = list.sites.every(d => existingDomains.has(d));
+        checkbox.disabled = alreadyAdded;
+
+        const label = document.createElement('span');
+        label.textContent = list.name + ' (' + list.sites.length + ' sites)' + (alreadyAdded ? ' ✓' : '');
+
+        item.appendChild(checkbox);
+        item.appendChild(label);
+        item.addEventListener('click', (e) => {
+          if (e.target !== checkbox && !checkbox.disabled) {
+            checkbox.checked = !checkbox.checked;
+          }
+        });
+        breakListsGrid.appendChild(item);
+      });
+    });
+
     // Schedule a precise re-render at the next state transition
     scheduleNuclearTransition(data.sites || []);
   });
@@ -442,6 +481,22 @@ function addNuclearSiteFromUI() {
         id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
         name: preset.name,
         ...(preset.domain ? { domain: preset.domain } : { domains: preset.domains }),
+        addedAt: Date.now(),
+        cooldown1Ms,
+        cooldown2Ms: enabled ? cooldown2Ms : 0,
+        unblockClickedAt: null,
+      });
+    }
+  });
+
+  // Collect checked break lists
+  document.querySelectorAll('#nuclearBreakLists input[type="checkbox"]').forEach(cb => {
+    if (cb.checked && !cb.disabled) {
+      const domains = JSON.parse(cb.dataset.domains);
+      entries.push({
+        id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        name: cb.dataset.listName,
+        domains,
         addedAt: Date.now(),
         cooldown1Ms,
         cooldown2Ms: enabled ? cooldown2Ms : 0,
