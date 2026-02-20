@@ -256,21 +256,19 @@ async function loadNuclearBlock() {
       return;
     }
 
-    // Render second cooldown radio
+    // Set second cooldown dropdown
     const { secondCooldownEnabled, secondCooldownMs } = data;
-    let radioVal = 'off';
+    let selectVal = 'off';
     if (secondCooldownEnabled) {
-      if (secondCooldownMs <= 5000) radioVal = '5s';
-      else if (secondCooldownMs <= 1200000) radioVal = '20m';
-      else if (secondCooldownMs <= 64800000) radioVal = '18h';
-      else if (secondCooldownMs <= 129600000) radioVal = '36h';
-      else if (secondCooldownMs <= 432000000) radioVal = '5d';
-      else if (secondCooldownMs <= 1209600000) radioVal = '14d';
-      else radioVal = '30d';
+      if (secondCooldownMs <= 5000) selectVal = '5s';
+      else if (secondCooldownMs <= 1200000) selectVal = '20m';
+      else if (secondCooldownMs <= 64800000) selectVal = '18h';
+      else if (secondCooldownMs <= 129600000) selectVal = '36h';
+      else if (secondCooldownMs <= 432000000) selectVal = '5d';
+      else if (secondCooldownMs <= 1209600000) selectVal = '14d';
+      else selectVal = '30d';
     }
-    document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(r => {
-      r.checked = r.value === radioVal;
-    });
+    document.getElementById('nuclearSecondCooldown').value = selectVal;
 
     // Render current nuclear sites
     const list = document.getElementById('nuclearSitesList');
@@ -389,7 +387,7 @@ async function loadNuclearBlock() {
 }
 
 function getNuclearSecondCooldown() {
-  const val = document.querySelector('input[name="nuclearSecondCooldown"]:checked')?.value || '18h';
+  const val = document.getElementById('nuclearSecondCooldown')?.value || '18h';
   if (val === 'off') return { enabled: false, ms: 0 };
   const MS = {
     '5s':    5 * 1000,
@@ -1272,18 +1270,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-delete-all-data').addEventListener('click', handleDeleteAllData);
 
   // Nuclear Block
-  document.querySelectorAll('input[name="nuclearSecondCooldown"]').forEach(radio => {
-    radio.addEventListener('change', () => saveNuclearSettings());
-  });
+  document.getElementById('nuclearSecondCooldown').addEventListener('change', () => saveNuclearSettings());
 
   document.getElementById('btn-add-nuclear').addEventListener('click', addNuclearSiteFromUI);
 
   const cooldownSelect = document.getElementById('nuclearCooldown');
+  const secondCooldownSelect = document.getElementById('nuclearSecondCooldown');
   const cooldownWarning = document.getElementById('nuclearCooldownTestWarning');
   function updateCooldownWarning() {
-    cooldownWarning.style.display = cooldownSelect.value === '10000' ? 'block' : 'none';
+    const testMode = cooldownSelect.value === '10000' || secondCooldownSelect.value === '5s';
+    cooldownWarning.style.display = testMode ? 'block' : 'none';
   }
   cooldownSelect.addEventListener('change', updateCooldownWarning);
+  secondCooldownSelect.addEventListener('change', updateCooldownWarning);
   updateCooldownWarning();
 
   // Refresh nuclear countdowns every minute
