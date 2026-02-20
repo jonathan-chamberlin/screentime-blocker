@@ -260,13 +260,19 @@ async function loadNuclearBlock() {
     const { secondCooldownEnabled, secondCooldownMs } = data;
     let selectVal = 'off';
     if (secondCooldownEnabled) {
-      if (secondCooldownMs <= 5000) selectVal = '5s';
-      else if (secondCooldownMs <= 1200000) selectVal = '20m';
-      else if (secondCooldownMs <= 64800000) selectVal = '18h';
-      else if (secondCooldownMs <= 129600000) selectVal = '36h';
-      else if (secondCooldownMs <= 432000000) selectVal = '5d';
-      else if (secondCooldownMs <= 1209600000) selectVal = '14d';
-      else selectVal = '30d';
+      // Find the closest matching option by comparing ms values
+      const options = [
+        ['5s', 5000], ['10m', 600000], ['20m', 1200000],
+        ['1h', 3600000], ['2h', 7200000], ['4h', 14400000],
+        ['8h', 28800000], ['12h', 43200000], ['18h', 64800000],
+        ['24h', 86400000], ['36h', 129600000], ['48h', 172800000],
+        ['3d', 259200000], ['5d', 432000000], ['7d', 604800000],
+        ['14d', 1209600000], ['30d', 2592000000],
+      ];
+      selectVal = '18h';
+      for (const [key, ms] of options) {
+        if (secondCooldownMs <= ms) { selectVal = key; break; }
+      }
     }
     document.getElementById('nuclearSecondCooldown').value = selectVal;
 
@@ -391,10 +397,20 @@ function getNuclearSecondCooldown() {
   if (val === 'off') return { enabled: false, ms: 0 };
   const MS = {
     '5s':    5 * 1000,
+    '10m':  10 * 60 * 1000,
     '20m':  20 * 60 * 1000,
+    '1h':    1 * 60 * 60 * 1000,
+    '2h':    2 * 60 * 60 * 1000,
+    '4h':    4 * 60 * 60 * 1000,
+    '8h':    8 * 60 * 60 * 1000,
+    '12h':  12 * 60 * 60 * 1000,
     '18h':  18 * 60 * 60 * 1000,
+    '24h':  24 * 60 * 60 * 1000,
     '36h':  36 * 60 * 60 * 1000,
+    '48h':  48 * 60 * 60 * 1000,
+    '3d':    3 * 24 * 60 * 60 * 1000,
     '5d':    5 * 24 * 60 * 60 * 1000,
+    '7d':    7 * 24 * 60 * 60 * 1000,
     '14d':  14 * 24 * 60 * 60 * 1000,
     '30d':  30 * 24 * 60 * 60 * 1000,
   };
@@ -557,9 +573,25 @@ function showTypingConfirmation(siteId) {
   input.focus();
 }
 
+async function handleDeleteAnalytics() {
+  const confirmed = window.confirm(
+    'Delete all analytics data?\n\nThis resets session history, streaks, and unused rewards. Your current session and settings are not affected.'
+  );
+  if (!confirmed) return;
+
+  chrome.runtime.sendMessage({ action: 'deleteAnalytics' }, (response) => {
+    if (response && response.success) {
+      showSavedIndicator();
+      alert('Analytics data has been deleted.');
+    } else {
+      alert('Failed to delete analytics. Please try again.');
+    }
+  });
+}
+
 async function handleDeleteAllData() {
   const confirmed = window.confirm(
-    'Delete all Brainrot Blocker data on this browser?\n\nThis cannot be undone.'
+    'Delete all extension data?\n\nThis will stop your active session and reset all settings. Your lists and Nuclear Block data are preserved.\n\nThis cannot be undone.'
   );
   if (!confirmed) return;
 
@@ -572,7 +604,7 @@ async function handleDeleteAllData() {
       await renderActiveProductiveLists();
       await loadNuclearBlock();
       showSavedIndicator();
-      alert('All Brainrot Blocker data was deleted. Nuclear Block data was preserved.');
+      alert('All data was deleted. Your lists and Nuclear Block data were preserved.');
     } else {
       alert('Failed to delete data. Please try again.');
     }
@@ -1267,6 +1299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoSave('paymentMethod', e.target.value.trim());
   });
 
+  document.getElementById('btn-delete-analytics').addEventListener('click', handleDeleteAnalytics);
   document.getElementById('btn-delete-all-data').addEventListener('click', handleDeleteAllData);
 
   // Nuclear Block

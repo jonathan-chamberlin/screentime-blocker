@@ -391,6 +391,17 @@ const PRESET_PRODUCTIVE_SITES = [
   { name: 'Sonic Academy', domain: 'sonicacademy.com', category: 'Music Production', checked: false },
   { name: 'Point Blank School', domain: 'pointblankmusicschool.com', category: 'Music Production', checked: false },
   { name: 'ProducerTech', domain: 'producertech.com', category: 'Music Production', checked: false },
+  // School & Academics
+  { name: 'Canvas', domain: 'instructure.com', category: 'School & Academics', checked: false },
+  { name: 'Gradescope', domain: 'gradescope.com', category: 'School & Academics', checked: false },
+  { name: 'Google Classroom', domain: 'classroom.google.com', category: 'School & Academics', checked: false },
+  { name: 'Blackboard', domain: 'blackboard.com', category: 'School & Academics', checked: false },
+  { name: 'Coursera', domain: 'coursera.org', category: 'School & Academics', checked: false },
+  { name: 'Khan Academy', domain: 'khanacademy.org', category: 'School & Academics', checked: false },
+  { name: 'Quizlet', domain: 'quizlet.com', category: 'School & Academics', checked: false },
+  { name: 'Chegg', domain: 'chegg.com', category: 'School & Academics', checked: false },
+  { name: 'Turnitin', domain: 'turnitin.com', category: 'School & Academics', checked: false },
+  { name: 'Schoology', domain: 'schoology.com', category: 'School & Academics', checked: false },
 ];
 
 // ── Break & Productive Lists (continued) ──

@@ -212,8 +212,9 @@ const messageHandlers = {
         await unblockSites();
         setCompanionModeEnabled(false);
 
-        // Preserve nuclear block data — it survives Delete All Data intentionally
+        // Preserve data that survives Delete All Data intentionally
         const savedNbData = await getNuclearData();
+        const savedLists = await getStorage(['breakLists', 'productiveLists']);
 
         state = {
           sessionActive: false,
@@ -242,7 +243,28 @@ const messageHandlers = {
           await applyNuclearRules();
         }
 
+        // Restore break lists and productive lists
+        if (savedLists.breakLists) await setStorage({ breakLists: savedLists.breakLists });
+        if (savedLists.productiveLists) await setStorage({ productiveLists: savedLists.productiveLists });
+
         chrome.action.setBadgeText({ text: '' });
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  },
+  deleteAnalytics: (msg, sender, sendResponse) => {
+    (async () => {
+      try {
+        await setStorage({
+          sessionHistory: [],
+          dailySummaries: {},
+          streakData: { currentStreak: 0, longestStreak: 0, lastActiveDate: null },
+          todayMinutes: 0,
+          unusedRewardSeconds: 0,
+        });
         sendResponse({ success: true });
       } catch (err) {
         sendResponse({ success: false, error: err.message });
