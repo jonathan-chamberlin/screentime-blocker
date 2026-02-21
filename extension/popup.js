@@ -193,31 +193,59 @@ async function renderActiveLists() {
   if (!container) return;
   container.innerHTML = '';
 
-  const data = await getStorage(['rewardSites', 'productiveSites', 'productiveMode']);
-  const breakSites = data.rewardSites || DEFAULTS.rewardSites;
-  const productiveMode = data.productiveMode || 'blocklist';
+  const data = await getStorage(['breakLists', 'productiveMode']);
+  const breakLists = migrateBreakLists(data.breakLists || DEFAULTS.breakLists);
 
-  // Break list row
-  const breakRow = document.createElement('div');
-  breakRow.className = 'row';
-  breakRow.innerHTML = `
-    <div class="row-icon">🚫</div>
-    <div class="row-label">Blocked Sites</div>
-    <span class="row-badge red">${breakSites.length} sites</span>
-  `;
-  container.appendChild(breakRow);
+  // Get scheduler status to know which scheduled lists are currently active
+  let schedulerStatus = null;
+  try {
+    schedulerStatus = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'getSchedulerStatus' }, resolve);
+    });
+  } catch (e) { /* ignore */ }
+  const blockingIds = new Set(schedulerStatus?.blockingListIds || []);
 
-  // Productive list row (only in allowlist mode)
-  if (productiveMode === 'allowlist') {
-    const prodSites = data.productiveSites || DEFAULTS.productiveSites;
-    const prodRow = document.createElement('div');
-    prodRow.className = 'row';
-    prodRow.innerHTML = `
-      <div class="row-icon">✅</div>
-      <div class="row-label">Productive Sites</div>
-      <span class="row-badge green">${prodSites.length} sites</span>
+  const modeLabels = { manual: 'Manual', scheduled: 'Scheduled', 'always-on': 'Always On' };
+
+  // Show each non-off break list
+  for (const list of breakLists) {
+    if (list.mode === 'off') continue;
+
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    const icon = document.createElement('div');
+    icon.className = 'row-icon';
+    icon.textContent = '🚫';
+
+    const label = document.createElement('div');
+    label.className = 'row-label';
+    label.textContent = list.name;
+
+    const badge = document.createElement('span');
+    badge.className = 'popup-mode-badge mode-' + list.mode;
+    if (list.mode === 'scheduled' && blockingIds.has(list.id)) {
+      badge.classList.add('active-now');
+      badge.textContent = (modeLabels[list.mode] || list.mode) + ' · Active';
+    } else {
+      badge.textContent = modeLabels[list.mode] || list.mode;
+    }
+
+    row.appendChild(icon);
+    row.appendChild(label);
+    row.appendChild(badge);
+    container.appendChild(row);
+  }
+
+  // If no lists are active, show a placeholder
+  if (container.children.length === 0) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="row-icon">🚫</div>
+      <div class="row-label" style="color: var(--text-dim);">No active break lists</div>
     `;
-    container.appendChild(prodRow);
+    container.appendChild(row);
   }
 }
 

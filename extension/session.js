@@ -1,6 +1,6 @@
 // Session handlers — starting and ending work sessions
 // Depends on: session-state.js (state, saveState, flushProductive, resetSessionState),
-//             blocking.js (blockSites, unblockSites, redirectBlockedTabs),
+//             scheduler.js (evaluateScheduler), blocking.js (redirectBlockedTabs),
 //             tab-monitor.js (checkCurrentTab), backend-api.js (notifyBackend),
 //             reward.js (bankActiveReward), storage.js
 
@@ -16,7 +16,7 @@ async function handleStartSession() {
   state.blockedDomainsMap = {};
   saveState();
 
-  await blockSites();
+  await evaluateScheduler();
   await redirectBlockedTabs();
   await checkCurrentTab();
 
@@ -78,7 +78,7 @@ async function handleEndSession(confirmed) {
   resetSessionState();
   saveState();
 
-  await unblockSites();
+  await evaluateScheduler();
   chrome.alarms.clear('checkSession');
   stopRewardCheckInterval();
   await setStorage({ shameLevel: 0 });

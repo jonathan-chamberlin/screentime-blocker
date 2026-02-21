@@ -969,37 +969,228 @@ async function renderActiveBreakLists() {
   container.innerHTML = '';
 
   breakLists.forEach(list => {
-    const row = document.createElement('div');
-    row.className = 'list-selector-row' + (list.isActive ? ' active' : '');
+    // Migrate if needed
+    if (!list.mode) {
+      list.mode = list.isActive ? 'manual' : 'off';
+    }
+    if (!list.schedules) list.schedules = [];
+    list.isActive = list.mode !== 'off';
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = list.isActive;
-    checkbox.dataset.listId = list.id;
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.gap = '0';
+
+    const row = document.createElement('div');
+    row.className = 'list-selector-row' + (list.mode !== 'off' ? ' active' : '');
+    row.style.cursor = 'default';
 
     const check = document.createElement('div');
     check.className = 'list-selector-check';
     check.innerHTML = '<svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg>';
+    if (list.mode !== 'off') {
+      check.style.background = '#f093fb';
+      check.style.borderColor = '#f093fb';
+      check.querySelector('svg').style.opacity = '1';
+    }
 
     const name = document.createElement('span');
     name.className = 'list-selector-name';
     name.textContent = list.name;
 
-    const badge = document.createElement('span');
-    badge.className = 'list-selector-badge';
-    badge.textContent = `${list.sites.length} sites · ${list.apps.length} apps`;
+    const modeBadge = document.createElement('span');
+    modeBadge.className = 'mode-badge mode-' + list.mode;
+    const modeLabels = { off: 'Off', manual: 'Manual', scheduled: 'Scheduled', 'always-on': 'Always On' };
+    modeBadge.textContent = modeLabels[list.mode] || list.mode;
 
-    row.appendChild(checkbox);
+    const select = document.createElement('select');
+    select.className = 'mode-select';
+    select.dataset.listId = list.id;
+    [
+      { value: 'off', label: 'Off' },
+      { value: 'manual', label: 'Manual' },
+      { value: 'scheduled', label: 'Scheduled' },
+      { value: 'always-on', label: 'Always On' },
+    ].forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === list.mode) option.selected = true;
+      select.appendChild(option);
+    });
+
+    select.addEventListener('change', async (e) => {
+      await changeBreakListMode(list.id, e.target.value);
+    });
+
+    // Prevent row click from doing anything
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
     row.appendChild(check);
     row.appendChild(name);
-    row.appendChild(badge);
-    row.addEventListener('click', (e) => {
-      checkbox.checked = !checkbox.checked;
-      row.classList.toggle('active', checkbox.checked);
-      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    container.appendChild(row);
+    row.appendChild(modeBadge);
+    row.appendChild(select);
+    wrapper.appendChild(row);
+
+    // Schedule editor (shown only for 'scheduled' mode)
+    if (list.mode === 'scheduled') {
+      const editor = renderScheduleEditor(list);
+      wrapper.appendChild(editor);
+    }
+
+    // Always-on note
+    if (list.mode === 'always-on') {
+      const note = document.createElement('div');
+      note.className = 'always-on-note';
+      note.textContent = 'Sites in this list are always blocked. Always-on reward config coming in a future update.';
+      wrapper.appendChild(note);
+    }
+
+    container.appendChild(wrapper);
   });
+}
+
+async function changeBreakListMode(listId, newMode) {
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const list = breakLists.find(l => l.id === listId);
+  if (!list) return;
+
+  list.mode = newMode;
+  list.isActive = newMode !== 'off';
+  if (!list.schedules) list.schedules = [];
+
+  // If switching to scheduled and no schedules exist, add a default one
+  if (newMode === 'scheduled' && list.schedules.length === 0) {
+    list.schedules.push({
+      days: [1, 2, 3, 4, 5], // Mon-Fri
+      startTime: '09:00',
+      endTime: '17:00',
+    });
+  }
+
+  await setStorage({ breakLists });
+  chrome.runtime.sendMessage({ action: 'evaluateScheduler' });
+  await renderActiveBreakLists();
+  showSavedIndicator();
+}
+
+function renderScheduleEditor(list) {
+  const editor = document.createElement('div');
+  editor.className = 'schedule-editor';
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  list.schedules.forEach((schedule, schedIdx) => {
+    const windowEl = document.createElement('div');
+    windowEl.className = 'schedule-window';
+
+    // Day chips
+    const daysContainer = document.createElement('div');
+    daysContainer.className = 'day-chips';
+    dayNames.forEach((dayName, dayIdx) => {
+      const chip = document.createElement('button');
+      chip.className = 'day-chip' + (schedule.days.includes(dayIdx) ? ' active' : '');
+      chip.textContent = dayName;
+      chip.type = 'button';
+      chip.addEventListener('click', async () => {
+        chip.classList.toggle('active');
+        await saveScheduleFromUI(list.id, editor);
+      });
+      daysContainer.appendChild(chip);
+    });
+    windowEl.appendChild(daysContainer);
+
+    // Start time
+    const startInput = document.createElement('input');
+    startInput.type = 'time';
+    startInput.className = 'schedule-time-input';
+    startInput.value = schedule.startTime || '09:00';
+    startInput.addEventListener('change', async () => {
+      await saveScheduleFromUI(list.id, editor);
+    });
+    windowEl.appendChild(startInput);
+
+    // Separator
+    const sep = document.createElement('span');
+    sep.className = 'schedule-time-separator';
+    sep.textContent = 'to';
+    windowEl.appendChild(sep);
+
+    // End time
+    const endInput = document.createElement('input');
+    endInput.type = 'time';
+    endInput.className = 'schedule-time-input';
+    endInput.value = schedule.endTime || '17:00';
+    endInput.addEventListener('change', async () => {
+      await saveScheduleFromUI(list.id, editor);
+    });
+    windowEl.appendChild(endInput);
+
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-remove-schedule';
+    removeBtn.type = 'button';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.title = 'Remove this schedule window';
+    removeBtn.addEventListener('click', async () => {
+      windowEl.remove();
+      await saveScheduleFromUI(list.id, editor);
+    });
+    windowEl.appendChild(removeBtn);
+
+    editor.appendChild(windowEl);
+  });
+
+  // Add window button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-add-schedule';
+  addBtn.type = 'button';
+  addBtn.textContent = '+ Add schedule window';
+  addBtn.addEventListener('click', async () => {
+    const result = await getStorage(['breakLists']);
+    const breakLists = result.breakLists || DEFAULTS.breakLists;
+    const listData = breakLists.find(l => l.id === list.id);
+    if (listData) {
+      listData.schedules.push({
+        days: [1, 2, 3, 4, 5],
+        startTime: '09:00',
+        endTime: '17:00',
+      });
+      await setStorage({ breakLists });
+      chrome.runtime.sendMessage({ action: 'evaluateScheduler' });
+      await renderActiveBreakLists();
+    }
+  });
+  editor.appendChild(addBtn);
+
+  return editor;
+}
+
+async function saveScheduleFromUI(listId, editorEl) {
+  const result = await getStorage(['breakLists']);
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const list = breakLists.find(l => l.id === listId);
+  if (!list) return;
+
+  const schedules = [];
+  editorEl.querySelectorAll('.schedule-window').forEach(windowEl => {
+    const days = [];
+    windowEl.querySelectorAll('.day-chip').forEach((chip, idx) => {
+      if (chip.classList.contains('active')) days.push(idx);
+    });
+    const times = windowEl.querySelectorAll('.schedule-time-input');
+    const startTime = times[0]?.value || '09:00';
+    const endTime = times[1]?.value || '17:00';
+    schedules.push({ days, startTime, endTime });
+  });
+
+  list.schedules = schedules;
+  await setStorage({ breakLists });
+  chrome.runtime.sendMessage({ action: 'evaluateScheduler' });
+  showSavedIndicator();
 }
 
 async function renderActiveProductiveLists() {
@@ -1228,9 +1419,11 @@ async function toggleBreakListActive(listId, isActive) {
   const breakLists = result.breakLists || DEFAULTS.breakLists;
   const list = breakLists.find(l => l.id === listId);
   if (list) {
+    // When toggling via checkbox, switch between 'off' and 'manual'
     list.isActive = isActive;
+    list.mode = isActive ? 'manual' : 'off';
     await setStorage({ breakLists });
-    chrome.runtime.sendMessage({ action: 'updateRewardSites' });
+    chrome.runtime.sendMessage({ action: 'evaluateScheduler' });
     showSavedIndicator();
   }
 }
@@ -1376,12 +1569,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Refresh nuclear countdowns every minute
   setInterval(() => loadNuclearBlock(), 60 * 1000);
 
-  // Active break list toggles
-  document.getElementById('activeBreakLists').addEventListener('change', async (e) => {
-    if (e.target.type === 'checkbox' && e.target.dataset.listId) {
-      await toggleBreakListActive(e.target.dataset.listId, e.target.checked);
-    }
-  });
+  // Active break list mode changes (handled inline by select change events)
+  // No change listener needed on container — mode selects have their own handlers
 
   // Active productive list toggles
   document.getElementById('activeProductiveListsInner').addEventListener('change', async (e) => {

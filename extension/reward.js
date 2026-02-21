@@ -1,6 +1,6 @@
 // Reward handlers — earning, using, pausing, and expiring break time
 // Depends on: session-state.js (state, saveState, flushReward), storage.js,
-//             blocking.js (blockSites, unblockSites, redirectBlockedTabs),
+//             scheduler.js (evaluateScheduler), blocking.js (unblockSites, redirectBlockedTabs),
 //             tab-monitor.js (checkCurrentTab)
 
 async function checkAndGrantReward() {
@@ -73,7 +73,7 @@ async function handlePauseReward() {
 
   if (state.sessionActive) {
     setTimeout(() => {
-      blockSites().catch(e => console.log('[handlePauseReward] blockSites error:', e));
+      evaluateScheduler().catch(e => console.log('[handlePauseReward] evaluateScheduler error:', e));
       redirectBlockedTabs('reward-paused').catch(e => console.log('[handlePauseReward] redirect error:', e));
     }, 0);
   }
@@ -91,7 +91,7 @@ async function handleRewardExpired() {
   state.lastRewardTick = null;
   saveState();
   chrome.action.setBadgeText({ text: '' });
-  await blockSites();
+  await evaluateScheduler();
   await redirectBlockedTabs('reward-expired');
   await killCurrentBlockedApp();
   // Subscribers: popup.js:361 (poll)

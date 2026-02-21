@@ -136,6 +136,7 @@
   <script src="../constants.js"></script>
   <script src="../timer.js"></script>
   <script src="../site-utils.js"></script>
+  <script src="../list-utils.js"></script>
   <script src="../shame-data.js"></script>
 
   <!-- Test framework and tests -->
@@ -193,6 +194,7 @@
       const groups = {
         'timer.js': [],
         'site-utils.js': [],
+        'list-utils.js': [],
         'shame-data.js': []
       };
 
@@ -201,6 +203,8 @@
           groups['timer.js'].push(result);
         } else if (result.name.includes('urlMatches') || result.name.includes('isBlockedUrl')) {
           groups['site-utils.js'].push(result);
+        } else if (result.name.includes('migrateBreakList') || result.name.includes('isScheduleActiveNow') || result.name.includes('getListsBlockingNow') || result.name.includes('getBlockingSites')) {
+          groups['list-utils.js'].push(result);
         } else if (result.name.includes('getShameLevel')) {
           groups['shame-data.js'].push(result);
         }
@@ -376,6 +380,127 @@
 
     test('getShameLevel: attempts 10 returns level 4', () => {
       assertEquals(getShameLevel(10), 4);
+    });
+
+    // ──────────────────────────────────────────────────────────────────────
+    // TESTS: list-utils.js - migrateBreakList()
+    // ──────────────────────────────────────────────────────────────────────
+
+    test('migrateBreakList: isActive true, no mode → mode manual', () => {
+      const list = { id: 'test', name: 'Test', isActive: true, sites: [], apps: [] };
+      migrateBreakList(list);
+      assertEquals(list.mode, 'manual');
+      assertEquals(list.isActive, true);
+      assert(Array.isArray(list.schedules), 'schedules should be an array');
+    });
+
+    test('migrateBreakList: isActive false, no mode → mode off', () => {
+      const list = { id: 'test', name: 'Test', isActive: false, sites: [], apps: [] };
+      migrateBreakList(list);
+      assertEquals(list.mode, 'off');
+      assertEquals(list.isActive, false);
+    });
+
+    test('migrateBreakList: already has mode → unchanged', () => {
+      const list = { id: 'test', name: 'Test', isActive: true, mode: 'scheduled', schedules: [{ days: [1], startTime: '09:00', endTime: '17:00' }], sites: [], apps: [] };
+      migrateBreakList(list);
+      assertEquals(list.mode, 'scheduled');
+    });
+
+    test('migrateBreakList: isActive derived from mode (always-on → true)', () => {
+      const list = { id: 'test', name: 'Test', isActive: false, mode: 'always-on', sites: [], apps: [] };
+      migrateBreakList(list);
+      assertEquals(list.isActive, true);
+    });
+
+    test('migrateBreakList: isActive derived from mode (off → false)', () => {
+      const list = { id: 'test', name: 'Test', isActive: true, mode: 'off', sites: [], apps: [] };
+      migrateBreakList(list);
+      assertEquals(list.isActive, false);
+    });
+
+    // ──────────────────────────────────────────────────────────────────────
+    // TESTS: list-utils.js - isScheduleActiveNow()
+    // ──────────────────────────────────────────────────────────────────────
+
+    test('isScheduleActiveNow: empty schedules → false', () => {
+      assertEquals(isScheduleActiveNow([]), false);
+      assertEquals(isScheduleActiveNow(null), false);
+    });
+
+    test('isScheduleActiveNow: within window → true', () => {
+      const now = new Date(2026, 1, 20, 12, 0); // Friday Feb 20 2026, noon
+      const schedules = [{ days: [5], startTime: '09:00', endTime: '17:00' }]; // Friday 9-5
+      assertEquals(isScheduleActiveNow(schedules, now), true);
+    });
+
+    test('isScheduleActiveNow: outside window → false', () => {
+      const now = new Date(2026, 1, 20, 20, 0); // Friday Feb 20 2026, 8pm
+      const schedules = [{ days: [5], startTime: '09:00', endTime: '17:00' }];
+      assertEquals(isScheduleActiveNow(schedules, now), false);
+    });
+
+    test('isScheduleActiveNow: wrong day → false', () => {
+      const now = new Date(2026, 1, 21, 12, 0); // Saturday Feb 21 2026, noon
+      const schedules = [{ days: [5], startTime: '09:00', endTime: '17:00' }]; // Friday only
+      assertEquals(isScheduleActiveNow(schedules, now), false);
+    });
+
+    test('isScheduleActiveNow: overnight window (22:00-06:00), inside at 23:00 → true', () => {
+      const now = new Date(2026, 1, 20, 23, 0); // Friday 11pm
+      const schedules = [{ days: [5], startTime: '22:00', endTime: '06:00' }];
+      assertEquals(isScheduleActiveNow(schedules, now), true);
+    });
+
+    test('isScheduleActiveNow: overnight window (22:00-06:00), inside at 03:00 next day → true', () => {
+      const now = new Date(2026, 1, 21, 3, 0); // Saturday 3am (day 6)
+      const schedules = [{ days: [6], startTime: '22:00', endTime: '06:00' }];
+      assertEquals(isScheduleActiveNow(schedules, now), true);
+    });
+
+    test('isScheduleActiveNow: overnight window, outside at 08:00 → false', () => {
+      const now = new Date(2026, 1, 20, 8, 0); // Friday 8am
+      const schedules = [{ days: [5], startTime: '22:00', endTime: '06:00' }];
+      assertEquals(isScheduleActiveNow(schedules, now), false);
+    });
+
+    // ──────────────────────────────────────────────────────────────────────
+    // TESTS: list-utils.js - getListsBlockingNow()
+    // ──────────────────────────────────────────────────────────────────────
+
+    test('getListsBlockingNow: off mode → not in result', () => {
+      const lists = [{ id: 'a', mode: 'off', sites: ['x.com'], apps: [], schedules: [] }];
+      const result = getListsBlockingNow(lists, true);
+      assertEquals(result.length, 0);
+    });
+
+    test('getListsBlockingNow: manual mode + sessionActive=true → in result', () => {
+      const lists = [{ id: 'a', mode: 'manual', isActive: true, sites: ['x.com'], apps: [], schedules: [] }];
+      const result = getListsBlockingNow(lists, true);
+      assertEquals(result.length, 1);
+    });
+
+    test('getListsBlockingNow: manual mode + sessionActive=false → not in result', () => {
+      const lists = [{ id: 'a', mode: 'manual', isActive: true, sites: ['x.com'], apps: [], schedules: [] }];
+      const result = getListsBlockingNow(lists, false);
+      assertEquals(result.length, 0);
+    });
+
+    test('getListsBlockingNow: always-on → always in result', () => {
+      const lists = [{ id: 'a', mode: 'always-on', isActive: true, sites: ['x.com'], apps: [], schedules: [] }];
+      assertEquals(getListsBlockingNow(lists, true).length, 1);
+      assertEquals(getListsBlockingNow(lists, false).length, 1);
+    });
+
+    test('getBlockingSites: unions sites from blocking lists', () => {
+      const lists = [
+        { id: 'a', mode: 'always-on', isActive: true, sites: ['x.com', 'y.com'], apps: [], schedules: [] },
+        { id: 'b', mode: 'off', isActive: false, sites: ['z.com'], apps: [], schedules: [] },
+      ];
+      const sites = getBlockingSites(lists, false);
+      assert(sites.includes('x.com'), 'should include x.com');
+      assert(sites.includes('y.com'), 'should include y.com');
+      assert(!sites.includes('z.com'), 'should not include z.com from off list');
     });
 
     // Run all tests when page loads

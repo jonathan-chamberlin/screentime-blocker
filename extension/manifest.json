@@ -3,7 +3,7 @@
   "name": "Brainrot Blocker",
   "version": "1.0.0",
   "description": "Hilariously guilt-trippy focus tool with social competition",
-  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs", "nativeMessaging"],
+  "permissions": ["declarativeNetRequest", "storage", "identity", "alarms", "tabs", "nativeMessaging", "idle"],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "16": "icon16.png",

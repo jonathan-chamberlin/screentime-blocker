@@ -905,6 +905,193 @@
         .nuclear-confirm-modal .modal-btn-confirm.enabled:hover {
             box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
         }
+
+        /* Mode dropdown for break lists */
+        .mode-select {
+            padding: 5px 8px;
+            background: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #ede9e3;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .mode-select:focus {
+            outline: none;
+            border-color: #f093fb;
+        }
+
+        .mode-select option {
+            background: #1a1722;
+            color: #ede9e3;
+        }
+
+        /* Mode badge colors */
+        .mode-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .mode-badge.mode-off {
+            background: rgba(138, 134, 144, 0.15);
+            color: #5c5862;
+        }
+
+        .mode-badge.mode-manual {
+            background: rgba(99, 148, 255, 0.15);
+            color: #6394ff;
+        }
+
+        .mode-badge.mode-scheduled {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+        }
+
+        .mode-badge.mode-always-on {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+        }
+
+        /* Schedule editor */
+        .schedule-editor {
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(168, 85, 247, 0.04);
+            border: 1px solid rgba(168, 85, 247, 0.1);
+            border-radius: 8px;
+        }
+
+        .schedule-window {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .schedule-window:last-of-type {
+            border-bottom: none;
+        }
+
+        .day-chips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .day-chip {
+            width: 32px;
+            height: 26px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: #5c5862;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .day-chip:hover {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: rgba(168, 85, 247, 0.2);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .day-chip.active {
+            background: rgba(168, 85, 247, 0.25);
+            border-color: rgba(168, 85, 247, 0.4);
+            color: #a855f7;
+        }
+
+        .schedule-time-input {
+            width: 80px;
+            padding: 4px 6px;
+            background: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            color: #ede9e3;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .schedule-time-input:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+
+        .schedule-time-separator {
+            color: #5c5862;
+            font-size: 12px;
+        }
+
+        .btn-remove-schedule {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 71, 87, 0.15);
+            background: rgba(255, 71, 87, 0.06);
+            color: #ff6b7a;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .btn-remove-schedule:hover {
+            background: rgba(255, 71, 87, 0.15);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-add-schedule {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .btn-add-schedule:hover {
+            background: rgba(168, 85, 247, 0.2);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .always-on-note {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 255, 136, 0.04);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 6px;
+            font-size: 12px;
+            color: #8a8690;
+        }
     </style>
 </head>
 <body>
@@ -938,10 +1125,10 @@
         <div class="section" style="border-color: rgba(240, 147, 251, 0.15); background: linear-gradient(135deg, rgba(240, 147, 251, 0.04), rgba(245, 87, 108, 0.02));" data-lockable>
             <h2 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 22px;">Choose your active lists</h2>
             <div class="section-body">
-            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Check which break lists and productive lists are active. Sites and apps from active break lists are blocked during sessions.</p>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Set each break list's blocking mode. Manual blocks during sessions only. Scheduled blocks during set time windows. Always-on blocks at all times.</p>
 
             <div class="form-group">
-                <label>Break Lists</label>
+                <label>Break Lists &amp; Modes</label>
                 <div id="activeBreakLists" style="display: flex; flex-direction: column; gap: 6px;"></div>
             </div>
 

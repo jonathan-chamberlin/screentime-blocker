@@ -261,6 +261,33 @@
     /* Active lists container */
     #active-lists-display .row-icon { font-size: 13px; }
 
+    /* Mode badges for break lists */
+    .popup-mode-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .popup-mode-badge.mode-manual {
+      background: rgba(99, 148, 255, 0.15);
+      color: #6394ff;
+    }
+    .popup-mode-badge.mode-scheduled {
+      background: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+    }
+    .popup-mode-badge.mode-scheduled.active-now {
+      background: rgba(168, 85, 247, 0.25);
+      color: #c084fc;
+    }
+    .popup-mode-badge.mode-always-on {
+      background: rgba(0, 255, 136, 0.15);
+      color: #4ade80;
+    }
+
     /* ── Actions ── */
     .actions {
       padding: 10px 12px 8px;

@@ -8,6 +8,7 @@ importScripts(
   'site-utils.js',
   'session-state.js',
   'blocking.js',
+  'scheduler.js',
   'nuclear-block.js',
   'native-host.js',
   'backend-api.js',
@@ -22,22 +23,32 @@ importScripts(
   const result = await getStorage(['focusState']);
   if (result.focusState) {
     state = { ...state, ...result.focusState };
-    if (state.sessionActive && state.sessionStartTime) {
-      blockSites();
-      checkCurrentTab();
-      chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
-      startRewardCheckInterval();
-    }
-    if (state.rewardActive) {
-      unblockSites();
-      checkCurrentTab();
-      chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
-      startRewardCountdown();
-    }
-    if (!state.sessionActive && !state.rewardActive) {
-      unblockSites();
-    }
   }
+
+  // Migrate break lists on startup (one-time migration for lists without mode field)
+  const listsResult = await getStorage(['breakLists']);
+  if (listsResult.breakLists) {
+    const migrated = migrateBreakLists(listsResult.breakLists);
+    const needsSave = migrated.some((l, i) => l.mode !== (listsResult.breakLists[i] && listsResult.breakLists[i].mode));
+    if (needsSave) await setStorage({ breakLists: migrated });
+  }
+
+  // Evaluate scheduler to apply correct blocking rules based on modes
+  await evaluateScheduler();
+
+  // Restore session/reward-specific state after scheduler has set base rules
+  if (state.sessionActive && state.sessionStartTime) {
+    checkCurrentTab();
+    chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+    startRewardCheckInterval();
+  }
+  if (state.rewardActive) {
+    await unblockSites(); // Reward overrides all session-level blocking
+    checkCurrentTab();
+    chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+    startRewardCountdown();
+  }
+
   const companionResult = await getStorage(['companionMode']);
   const companionMode = companionResult.companionMode || DEFAULTS.companionMode;
   setCompanionModeEnabled(companionMode === 'on');
@@ -45,8 +56,9 @@ importScripts(
   // Always apply nuclear block rules on startup
   await applyNuclearRules();
 
-  // Periodic nuclear expiry check — runs every minute regardless of session state
+  // Periodic alarms
   chrome.alarms.create('checkNuclear', { periodInMinutes: 1 });
+  chrome.alarms.create('evaluateScheduler', { periodInMinutes: ALARM_PERIOD_MINUTES });
 })();
 
 // --- Reward threshold check interval ---
@@ -152,12 +164,8 @@ const messageHandlers = {
     return false;
   },
   updateRewardSites: (msg, sender, sendResponse) => {
-    if (state.sessionActive) {
-      blockSites().then(() => sendResponse({ success: true }));
-      return true;
-    }
-    sendResponse({ success: true });
-    return false;
+    evaluateScheduler().then(() => sendResponse({ success: true }));
+    return true;
   },
   addToBlockedSites: (msg, sender, sendResponse) => {
     (async () => {
@@ -170,8 +178,8 @@ const messageHandlers = {
           targetList.sites.push(msg.site);
           await setStorage({ breakLists });
         }
+        await evaluateScheduler();
         if (state.sessionActive) {
-          await blockSites();
           await redirectBlockedTabs();
         }
         sendResponse({ success: true });
@@ -209,7 +217,6 @@ const messageHandlers = {
         stopRewardCheckInterval();
         stopRewardCountdown();
         await chrome.alarms.clear('checkSession');
-        await unblockSites();
         setCompanionModeEnabled(false);
 
         // Preserve data that survives Delete All Data intentionally
@@ -247,6 +254,7 @@ const messageHandlers = {
         if (savedLists.breakLists) await setStorage({ breakLists: savedLists.breakLists });
         if (savedLists.productiveLists) await setStorage({ productiveLists: savedLists.productiveLists });
 
+        await evaluateScheduler();
         chrome.action.setBadgeText({ text: '' });
         sendResponse({ success: true });
       } catch (err) {
@@ -300,6 +308,19 @@ const messageHandlers = {
     removeNuclearSite(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   },
+  getSchedulerStatus: (msg, sender, sendResponse) => {
+    const cache = getSchedulerCache();
+    sendResponse({
+      blockingListIds: Array.from(cache.blockingListIds),
+      blockingSites: cache.blockingSites,
+      blockingApps: cache.blockingApps,
+    });
+    return false;
+  },
+  evaluateScheduler: (msg, sender, sendResponse) => {
+    evaluateScheduler().then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
   openSettings: (msg, sender, sendResponse) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
     sendResponse({ success: true });
@@ -337,6 +358,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'checkNuclear' || alarm.name === 'nuclearRuleRefresh') {
     await applyNuclearRules();
+  }
+
+  if (alarm.name === 'evaluateScheduler') {
+    await evaluateScheduler();
   }
 
   if (alarm.name === 'checkSession') {

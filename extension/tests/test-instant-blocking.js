@@ -28,11 +28,11 @@ function testSessionStartRedirectsBlockedTabs() {
   assert(startIdx >= 0, 'handleStartSession exists');
   if (startIdx < 0) return;
 
-  const blockIdx = sessionCode.indexOf('await blockSites()', startIdx);
+  const evalIdx = sessionCode.indexOf('await evaluateScheduler()', startIdx);
   const redirectIdx = sessionCode.indexOf('await redirectBlockedTabs()', startIdx);
-  assert(blockIdx >= 0, 'handleStartSession calls blockSites()');
+  assert(evalIdx >= 0, 'handleStartSession calls evaluateScheduler()');
   assert(redirectIdx >= 0, 'handleStartSession calls redirectBlockedTabs()');
-  assert(redirectIdx > blockIdx, 'redirectBlockedTabs() is called after blockSites()');
+  assert(redirectIdx > evalIdx, 'redirectBlockedTabs() is called after evaluateScheduler()');
 }
 
 function testNativeHostCompanionModeGuards() {

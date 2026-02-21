@@ -14,9 +14,13 @@ async function checkCurrentTab() {
     }
 
     const result = await getStorage(['breakLists', 'productiveLists', 'productiveMode', 'allowedPaths']);
-    const breakLists = result.breakLists || DEFAULTS.breakLists;
-    const blockedSites = getActiveBreakSites(breakLists);
     const allowedPaths = result.allowedPaths || DEFAULTS.allowedPaths;
+
+    // Use scheduler cache for blocked sites (mode-aware); fall back to storage if cache empty
+    const cache = typeof getSchedulerCache === 'function' ? getSchedulerCache() : null;
+    const blockedSites = (cache && cache.blockingSites.length > 0)
+      ? cache.blockingSites
+      : getActiveBreakSites(result.breakLists || DEFAULTS.breakLists);
 
     if (state.sessionActive) {
       const mode = result.productiveMode || DEFAULTS.productiveMode;
@@ -71,6 +75,27 @@ function updateBadge(isActive) {
   }
 }
 
+// --- Idle/screen detection ---
+// Pause timers when screen is off, locked, or user is idle (60s threshold)
+
+let screenIsActive = true;
+
+chrome.idle.setDetectionInterval(60);
+
+chrome.idle.onStateChanged.addListener((newState) => {
+  if (newState === 'active') {
+    screenIsActive = true;
+    if (state.sessionActive || state.rewardActive) {
+      checkCurrentTab();
+    }
+  } else {
+    // 'idle' or 'locked' — screen off, locked, or no input
+    screenIsActive = false;
+    if (state.sessionActive) updateProductiveState(false);
+    if (state.rewardActive) updateRewardState(false);
+  }
+});
+
 // --- Tab/window event listeners ---
 
 chrome.tabs.onActivated.addListener(() => {
@@ -87,6 +112,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   browserHasFocus = windowId !== chrome.windows.WINDOW_ID_NONE;
+
+  // Don't resume timers if screen is off/locked/idle
+  if (!screenIsActive) return;
 
   if (state.sessionActive || state.rewardActive) {
     if (!browserHasFocus) {

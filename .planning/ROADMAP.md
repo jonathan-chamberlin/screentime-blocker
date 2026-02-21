@@ -74,7 +74,7 @@
 - **Success Criteria**:
   - Native messaging host detects focused Windows application and reports to extension
   - Work timer continues when user is in a productive app (whitelist mode: listed apps only; all-except-blocked: any app)
-  - Work timer pauses with "⏸" badge when user switches to non-productive app
+  - Work timer pauses with "⏸" badge on extension icon when timer paused during session
   - Settings UI shows curated app checkboxes + custom process name field
   - Extension falls back gracefully to browser-only tracking when native host unavailable
   - Install/uninstall scripts register native host in Windows registry
@@ -95,23 +95,61 @@
 - **Dependencies**: Phase 6
 - **Status**: complete
 
-## Phase 8: break-productive-lists
-- **Goal**: Replace flat site/app sections with named, reusable break lists and productive lists that users can create, edit, and activate in any combination
+## Phase 8: per-list-modes
+- **Goal**: Each break list gets an independent blocking mode (Off / Manual / Scheduled / Always-On). Build the scheduled blocking engine so lists can auto-block during defined time windows.
 - **Success Criteria**:
-  - Data model: lists stored in chrome.storage with unique IDs, each containing sites and apps
-  - Default "Default" break list ships with Instagram, Facebook, YouTube, Steam (site+app), Adult Sites, Gambling Sites, News Sites
-  - Settings UI: "Create new break list" / "Create new productive list" buttons that expand an editing section
-  - Category header checkboxes toggle all items in that category
-  - List selection at top of settings (below Strict Mode): checkboxes to activate any combination of break/productive lists
-  - Productive mode rework: "All sites (except blocked)" option + one option per user-created productive list (multi-selectable)
-  - Popup shows active break list name(s); shows active productive list name(s) only when not using "All sites" mode
-  - Nuclear Block section unchanged
-  - Session blocking logic uses the union of all active break lists' sites/apps
-  - Productive detection logic uses the union of all active productive lists' sites/apps (or all-except-blocked if that option selected)
+  - Break list data model has `mode` field ('off' | 'manual' | 'scheduled' | 'always-on') and `schedules` array
+  - Settings UI replaces active checkbox with mode dropdown per list
+  - When "Scheduled" selected, inline schedule editor shows day checkboxes + time ranges + "Add window"
+  - Scheduler module evaluates all lists on startup + every alarm tick, updates DNR rules accordingly
+  - Scheduled lists block during their windows, free outside
+  - Manual lists block only during active sessions (existing behavior preserved)
+  - Off lists generate no blocking rules
+  - Always-on lists always block (reward logic deferred to Phase 9)
+  - Migration converts `isActive: true` → `mode: 'manual'`, `isActive: false` → `mode: 'off'`
+  - Popup shows mode badge per list
+- **Requirements**: REQ-040, REQ-041, REQ-042, REQ-043, REQ-044
 - **Dependencies**: Phase 7
 - **Status**: not-started
 
-## Phase 9: application-blocking
+## Phase 9: always-on-rewards
+- **Goal**: Background productive time tracking feeds into always-on reward pools. Break sites blocked by default; earn temporary access through productive time.
+- **Success Criteria**:
+  - Automatic productive time tracking runs in background (no button press needed)
+  - Passive Pool sub-mode: earn reward time proportional to productive time (configurable ratio). Break sites accessible while pool > 0, timer counts down on break sites. When pool hits 0, blocked again.
+  - Daily Budget sub-mode: fixed daily allowance. Break sites accessible but timer counts down. Once budget spent, blocked until tomorrow.
+  - Reward pool decrements only when a break site is the active Chrome tab
+  - Popup shows accumulated productive time and available reward time
+  - Settings UI for reward config (passive pool vs daily budget, ratio, carryover toggle)
+- **Requirements**: REQ-045, REQ-046, REQ-047, REQ-048
+- **Dependencies**: Phase 8
+- **Status**: not-started
+
+## Phase 10: settings-lock
+- **Goal**: Users lock their settings for a chosen duration. Weakening restrictions requires a cooldown; strengthening is immediate.
+- **Success Criteria**:
+  - "Lock Settings" button with duration selector (1 day to 1 month)
+  - When locked: lock indicator with time remaining
+  - Strengthening actions (add sites, create lists, extend schedules, switch to stronger mode) allowed immediately
+  - Weakening actions (remove sites, shorten schedules, disable lists, switch to weaker mode) trigger cooldown modal
+  - Pending weakening changes shown with countdown, cancellable
+  - Background enforcement intercepts storage changes that weaken restrictions
+- **Requirements**: REQ-049, REQ-050, REQ-051
+- **Dependencies**: Phase 8
+- **Status**: not-started
+
+## Phase 11: blocking-modes-polish
+- **Goal**: Smooth migration, comprehensive testing, mode-specific block pages, edge case handling.
+- **Success Criteria**:
+  - Migration: existing `isActive: true` → `mode: 'manual'`, `isActive: false` → `mode: 'off'`
+  - Block page messaging per mode ("Blocked during scheduled hours" / "Break budget spent" / "Start a work session to earn access")
+  - Browser-automated testing of all mode combinations
+  - Edge case: schedule + manual session overlap → schedule takes precedence
+- **Requirements**: REQ-052, REQ-053
+- **Dependencies**: Phases 8, 9, 10
+- **Status**: not-started
+
+## Phase 12: application-blocking
 - **Goal**: Enable blocking desktop applications (not just time tracking), specifically for Steam and other apps to be used as break/reward apps
 - **Success Criteria**:
   - Native host can block applications by closing them when detected
@@ -120,10 +158,10 @@
   - During reward burn, blocked apps are accessible
   - Steam specifically can be used as a reward app
   - Graceful fallback when native host unavailable
-- **Dependencies**: Phase 8
+- **Dependencies**: Phase 11
 - **Status**: not-started
 
-## Phase 10: unified-settings-save
+## Phase 13: unified-settings-save
 - **Goal**: Replace individual save buttons with single floating banner save button at bottom of settings page
 - **Success Criteria**:
   - All individual "Save" buttons removed from settings page
@@ -132,10 +170,10 @@
   - Banner shows clear visual feedback (unsaved changes indicator)
   - Clicking "Save" persists all changed settings at once
   - Banner disappears after successful save with confirmation message
-- **Dependencies**: Phase 8
+- **Dependencies**: Phase 11
 - **Status**: not-started
 
-## Phase 11: chrome-web-store
+## Phase 14: chrome-web-store
 - **Goal**: Package extension for Chrome Web Store deployment with proper metadata, screenshots, privacy policy
 - **Success Criteria**:
   - Extension packaged with production manifest (no dev-only features)
@@ -144,5 +182,5 @@
   - Store listing copy written with clear value proposition
   - Extension submitted and passing Chrome Web Store review
   - Public store link available
-- **Dependencies**: Phases 9, 10
+- **Dependencies**: Phases 12, 13
 - **Status**: not-started

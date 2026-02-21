@@ -1,4 +1,6 @@
-// Site blocking — declarativeNetRequest rule management and tab redirects
+// Site blocking — low-level declarativeNetRequest rule manipulation and tab redirects
+// For mode-aware blocking state changes, use evaluateScheduler() from scheduler.js instead.
+// blockSites/unblockSites are retained for: reward flow (unblockSites overrides all blocking) and legacy compat.
 // Depends on: session-state.js (loadSiteConfig), site-utils.js (isBlockedUrl), constants.js (ALLOW_RULE_ID_OFFSET, NUCLEAR_RULE_ID_OFFSET)
 
 async function blockSites() {

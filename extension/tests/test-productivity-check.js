@@ -65,8 +65,8 @@ test('Background.js has addToBlockedSites message handler', () => {
 
   const content = fs.readFileSync(backgroundPath, 'utf8');
   assert(content.includes('addToBlockedSites:'), 'Contains addToBlockedSites handler');
-  assert(content.includes('rewardSites'), 'Handler references rewardSites');
-  assert(content.includes('blockSites()'), 'Handler calls blockSites()');
+  assert(content.includes('breakLists'), 'Handler references breakLists');
+  assert(content.includes('evaluateScheduler()'), 'Handler calls evaluateScheduler()');
   assert(content.includes('redirectBlockedTabs()'), 'Handler calls redirectBlockedTabs()');
 });
 

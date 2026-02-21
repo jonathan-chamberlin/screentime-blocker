@@ -295,52 +295,143 @@
   - Shame thresholds use named constants
 - **Priority**: Nice-to-have
 
-## Phase: break-productive-lists
+## Phase: per-list-modes
 
-### REQ-035: Break & Productive List Data Model
-- **Description**: Storage schema for named lists, each containing sites and apps, with unique IDs and activation state
+### REQ-040: Per-List Blocking Mode Data Model
+- **Description**: Add `mode` and `schedules` fields to break list objects for independent blocking behavior per list
 - **Acceptance Criteria**:
-  - Lists stored in chrome.storage.local under `breakLists` and `productiveLists` keys
-  - Each list has: id, name, sites[], apps[], isActive boolean
-  - A default break list ships pre-populated (Instagram, Facebook, YouTube, Steam site+app, Adult Sites, Gambling Sites, News Sites)
-  - Multiple lists can be active simultaneously
+  - Each break list has a `mode` field: 'off' | 'manual' | 'scheduled' | 'always-on'
+  - Default mode: 'manual' for backward compatibility
+  - Each break list has a `schedules` array: `[{ days: [0-6], startTime: 'HH:MM', endTime: 'HH:MM' }]`
+  - `isActive` derived from `mode !== 'off'` for backward compatibility
+  - DEFAULT_BREAK_LIST updated with mode and schedules fields
+  - DEFAULTS.breakLists reflects the new shape
 - **Priority**: Must-have
 
-### REQ-036: List Creation & Editing UI
-- **Description**: Settings UI for creating and editing break lists and productive lists
+### REQ-041: Mode Selection Settings UI
+- **Description**: Replace active checkbox with mode dropdown per break list in the "Choose your active lists" section
 - **Acceptance Criteria**:
-  - "Create new break list" and "Create new productive list" buttons
-  - Clicking expands an editing section with site/app selection
-  - Category header checkboxes toggle all items in that category
-  - Existing preset categories available as checkbox groups
-  - Custom site/app text inputs available
-  - Lists can be renamed, edited, and deleted
-- **Priority**: Must-have
-
-### REQ-037: List Selection UI
-- **Description**: Top-of-settings UI for selecting which lists are active
-- **Acceptance Criteria**:
-  - Placed below Strict Mode section
-  - Break lists shown with checkboxes (multi-select)
-  - Productive options: "All sites (except blocked)" + one checkbox per productive list
-  - Selection persisted to storage
+  - Each break list row shows a mode dropdown (Off / Manual / Scheduled / Always-On) instead of a checkbox
+  - Mode badges displayed on list rows indicating current mode
+  - Changing mode persists to storage immediately
   - Locked during active sessions (data-lockable)
 - **Priority**: Must-have
 
-### REQ-038: Popup Active List Display
-- **Description**: Popup shows which break/productive lists would apply
+### REQ-042: Schedule Editor UI
+- **Description**: Inline schedule editor when "Scheduled" mode is selected for a break list
 - **Acceptance Criteria**:
-  - Shows active break list name(s)
-  - Shows active productive list name(s) only when "All sites" is NOT selected
-  - When no lists exist, shows guidance to create one
+  - Day checkboxes (Mon-Sun) for selecting active days
+  - Time range inputs (HH:MM start, HH:MM end) in 24-hour format
+  - "Add window" button to add multiple schedule windows per list
+  - Remove button per schedule window
+  - Schedule changes auto-saved to storage
+  - Schedule editor collapses when mode is not "Scheduled"
 - **Priority**: Must-have
 
-### REQ-039: Session Integration
-- **Description**: Session blocking and productive detection use active lists instead of flat arrays
+### REQ-043: Scheduler Engine
+- **Description**: Background module that evaluates each break list's mode and schedule, then updates blocking rules accordingly
 - **Acceptance Criteria**:
-  - `blockSites()` unions all active break lists' sites
-  - `blockedApps` unions all active break lists' apps
-  - Productive site detection uses union of active productive lists' sites (or all-except-blocked)
-  - Productive app detection uses union of active productive lists' apps
-  - Existing session flow unchanged (start → work → break → end)
+  - New `scheduler.js` module loaded via importScripts
+  - On startup + every alarm tick, evaluates all break lists
+  - For 'scheduled' lists: checks if current time falls within any schedule window → blocks if yes
+  - For 'always-on' lists: always generates blocking rules
+  - For 'manual' lists: blocks only during active sessions (existing behavior)
+  - For 'off' lists: no blocking rules
+  - Updates declarativeNetRequest rules based on evaluation
+  - Maintains in-memory cache of currently-blocking lists for fast popup queries
+- **Priority**: Must-have
+
+### REQ-044: Popup Mode Badges
+- **Description**: Popup shows mode indicator for each active break list
+- **Acceptance Criteria**:
+  - Each list displayed in popup shows its mode as a badge (e.g., "Scheduled", "Always-On", "Manual")
+  - Badge color differs by mode for quick visual identification
+  - Lists in "Off" mode not shown in popup
+- **Priority**: Should-have
+
+## Phase: always-on-rewards
+
+### REQ-045: Automatic Productive Time Tracking
+- **Description**: Background productive time tracking that runs independently of manual sessions
+- **Acceptance Criteria**:
+  - Any time on a productive site counts, no button press needed
+  - Runs in background regardless of session mode
+  - Accumulates productive milliseconds in storage (autoProductiveMillis)
+  - On every tab change / alarm tick, checks if current site is in any active productive list
+  - Popup shows accumulated productive time
+- **Priority**: Must-have
+
+### REQ-046: Passive Pool Reward System
+- **Description**: Earn reward time proportional to productive time for always-on lists
+- **Acceptance Criteria**:
+  - Track rewardPoolMs in storage
+  - Earn at configurable ratio (e.g., 50 min productive = 10 min reward)
+  - Decrement while active tab is a break site
+  - When pool hits 0, re-add blocking rules for always-on lists
+  - User setting: carry over vs reset daily
+- **Priority**: Must-have
+
+### REQ-047: Daily Budget Reward System
+- **Description**: Fixed daily allowance for always-on break site access
+- **Acceptance Criteria**:
+  - Track dailyBudgetUsedMs and dailyBudgetDate
+  - Fixed daily amount (configurable)
+  - Reset at midnight
+  - Once budget spent, blocked until tomorrow
+  - Break sites accessible but timer counts down while budget remains
+- **Priority**: Must-have
+
+### REQ-048: Always-On Blocking Logic
+- **Description**: Always-on lists blocked by default, temporarily unblocked when reward pool > 0
+- **Acceptance Criteria**:
+  - Always-on lists: sites blocked by default via declarativeNetRequest
+  - When user has reward pool > 0 and navigates to a break site → temporarily remove blocking rule for that domain
+  - When pool hits 0 or user leaves break site → re-add blocking rules
+  - Decrement only while break site is the active Chrome tab
+- **Priority**: Must-have
+
+## Phase: settings-lock
+
+### REQ-049: Settings Lock Data Model
+- **Description**: Storage schema for settings lock state and pending weakening changes
+- **Acceptance Criteria**:
+  - settingsLock object in storage: { lockedAt, lockDurationMs, weakeningCooldownMs, pendingChanges }
+  - pendingChanges: [{ id, description, requestedAt }]
+  - Lock state checked on every settings modification
+- **Priority**: Must-have
+
+### REQ-050: Settings Lock UI
+- **Description**: Lock button with duration selector and lock indicator
+- **Acceptance Criteria**:
+  - "Lock Settings" button with duration selector (1 day, 3 days, 1 week, 2 weeks, 1 month)
+  - When locked: lock indicator with time remaining
+  - Strengthening actions allowed immediately
+  - Weakening actions show cooldown modal with wait time
+  - Pending weakening changes shown with countdown, cancellable
+- **Priority**: Must-have
+
+### REQ-051: Settings Lock Enforcement
+- **Description**: Background enforcement of settings lock
+- **Acceptance Criteria**:
+  - Intercept storage changes that weaken restrictions when lock is active
+  - Queue weakening changes with cooldown timer
+  - Process pending changes when cooldown expires
+- **Priority**: Must-have
+
+## Phase: blocking-modes-polish
+
+### REQ-052: Migration and Block Page Messaging
+- **Description**: Smooth migration from old format and mode-specific block pages
+- **Acceptance Criteria**:
+  - Migration: convert `isActive: true` → `mode: 'manual'`, `isActive: false` → `mode: 'off'`
+  - Block page shows different messaging per mode ("Blocked during scheduled hours" / "Break budget spent" / "Start a work session to earn access")
+- **Priority**: Must-have
+
+### REQ-053: Comprehensive Testing
+- **Description**: Browser-automated testing of all mode combinations and edge cases
+- **Acceptance Criteria**:
+  - All 4 modes tested simultaneously
+  - Schedule + manual session overlap tested (schedule takes precedence)
+  - Fresh install test
+  - Existing user upgrade test (isActive → mode migration)
 - **Priority**: Must-have

@@ -42,6 +42,22 @@ const DEFAULT_BREAK_LIST = {
     { name: 'Steam', process: 'steam', detectProcesses: ['steam', 'steamwebhelper'], killProcesses: ['steam', 'steamwebhelper'] },
   ],
   isActive: true,
+  mode: 'manual',
+  schedules: [],
+};
+
+const BLOCKING_MODES = {
+  OFF: 'off',
+  MANUAL: 'manual',
+  SCHEDULED: 'scheduled',
+  ALWAYS_ON: 'always-on',
+};
+
+const MODE_STRENGTH = {
+  'off': 0,
+  'manual': 1,
+  'scheduled': 2,
+  'always-on': 3,
 };
 
 const DEFAULTS = {
@@ -380,9 +396,10 @@ const PRESET_PRODUCTIVE_SITES = [
   { name: 'CodePen', domain: 'codepen.io', category: 'Development', checked: false },
   // AI Tools
   { name: 'Claude', domain: 'claude.ai', category: 'AI Tools', checked: false },
-  { name: 'ChatGPT', domain: 'chat.openai.com', category: 'AI Tools', checked: false },
+  { name: 'ChatGPT', domain: 'chatgpt.com', category: 'AI Tools', checked: false },
   { name: 'Gemini', domain: 'gemini.google.com', category: 'AI Tools', checked: false },
   { name: 'Perplexity', domain: 'perplexity.ai', category: 'AI Tools', checked: false },
+  { name: 'Grok', domain: 'grok.com', category: 'AI Tools', checked: false },
   // Music Production
   { name: 'Splice', domain: 'splice.com', category: 'Music Production', checked: false },
   { name: 'Bandcamp', domain: 'bandcamp.com', category: 'Music Production', checked: false },
