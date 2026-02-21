@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You Stayed Strong</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #12082a 50%, #0e0620 100%);
+      color: #e8e0f8;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 620px;
+      width: 100%;
+    }
+
+    .icon {
+      font-size: 80px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.4));
+      animation: pulse-icon 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-icon {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .headline {
+      font-size: 38px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c084fc, #a855f7, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .subheadline {
+      font-size: 20px;
+      color: rgba(232, 224, 248, 0.7);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .hype-box {
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .hype-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(192, 132, 252, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .hype-text {
+      font-size: 16px;
+      color: rgba(232, 224, 248, 0.8);
+      line-height: 1.7;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+      justify-content: center;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(168, 85, 247, 0.15);
+      border-radius: 10px;
+      padding: 16px 24px;
+      min-width: 120px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #c084fc;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(232, 224, 248, 0.45);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(168, 85, 247, 0.4);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(232, 224, 248, 0.85);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      color: rgba(232, 224, 248, 0.4);
+    }
+
+    .close-link {
+      display: inline-block;
+      color: rgba(232, 224, 248, 0.35);
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .close-link:hover {
+      color: rgba(232, 224, 248, 0.65);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.7s ease-out;
+    }
+
+    @keyframes confetti-fall {
+      0% { opacity: 1; transform: translateY(0) rotateZ(0deg); }
+      100% { opacity: 0; transform: translateY(100vh) rotateZ(720deg); }
+    }
+    .confetti-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      overflow: hidden;
+    }
+    .confetti {
+      position: absolute;
+      width: 8px; height: 8px;
+      opacity: 0;
+      animation: confetti-fall 3s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="icon">💪</div>
+    <h1 class="headline">You chose yourself.</h1>
+    <p class="subheadline">You had every chance to go back. You looked temptation in the eye and said no.<br>That's not willpower. That's who you are now.</p>
+
+    <div class="hype-box">
+      <div class="hype-title">What just happened</div>
+      <p class="hype-text">
+        You waited through two cooldowns. You sat on the last-chance page with the unblock button right there. And you chose to block it again. Most people can't do that. You just proved you're not most people.
+      </p>
+    </div>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text"></p>
+      <p class="quote-author" id="quote-author"></p>
+    </div>
+
+    <button class="close-link" id="close-tab">Close this tab</button>
+  </div>
+
+  <script>
+    const QUOTES = [
+      { text: 'Discipline is choosing between what you want now and what you want most.', author: 'Abraham Lincoln' },
+      { text: 'The pain of discipline is nothing like the pain of disappointment.', author: 'Justin Langer' },
+      { text: 'You will never always be motivated. You have to learn to be disciplined.', author: 'Unknown' },
+      { text: 'Strength does not come from winning. Your struggles develop your strengths.', author: 'Arnold Schwarzenegger' },
+      { text: 'The successful person has the habit of doing the things failures don\'t like to do.', author: 'Thomas Edison' },
+      { text: 'It is not that I am so smart. It is just that I stay with problems longer.', author: 'Albert Einstein' },
+      { text: 'Fall seven times, stand up eight.', author: 'Japanese Proverb' },
+      { text: 'Hard choices, easy life. Easy choices, hard life.', author: 'Jerzy Gregorek' },
+    ];
+
+    const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    document.getElementById('quote-text').textContent = '"' + quote.text + '"';
+    document.getElementById('quote-author').textContent = '— ' + quote.author;
+
+    document.getElementById('close-tab').addEventListener('click', () => {
+      window.close();
+    });
+
+    // Celebration confetti
+    (function showConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+      const colors = ['#c084fc', '#a855f7', '#7c3aed', '#f472b6', '#4ade80', '#eab308'];
+      for (let i = 0; i < 50; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + '%';
+        c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animationDelay = Math.random() * 0.8 + 's';
+        c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        container.appendChild(c);
+      }
+      setTimeout(() => container.remove(), 4000);
+    })();
+  </script>
+</body>
+</html>

@@ -80,8 +80,10 @@ function findConfirmSite(sites) {
     // Final confirm
     confirmBtn.addEventListener('click', () => {
       if (typingInput.value !== CONFIRM_PHRASE) return;
+      const domains = site.domains || (site.domain ? [site.domain] : []);
       chrome.runtime.sendMessage({ action: 'confirmUnblockNuclear', id: site.id }, () => {
-        window.location.href = chrome.runtime.getURL('nuclear-blocked-good-choice.html');
+        const params = new URLSearchParams({ domains: domains.join(',') });
+        window.location.href = chrome.runtime.getURL('nuclear-blocked-good-choice.html') + '?' + params;
       });
     });
 
@@ -89,7 +91,7 @@ function findConfirmSite(sites) {
     document.getElementById('btn-block-again').addEventListener('click', () => {
       const cooldownMs = parseInt(document.getElementById('block-again-cooldown').value, 10);
       chrome.runtime.sendMessage({ action: 'blockAgainNuclear', id: site.id, cooldown1Ms: cooldownMs }, () => {
-        window.location.href = chrome.runtime.getURL('nuclear-blocked.html');
+        window.location.href = chrome.runtime.getURL('nuclear-block-stayed-strong.html');
       });
     });
   });

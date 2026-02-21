@@ -1,4 +1,5 @@
 // Good choice page — shown after user successfully unblocks a nuclear-blocked site
+// Offers a "Block Again" option in case the user regrets unblocking
 
 const GOOD_CHOICE_QUOTES = [
   { text: 'The measure of intelligence is the ability to change.', author: 'Albert Einstein' },
@@ -16,9 +17,32 @@ const GOOD_CHOICE_QUOTES = [
   document.getElementById('quote-text').textContent = '"' + quote.text + '"';
   document.getElementById('quote-author').textContent = '— ' + quote.author;
 
-  document.getElementById('open-settings').addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'openSettings' }).catch(() => {
-      chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
+  // Parse domains from URL params (passed by last-chance page)
+  const params = new URLSearchParams(window.location.search);
+  const domainsStr = params.get('domains');
+  const domains = domainsStr ? domainsStr.split(',').filter(Boolean) : [];
+
+  // Hide block-again if we don't know what domains to re-block
+  if (domains.length === 0) {
+    document.getElementById('block-again-box').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('btn-block-again').addEventListener('click', () => {
+    const cooldownMs = parseInt(document.getElementById('block-again-cooldown').value, 10);
+    const entry = {
+      id: 'nuclear-' + Date.now(),
+      domains: domains,
+      addedAt: Date.now(),
+      cooldown1Ms: cooldownMs,
+      cooldown2Ms: 64800000, // 18 hours default
+      unblockClickedAt: null,
+    };
+    chrome.runtime.sendMessage({ action: 'addNuclearSite', entry }, () => {
+      document.getElementById('btn-block-again').disabled = true;
+      document.getElementById('btn-block-again').style.opacity = '0.4';
+      document.getElementById('block-again-cooldown').disabled = true;
+      document.getElementById('block-again-success').style.display = 'block';
     });
   });
 })();

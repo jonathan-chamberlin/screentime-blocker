@@ -1569,6 +1569,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Refresh nuclear countdowns every minute
   setInterval(() => loadNuclearBlock(), 60 * 1000);
 
+  // Re-render nuclear block when storage changes (e.g. block again from good-choice/last-chance page)
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.nbData) loadNuclearBlock();
+  });
+
   // Active break list mode changes (handled inline by select change events)
   // No change listener needed on container — mode selects have their own handlers
 

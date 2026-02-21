@@ -96,23 +96,70 @@
       color: rgba(208, 240, 216, 0.45);
     }
 
-    .settings-link {
-      display: inline-block;
-      color: rgba(208, 240, 216, 0.4);
-      font-size: 13px;
-      text-decoration: none;
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-family: inherit;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: color 0.2s, background 0.2s;
+    .block-again-box {
+      background: rgba(255, 100, 100, 0.06);
+      border: 1px solid rgba(255, 100, 100, 0.15);
+      border-radius: 12px;
+      padding: 20px 28px;
+      text-align: center;
     }
 
-    .settings-link:hover {
-      color: rgba(208, 240, 216, 0.7);
+    .block-again-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 130, 130, 0.9);
+      margin-bottom: 14px;
+    }
+
+    .block-again-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .block-again-select {
       background: rgba(255, 255, 255, 0.05);
+      color: #aaa;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .block-again-select option {
+      background: #0e2418;
+      color: #d0f0d8;
+    }
+
+    .btn-block-again {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-block-again:hover {
+      background: linear-gradient(135deg, #ff8080, #ff6060);
+      box-shadow: 0 4px 12px rgba(255, 100, 100, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .block-again-success {
+      display: none;
+      color: rgba(0, 255, 136, 0.9);
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
     }
 
     @keyframes fadeIn {
@@ -133,7 +180,7 @@
     <div class="affirmation-box">
       <div class="affirmation-title">Remember this</div>
       <p class="affirmation-text">
-        You went through every step. You waited through the cooldowns, you reflected, and you decided with intention. That is not weakness. That is someone who knows what they want and acts on purpose. Keep building the life you actually want.
+        You went through every step. You waited through the cooldowns, you reflected, and you decided with intention. You knows what they want and acts on purpose. Keep building the life you actually want.
       </p>
     </div>
 
@@ -142,7 +189,22 @@
       <p class="quote-author" id="quote-author"></p>
     </div>
 
-    <button class="settings-link" id="open-settings">Open Settings</button>
+    <div class="block-again-box" id="block-again-box">
+      <div class="block-again-label">Was this a mistake?</div>
+      <div class="block-again-row">
+        <button class="btn-block-again" id="btn-block-again">Block Again</button>
+        <select class="block-again-select" id="block-again-cooldown">
+          <option value="86400000">24 hours</option>
+          <option value="172800000" selected>48 hours</option>
+          <option value="604800000">1 week</option>
+          <option value="2592000000">1 month</option>
+          <option value="7776000000">3 months</option>
+          <option value="15552000000">6 months</option>
+          <option value="31536000000">1 year</option>
+        </select>
+      </div>
+      <div class="block-again-success" id="block-again-success">Site re-blocked. You're back in control.</div>
+    </div>
   </div>
   <script src="constants.js"></script>
   <script src="nuclear-blocked-good-choice.js"></script>
