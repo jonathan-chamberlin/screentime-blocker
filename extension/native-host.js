@@ -44,8 +44,9 @@ function connectNativeHost() {
     nativePort.onMessage.addListener((msg) => {
       if (msg.type === 'app-focus') {
         currentAppName = msg.processName;
+        const blocking = typeof isCurrentlyBlocking === 'function' && isCurrentlyBlocking();
         if (!browserHasFocus) {
-          if (state.sessionActive) {
+          if (state.sessionActive || blocking) {
             // Check if app is blocked first
             processAppUpdate(currentAppName);
 
