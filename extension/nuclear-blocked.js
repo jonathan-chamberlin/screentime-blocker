@@ -11,6 +11,20 @@ const MOTIVATIONAL_QUOTES = [
   { text: 'Your future self is watching you right now through your memories.', author: 'Aubrey de Grey' },
   { text: 'You are braver than you believe, stronger than you seem, and smarter than you think.', author: 'A.A. Milne' },
   { text: 'The only way out is through. Keep going.', author: 'Robert Frost' },
+  { text: 'We suffer more often in imagination than in reality.', author: 'Seneca' },
+  { text: 'The best time to plant a tree was 20 years ago. The second best time is now.', author: 'Chinese Proverb' },
+  { text: 'What we fear doing most is usually what we most need to do.', author: 'Tim Ferriss' },
+  { text: 'A year from now you will wish you had started today.', author: 'Karen Lamb' },
+  { text: 'The only impossible journey is the one you never begin.', author: 'Tony Robbins' },
+  { text: 'Do the hard things. If you only do what is easy, life will be hard.', author: 'Les Brown' },
+  { text: 'Action is the foundational key to all success.', author: 'Pablo Picasso' },
+  { text: 'You don\'t have to be great to start, but you have to start to be great.', author: 'Zig Ziglar' },
+  { text: 'The difference between who you are and who you want to be is what you do.', author: 'Unknown' },
+  { text: 'It always seems impossible until it\'s done.', author: 'Nelson Mandela' },
+  { text: 'Success is the sum of small efforts repeated day in and day out.', author: 'Robert Collier' },
+  { text: 'Don\'t watch the clock; do what it does. Keep going.', author: 'Sam Levenson' },
+  { text: 'Obsessed is a word the lazy use to describe the dedicated.', author: 'Unknown' },
+  { text: 'If you want something you\'ve never had, you must be willing to do something you\'ve never done.', author: 'Thomas Jefferson' },
 ];
 
 function fuzzyTimeLeft(ms) {

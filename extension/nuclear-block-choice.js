@@ -10,6 +10,18 @@ const GOOD_CHOICE_QUOTES = [
   { text: 'You have power over your mind, not outside events. Realize this, and you will find strength.', author: 'Marcus Aurelius' },
   { text: 'Be yourself. Everyone else is already taken.', author: 'Oscar Wilde' },
   { text: 'Life is 10% what happens to you and 90% how you react to it.', author: 'Charles R. Swindoll' },
+  { text: 'The greatest glory in living lies not in never falling, but in rising every time we fall.', author: 'Nelson Mandela' },
+  { text: 'In the middle of difficulty lies opportunity.', author: 'Albert Einstein' },
+  { text: 'To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.', author: 'Ralph Waldo Emerson' },
+  { text: 'Knowing yourself is the beginning of all wisdom.', author: 'Aristotle' },
+  { text: 'The privilege of a lifetime is to become who you truly are.', author: 'Carl Jung' },
+  { text: 'It is never too late to be what you might have been.', author: 'George Eliot' },
+  { text: 'Happiness is not something ready-made. It comes from your own actions.', author: 'Dalai Lama' },
+  { text: 'The only real failure is the failure to try.', author: 'Unknown' },
+  { text: 'Every saint has a past, and every sinner has a future.', author: 'Oscar Wilde' },
+  { text: 'You are never too old to set another goal or to dream a new dream.', author: 'C.S. Lewis' },
+  { text: 'Growth is uncomfortable. You have to embrace being uncomfortable if you want to grow.', author: 'Unknown' },
+  { text: 'What you get by achieving your goals is not as important as what you become by achieving them.', author: 'Zig Ziglar' },
 ];
 
 (function init() {

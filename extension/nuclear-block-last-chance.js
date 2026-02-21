@@ -10,6 +10,20 @@ const LAST_CHANCE_QUOTES = [
   { text: 'Almost everything will work again if you unplug it for a few minutes, including you.', author: 'Anne Lamott' },
   { text: 'What you resist, persists. What you let go of, lets go of you.', author: 'Unknown' },
   { text: 'You are not a finished product. You are a work in progress, and that is okay.', author: 'Unknown' },
+  { text: 'Between stimulus and response there is a space. In that space is our power to choose.', author: 'Viktor Frankl' },
+  { text: 'The first and greatest victory is to conquer yourself.', author: 'Plato' },
+  { text: 'Nothing worth having comes easy.', author: 'Theodore Roosevelt' },
+  { text: 'He who has a why to live can bear almost any how.', author: 'Friedrich Nietzsche' },
+  { text: 'You are one decision away from a completely different life.', author: 'Unknown' },
+  { text: 'The temptation to quit will be greatest just before you are about to succeed.', author: 'Chinese Proverb' },
+  { text: 'Comfort is the enemy of progress.', author: 'P.T. Barnum' },
+  { text: 'How you do anything is how you do everything.', author: 'Martha Beck' },
+  { text: 'Sacrifice is giving up something good for something better.', author: 'Unknown' },
+  { text: 'When you feel like quitting, remember why you started.', author: 'Unknown' },
+  { text: 'Your brain is a suggestion engine. Not every thought deserves action.', author: 'Unknown' },
+  { text: 'The pain you feel today will be the strength you feel tomorrow.', author: 'Unknown' },
+  { text: 'Temporary discomfort or permanent regret. Your call.', author: 'Unknown' },
+  { text: 'You will never regret choosing the harder right over the easier wrong.', author: 'Unknown' },
 ];
 
 const CONFIRM_PHRASE = 'You can change. I love you.';
@@ -83,7 +97,7 @@ function findConfirmSite(sites) {
       const domains = site.domains || (site.domain ? [site.domain] : []);
       chrome.runtime.sendMessage({ action: 'confirmUnblockNuclear', id: site.id }, () => {
         const params = new URLSearchParams({ domains: domains.join(',') });
-        window.location.href = chrome.runtime.getURL('nuclear-blocked-good-choice.html') + '?' + params;
+        window.location.href = chrome.runtime.getURL('nuclear-block-choice.html') + '?' + params;
       });
     });
 

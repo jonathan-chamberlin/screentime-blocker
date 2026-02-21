@@ -173,6 +173,22 @@ const GUILT_QUOTES = [
   { text: "Your work session called. It misses you.", source: "Ancient Proverb" },
   { text: "Procrastination is the thief of time.", source: "Some guy on Twitter, 2018" },
   { text: "Focus is a superpower.", source: "Your bank account" },
+  { text: "You're not even enjoying this. You're just avoiding something harder.", source: "Your therapist, internally" },
+  { text: "This is the exact moment future-you gets mad about.", source: "A time traveler" },
+  { text: "Your to-do list just got longer while you read this.", source: "The laws of physics" },
+  { text: "You have the same number of hours in a day as Beyoncé.", source: "LinkedIn motivational post" },
+  { text: "Scrolling won't fix your problems. But working might.", source: "Your mom, basically" },
+  { text: "That dopamine hit lasted 0.3 seconds. Was it worth it?", source: "Your prefrontal cortex" },
+  { text: "Somewhere, someone less talented than you is outworking you right now.", source: "The universe" },
+  { text: "Your screen time report is going to be devastating.", source: "Apple, weekly" },
+  { text: "This site will not remember you. Your work will.", source: "Future historians" },
+  { text: "Even your browser tabs are judging how many are open.", source: "Chrome Task Manager" },
+  { text: "You opened this tab 4 seconds ago. Close it 4 seconds from now.", source: "Basic math" },
+  { text: "Ctrl+W is right there. You know what to do.", source: "Your keyboard" },
+  { text: "Your goals didn't take the day off. Why did you?", source: "Your vision board" },
+  { text: "Nobody ever said 'I wish I had scrolled more' on their deathbed.", source: "Every wise person ever" },
+  { text: "The Wi-Fi password to success is H-A-R-D-W-O-R-K.", source: "A fortune cookie" },
+  { text: "You are one tab-close away from being productive.", source: "This extension" },
 ];
 
 const SHAME_LEVEL_LABELS = { 1: 'LOW', 2: 'MEDIUM', 3: 'HIGH', 4: 'MAXIMUM' };
