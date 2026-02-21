@@ -41,6 +41,10 @@ importScripts(
     checkCurrentTab();
     chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
     startRewardCheckInterval();
+  } else if (isCurrentlyBlocking()) {
+    // Always-on or scheduled lists are blocking — start productive time tracking without a manual session
+    checkCurrentTab();
+    chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
   }
   if (state.rewardActive) {
     await unblockSites(); // Reward overrides all session-level blocking
@@ -112,7 +116,8 @@ const messageHandlers = {
     (async () => {
       const result = await getStorage(['todayMinutes', 'unusedRewardSeconds']);
 
-      const currentProductiveSeconds = state.sessionActive
+      const trackingActive = state.sessionActive || isCurrentlyBlocking();
+      const currentProductiveSeconds = trackingActive
         ? snapshotSeconds(state.isOnProductiveSite, state.lastProductiveTick, state.productiveMillis)
         : Math.floor(state.productiveMillis / 1000);
 
@@ -129,6 +134,7 @@ const messageHandlers = {
         workMinutes: state.workMinutes,
         rewardMinutes: state.rewardMinutes,
         rewardActive: state.rewardActive,
+        blocking: isCurrentlyBlocking(),
         todayMinutes: result.todayMinutes || 0,
         unusedRewardSeconds: result.unusedRewardSeconds || 0,
         productiveSeconds: currentProductiveSeconds,
@@ -362,10 +368,18 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
   if (alarm.name === 'evaluateScheduler') {
     await evaluateScheduler();
+    // Ensure checkSession alarm runs when blocking is active (for productive time tracking)
+    if (isCurrentlyBlocking() || state.sessionActive || state.rewardActive) {
+      chrome.alarms.get('checkSession', (existing) => {
+        if (!existing) chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+      });
+    }
   }
 
   if (alarm.name === 'checkSession') {
-    if (state.sessionActive) {
+    const blocking = isCurrentlyBlocking();
+
+    if (state.sessionActive || blocking) {
       flushProductive();
       saveState();
 
@@ -376,7 +390,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         updateProductiveState(isProductive);
       }
 
-      await checkAndGrantReward();
+      if (state.sessionActive) await checkAndGrantReward();
     }
 
     if (state.rewardActive) {
@@ -388,7 +402,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       }
     }
 
-    if (!state.sessionActive && !state.rewardActive) {
+    if (!state.sessionActive && !state.rewardActive && !blocking) {
       chrome.alarms.clear('checkSession');
     }
   }

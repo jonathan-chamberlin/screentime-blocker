@@ -154,6 +154,16 @@ function renderTimer(status) {
       el.timerSection.className = 'timer-hero paused';
       el.timerLabel.textContent = 'timer paused \u2014 open a productive site or app to resume';
     }
+  } else if (status.blocking) {
+    const productiveSec = status.productiveSeconds || 0;
+    el.timerDisplay.textContent = formatTime(productiveSec);
+    if (status.isOnProductiveSite) {
+      el.timerSection.className = 'timer-hero active';
+      el.timerLabel.textContent = 'productive time (always-on blocking)';
+    } else {
+      el.timerSection.className = 'timer-hero paused';
+      el.timerLabel.textContent = 'timer paused \u2014 open a productive site to resume';
+    }
   } else {
     el.timerSection.className = 'timer-hero';
     el.timerDisplay.textContent = '00:00';
@@ -513,7 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize
   await poll();
   renderActiveLists();
-  if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive)) {
+  if (currentStatus && (currentStatus.sessionActive || currentStatus.rewardActive || currentStatus.blocking)) {
     startPolling();
   }
 });

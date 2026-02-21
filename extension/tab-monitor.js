@@ -3,12 +3,13 @@
 //             site-utils.js, storage.js, native-host.js (isProductiveApp, browserHasFocus, currentAppName)
 
 async function checkCurrentTab() {
-  if (!state.sessionActive && !state.rewardActive) return;
+  const blocking = typeof isCurrentlyBlocking === 'function' && isCurrentlyBlocking();
+  if (!state.sessionActive && !state.rewardActive && !blocking) return;
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     if (!tab || !tab.url) {
-      if (state.sessionActive) updateProductiveState(false);
+      if (state.sessionActive || blocking) updateProductiveState(false);
       if (state.rewardActive) updateRewardState(false);
       return;
     }
@@ -22,7 +23,7 @@ async function checkCurrentTab() {
       ? cache.blockingSites
       : getActiveBreakSites(result.breakLists || DEFAULTS.breakLists);
 
-    if (state.sessionActive) {
+    if (state.sessionActive || blocking) {
       const mode = result.productiveMode || DEFAULTS.productiveMode;
 
       if (urlMatchesAllowedPaths(tab.url, allowedPaths)) {
@@ -83,15 +84,16 @@ let screenIsActive = true;
 chrome.idle.setDetectionInterval(60);
 
 chrome.idle.onStateChanged.addListener((newState) => {
+  const blocking = typeof isCurrentlyBlocking === 'function' && isCurrentlyBlocking();
   if (newState === 'active') {
     screenIsActive = true;
-    if (state.sessionActive || state.rewardActive) {
+    if (state.sessionActive || state.rewardActive || blocking) {
       checkCurrentTab();
     }
   } else {
     // 'idle' or 'locked' — screen off, locked, or no input
     screenIsActive = false;
-    if (state.sessionActive) updateProductiveState(false);
+    if (state.sessionActive || blocking) updateProductiveState(false);
     if (state.rewardActive) updateRewardState(false);
   }
 });
@@ -99,11 +101,13 @@ chrome.idle.onStateChanged.addListener((newState) => {
 // --- Tab/window event listeners ---
 
 chrome.tabs.onActivated.addListener(() => {
-  if (state.sessionActive || state.rewardActive) checkCurrentTab();
+  const blocking = typeof isCurrentlyBlocking === 'function' && isCurrentlyBlocking();
+  if (state.sessionActive || state.rewardActive || blocking) checkCurrentTab();
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.url && (state.sessionActive || state.rewardActive)) {
+  const blocking = typeof isCurrentlyBlocking === 'function' && isCurrentlyBlocking();
+  if (changeInfo.url && (state.sessionActive || state.rewardActive || blocking)) {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
       if (tabs[0] && tabs[0].id === tabId) checkCurrentTab();
     });
@@ -116,9 +120,10 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
   // Don't resume timers if screen is off/locked/idle
   if (!screenIsActive) return;
 
-  if (state.sessionActive || state.rewardActive) {
+  const blocking = typeof isCurrentlyBlocking === 'function' && isCurrentlyBlocking();
+  if (state.sessionActive || state.rewardActive || blocking) {
     if (!browserHasFocus) {
-      if (state.sessionActive) {
+      if (state.sessionActive || blocking) {
         const isProductive = await isProductiveApp(currentAppName);
         updateProductiveState(isProductive);
       }
