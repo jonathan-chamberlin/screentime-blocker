@@ -3,6 +3,7 @@
 
 let state = {
   sessionActive: false,
+  autoSession: false,
   sessionId: null,
   sessionStartTime: null,
   rewardActive: false,
@@ -41,6 +42,7 @@ function flushReward() {
 // Zero out all session-related fields
 function resetSessionState() {
   state.sessionActive = false;
+  state.autoSession = false;
   state.sessionId = null;
   state.sessionStartTime = null;
   state.blockedAttempts = 0;

@@ -28,7 +28,7 @@
     "run_at": "document_idle"
   }],
   "web_accessible_resources": [{
-    "resources": ["blocked.html", "nuclear-blocked.html", "nuclear-block-last-chance.html", "nuclear-blocked-good-choice.html", "nuclear-block-stayed-strong.html", "example-leaderboard.csv", "install-guide.html"],
+    "resources": ["blocked.html", "nuclear-blocked.html", "nuclear-block-last-chance.html", "nuclear-block-choice.html", "nuclear-block-stayed-strong.html", "example-leaderboard.csv", "install-guide.html"],
     "matches": ["<all_urls>"]
   }]
 }

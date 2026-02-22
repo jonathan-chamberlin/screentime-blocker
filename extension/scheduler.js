@@ -19,6 +19,13 @@ async function evaluateScheduler() {
 
   await updateBlockingRules(sites);
 
+  // Auto-start/stop session based on blocking state
+  if (isCurrentlyBlocking() && !state.sessionActive) {
+    await handleAutoSessionStart();
+  } else if (!isCurrentlyBlocking() && state.sessionActive && state.autoSession) {
+    await handleAutoSessionEnd();
+  }
+
   return schedulerCache;
 }
 

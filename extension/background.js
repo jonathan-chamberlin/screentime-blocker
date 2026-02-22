@@ -41,11 +41,8 @@ importScripts(
     checkCurrentTab();
     chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
     startRewardCheckInterval();
-  } else if (isCurrentlyBlocking()) {
-    // Always-on or scheduled lists are blocking — start productive time tracking without a manual session
-    checkCurrentTab();
-    chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
   }
+  // evaluateScheduler() above handles auto-session start for always-on/scheduled blocking
   if (state.rewardActive) {
     await unblockSites(); // Reward overrides all session-level blocking
     checkCurrentTab();
@@ -129,6 +126,7 @@ const messageHandlers = {
 
       sendResponse({
         sessionActive: state.sessionActive,
+        autoSession: state.autoSession,
         sessionId: state.sessionId,
         sessionStartTime: state.sessionStartTime,
         workMinutes: state.workMinutes,
@@ -231,6 +229,7 @@ const messageHandlers = {
 
         state = {
           sessionActive: false,
+          autoSession: false,
           sessionId: null,
           sessionStartTime: null,
           rewardActive: false,
@@ -322,6 +321,10 @@ const messageHandlers = {
       blockingApps: cache.blockingApps,
     });
     return false;
+  },
+  recheckCurrentTab: (msg, sender, sendResponse) => {
+    checkCurrentTab().then(() => sendResponse({ success: true }));
+    return true;
   },
   evaluateScheduler: (msg, sender, sendResponse) => {
     evaluateScheduler().then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));

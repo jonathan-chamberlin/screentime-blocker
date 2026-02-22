@@ -5,8 +5,20 @@
 //             reward.js (bankActiveReward), storage.js
 
 async function handleStartSession() {
+  // If auto-session is running, upgrade to manual session (keep accumulated progress)
+  if (state.sessionActive && state.autoSession) {
+    state.autoSession = false;
+    saveState();
+    await evaluateScheduler();
+    await redirectBlockedTabs();
+    notifyBackend('start', { session_id: state.sessionId });
+    chrome.runtime.sendMessage({ action: 'sessionStarted' }).catch(() => {});
+    return { success: true, sessionId: state.sessionId };
+  }
+
   state.sessionId = crypto.randomUUID();
   state.sessionActive = true;
+  state.autoSession = false;
   state.sessionStartTime = Date.now();
   state.productiveMillis = 0;
   state.lastProductiveTick = Date.now();
@@ -27,6 +39,62 @@ async function handleStartSession() {
   chrome.runtime.sendMessage({ action: 'sessionStarted' }).catch(() => {});
 
   return { success: true, sessionId: state.sessionId };
+}
+
+async function handleAutoSessionStart() {
+  // Don't override an existing session (manual or auto)
+  if (state.sessionActive) return;
+
+  state.sessionId = crypto.randomUUID();
+  state.sessionActive = true;
+  state.autoSession = true;
+  state.sessionStartTime = Date.now();
+  state.productiveMillis = 0;
+  state.lastProductiveTick = Date.now();
+  state.isOnProductiveSite = false;
+  state.rewardGrantCount = 0;
+  state.blockedAttempts = 0;
+  state.blockedDomainsMap = {};
+  saveState();
+
+  await checkCurrentTab();
+  chrome.alarms.create('checkSession', { periodInMinutes: ALARM_PERIOD_MINUTES });
+  startRewardCheckInterval();
+}
+
+async function handleAutoSessionEnd() {
+  // Only end auto-sessions, never manual ones
+  if (!state.sessionActive || !state.autoSession) return;
+
+  flushProductive();
+  const minutesCompleted = Math.floor(state.productiveMillis / 1000 / 60);
+
+  if (minutesCompleted > 0) {
+    const todayResult = await getStorage(['todayMinutes']);
+    await setStorage({ todayMinutes: (todayResult.todayMinutes || 0) + minutesCompleted });
+
+    await saveSessionRecord({
+      sessionId: state.sessionId,
+      startTime: state.sessionStartTime,
+      endTime: Date.now(),
+      workMinutes: state.workMinutes,
+      rewardMinutes: state.rewardMinutes,
+      productiveMillis: state.productiveMillis,
+      blockedAttempts: state.blockedAttempts,
+      blockedDomains: { ...state.blockedDomainsMap },
+      rewardGrantCount: state.rewardGrantCount,
+      endedEarly: false,
+    });
+  }
+
+  if (state.rewardActive) await bankActiveReward();
+  resetSessionState();
+  saveState();
+
+  chrome.alarms.clear('checkSession');
+  stopRewardCheckInterval();
+  chrome.action.setBadgeText({ text: '' });
+  chrome.runtime.sendMessage({ action: 'sessionEnded' }).catch(() => {});
 }
 
 async function handleEndSession(confirmed) {

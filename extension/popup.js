@@ -148,21 +148,12 @@ function renderTimer(status) {
 
     if (status.isOnProductiveSite) {
       el.timerSection.className = 'timer-hero active';
+      const prefix = status.autoSession ? '(always-on) ' : '';
       const appSuffix = status.currentAppName ? ` (${status.currentAppName})` : '';
-      el.timerLabel.textContent = `${remainingMin} min until you earn a break${appSuffix}`;
+      el.timerLabel.textContent = `${prefix}${remainingMin} min until you earn a break${appSuffix}`;
     } else {
       el.timerSection.className = 'timer-hero paused';
       el.timerLabel.textContent = 'timer paused \u2014 open a productive site or app to resume';
-    }
-  } else if (status.blocking) {
-    const productiveSec = status.productiveSeconds || 0;
-    el.timerDisplay.textContent = formatTime(productiveSec);
-    if (status.isOnProductiveSite) {
-      el.timerSection.className = 'timer-hero active';
-      el.timerLabel.textContent = 'productive time (always-on blocking)';
-    } else {
-      el.timerSection.className = 'timer-hero paused';
-      el.timerLabel.textContent = 'timer paused \u2014 open a productive site to resume';
     }
   } else {
     el.timerSection.className = 'timer-hero';
@@ -179,8 +170,8 @@ function renderButtons(status) {
 
   if (status.rewardActive) {
     el.btnPause.style.display = 'block';
-    if (status.sessionActive) showEndButton(status);
-  } else if (status.sessionActive) {
+    if (status.sessionActive && !status.autoSession) showEndButton(status);
+  } else if (status.sessionActive && !status.autoSession) {
     showEndButton(status);
     if ((status.unusedRewardSeconds || 0) > 0) {
       el.btnReward.style.display = 'block';
@@ -191,6 +182,14 @@ function renderButtons(status) {
         el.btnReward.disabled = false;
         el.btnReward.title = '';
       }
+    }
+  } else if (status.sessionActive && status.autoSession) {
+    el.btnStart.textContent = 'Lock in';
+    el.btnStart.style.display = 'block';
+    if ((status.unusedRewardSeconds || 0) > 0 && (status.rewardGrantCount || 0) >= 1) {
+      el.btnReward.style.display = 'block';
+      el.btnReward.disabled = false;
+      el.btnReward.title = '';
     }
   } else {
     el.btnStart.textContent = 'Lock in';

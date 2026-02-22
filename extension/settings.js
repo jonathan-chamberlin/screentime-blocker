@@ -938,6 +938,7 @@ async function saveProductiveList() {
   }
 
   await setStorage({ productiveLists });
+  chrome.runtime.sendMessage({ action: 'recheckCurrentTab' }).catch(() => {});
   closeProductiveListEditor();
   await loadProductiveLists();
   await renderActiveProductiveLists();
@@ -949,6 +950,7 @@ async function deleteProductiveList(listId) {
   const result = await getStorage(['productiveLists']);
   const productiveLists = (result.productiveLists || DEFAULTS.productiveLists).filter(l => l.id !== listId);
   await setStorage({ productiveLists });
+  chrome.runtime.sendMessage({ action: 'recheckCurrentTab' }).catch(() => {});
   await loadProductiveLists();
   await renderActiveProductiveLists();
   showSavedIndicator();
