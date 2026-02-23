@@ -7,6 +7,10 @@
 
 import { Router } from 'express';
 import { getAll, set } from '../../storage.js';
+import {
+  getBlockedSites, getAllowedPaths,
+  getProductiveSites, getProductiveApps,
+} from '../../shared/list-utils.js';
 
 /**
  * @typedef {Object} ApiRouterDeps
@@ -95,8 +99,9 @@ function extractSettings(data) {
     idleTimeoutSeconds: data.idleTimeoutSeconds,
     productiveMode: data.productiveMode,
     breakLists: data.breakLists,
-    productiveSites: data.productiveSites,
-    productiveApps: data.productiveApps,
+    productiveLists: data.productiveLists,
+    activeBreakListId: data.activeBreakListId,
+    activeProductiveListId: data.activeProductiveListId,
     blockedApps: data.blockedApps,
     nuclearBlockData: data.nuclearBlockData,
   };
@@ -104,17 +109,17 @@ function extractSettings(data) {
 
 /**
  * Apply changed settings to the session engine's live config.
- * This ensures the engine picks up new productive sites, work minutes, etc.
- * without requiring a restart.
+ * Derives flat arrays from the active lists so the engine doesn't
+ * need to know about the list structure.
  *
  * @param {import('../../session/session-engine.js').SessionEngineAPI} engine
  * @param {import('../../storage.js').StorageData} data
  */
 function applySettingsToEngine(engine, data) {
   engine.updateConfig({
-    productiveSites: data.productiveSites,
-    productiveApps: data.productiveApps,
-    blockedSites: data.breakLists?.[0]?.sites || [],
+    productiveSites: getProductiveSites(data.productiveLists, data.activeProductiveListId),
+    productiveApps: getProductiveApps(data.productiveLists, data.activeProductiveListId),
+    blockedSites: getBlockedSites(data.breakLists, data.activeBreakListId),
     productiveMode: data.productiveMode,
     workMinutes: data.workMinutes,
     rewardMinutes: data.rewardMinutes,

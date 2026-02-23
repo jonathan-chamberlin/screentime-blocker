@@ -24,6 +24,10 @@ export const DEFAULT_WORK_MINUTES = 50;
 export const DEFAULT_REWARD_MINUTES = 10;
 export const DEFAULT_IDLE_TIMEOUT_SECONDS = 180;
 export const DEFAULT_PRODUCTIVE_MODE = 'all-except-blocked';
+export const DEFAULT_BREAK_LIST_NAME = 'Default Block List';
+export const DEFAULT_PRODUCTIVE_LIST_NAME = 'Default Productive List';
+export const DEFAULT_BREAK_LIST_ID = 'default';
+export const DEFAULT_PRODUCTIVE_LIST_ID = 'default';
 
 // --- Blocking Modes ---
 export const BLOCKING_MODES = /** @type {const} */ ({

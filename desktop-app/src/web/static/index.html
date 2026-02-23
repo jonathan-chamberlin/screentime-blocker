@@ -123,6 +123,25 @@
     }
     .nav-link:hover { text-decoration: underline; }
 
+    /* List selectors */
+    .list-selectors {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+    }
+    .list-selector {
+      background: var(--surface); border-radius: 10px; padding: 10px 12px;
+      border: 1px solid var(--border);
+    }
+    .list-selector .label {
+      font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .list-selector select {
+      width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 6px 8px; font-size: 13px; cursor: pointer;
+    }
+    .list-selector select:focus { outline: none; border-color: var(--accent); }
+
     /* Idle overlay */
     .idle-indicator {
       display: none; text-align: center; padding: 8px;
@@ -150,6 +169,17 @@
     </div>
 
     <div class="idle-indicator" id="idleIndicator">Idle — timers paused</div>
+
+    <div class="list-selectors">
+      <div class="list-selector">
+        <div class="label">Block List</div>
+        <select id="breakListSelect"></select>
+      </div>
+      <div class="list-selector">
+        <div class="label">Productive List</div>
+        <select id="productiveListSelect"></select>
+      </div>
+    </div>
 
     <div class="timer-grid">
       <div class="timer-card work">
@@ -226,6 +256,8 @@
     const blockedAttemptsEl = document.getElementById('blockedAttempts');
     const toggleTaskMgr = document.getElementById('toggleTaskMgr');
     const toggleStrict = document.getElementById('toggleStrict');
+    const breakListSelect = document.getElementById('breakListSelect');
+    const productiveListSelect = document.getElementById('productiveListSelect');
 
     /** Format ms to MM:SS or H:MM:SS */
     function formatTimer(ms) {
@@ -262,13 +294,27 @@
       el.classList.toggle('on', on);
     }
 
-    /** Load settings and apply toggle states */
+    /** Populate a <select> with list options */
+    function populateListSelect(selectEl, lists, activeId) {
+      selectEl.innerHTML = '';
+      for (const list of (lists || [])) {
+        const opt = document.createElement('option');
+        opt.value = list.id;
+        opt.textContent = list.name;
+        if (list.id === activeId) opt.selected = true;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    /** Load settings and apply toggle states + list selectors */
     async function loadSettings() {
       try {
         const res = await fetch('/api/settings');
         const settings = await res.json();
         setToggle(toggleTaskMgr, settings.blockTaskManager);
         setToggle(toggleStrict, settings.strictMode);
+        populateListSelect(breakListSelect, settings.breakLists, settings.activeBreakListId);
+        populateListSelect(productiveListSelect, settings.productiveLists, settings.activeProductiveListId);
       } catch (e) {
         console.error('Failed to load settings:', e);
       }
@@ -299,6 +345,14 @@
     setupToggle(toggleTaskMgr);
     setupToggle(toggleStrict);
 
+    /* --- List selector change handlers --- */
+    breakListSelect.addEventListener('change', () => {
+      saveSetting('activeBreakListId', breakListSelect.value);
+    });
+    productiveListSelect.addEventListener('change', () => {
+      saveSetting('activeProductiveListId', productiveListSelect.value);
+    });
+
     /* --- Session button handlers --- */
     lockInBtn.addEventListener('click', async () => {
       const res = await fetch('/api/session/start', { method: 'POST' });
@@ -323,6 +377,8 @@
         if (msg.type === 'settings-updated') {
           setToggle(toggleTaskMgr, msg.data.blockTaskManager);
           setToggle(toggleStrict, msg.data.strictMode);
+          populateListSelect(breakListSelect, msg.data.breakLists, msg.data.activeBreakListId);
+          populateListSelect(productiveListSelect, msg.data.productiveLists, msg.data.activeProductiveListId);
         }
       };
       ws.onclose = () => {

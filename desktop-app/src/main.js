@@ -16,30 +16,29 @@ import { startAppMonitor } from './monitor/app-monitor.js';
 import { killApp } from './monitor/app-killer.js';
 import { startWebServer } from './web/server.js';
 import { getAll } from './storage.js';
-import { PROXY_PORT, WEB_PORT, BLOCKING_MODES } from './shared/constants.js';
+import { PROXY_PORT, WEB_PORT } from './shared/constants.js';
+import {
+  getBlockedSites, getAllowedPaths, getBlockingMode,
+  getProductiveSites, getProductiveApps,
+} from './shared/list-utils.js';
 
 /**
- * Build the initial blocking state from storage and session engine.
- * Pure function: takes config + session status, returns BlockingState.
+ * Build the blocking state from storage config and session engine status.
+ * Pure function: derives flat arrays from the active break list.
  *
- * @param {Object} config - Storage data with breakLists, nuclearBlockData
+ * @param {Object} config - Storage data with breakLists, activeBreakListId, nuclearBlockData
  * @param {Object} sessionStatus - Current session state
  * @returns {import('./proxy/rule-engine.js').BlockingState}
  */
 function buildBlockingState(config, sessionStatus) {
-  const defaultList = config.breakLists?.[0] || {
-    mode: BLOCKING_MODES.MANUAL,
-    sites: [],
-    allowedPaths: [],
-  };
-
+  const activeId = config.activeBreakListId;
   return {
     sessionActive: sessionStatus.sessionActive,
     rewardActive: sessionStatus.rewardActive || false,
-    blockedSites: defaultList.sites || [],
-    allowedPaths: defaultList.allowedPaths || [],
+    blockedSites: getBlockedSites(config.breakLists, activeId),
+    allowedPaths: getAllowedPaths(config.breakLists, activeId),
     nuclearSites: config.nuclearBlockData?.sites || [],
-    blockingMode: defaultList.mode || BLOCKING_MODES.MANUAL,
+    blockingMode: getBlockingMode(config.breakLists, activeId),
   };
 }
 
@@ -57,11 +56,11 @@ export async function startApp() {
   await ensureCA();
   console.log('[main] CA certificate ready');
 
-  // 2. Create session engine
+  // 2. Create session engine — derive flat arrays from active lists
   const engine = createSessionEngine({
-    productiveSites: config.productiveSites || [],
-    productiveApps: config.productiveApps || [],
-    blockedSites: config.breakLists?.[0]?.sites || [],
+    productiveSites: getProductiveSites(config.productiveLists, config.activeProductiveListId),
+    productiveApps: getProductiveApps(config.productiveLists, config.activeProductiveListId),
+    blockedSites: getBlockedSites(config.breakLists, config.activeBreakListId),
     productiveMode: config.productiveMode,
     workMinutes: config.workMinutes,
     rewardMinutes: config.rewardMinutes,

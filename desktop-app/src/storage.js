@@ -19,6 +19,10 @@ import {
   DEFAULT_REWARD_MINUTES,
   DEFAULT_IDLE_TIMEOUT_SECONDS,
   DEFAULT_PRODUCTIVE_MODE,
+  DEFAULT_BREAK_LIST_ID,
+  DEFAULT_PRODUCTIVE_LIST_ID,
+  DEFAULT_BREAK_LIST_NAME,
+  DEFAULT_PRODUCTIVE_LIST_NAME,
   BLOCKING_MODES,
 } from './shared/constants.js';
 
@@ -30,9 +34,12 @@ import {
  * @property {boolean} blockTaskManager
  * @property {number} idleTimeoutSeconds
  * @property {string} productiveMode - 'all-except-blocked' | 'whitelist'
- * @property {Array<import('./shared/constants.js').BreakList>} breakLists
- * @property {string[]} productiveSites
- * @property {string[]} productiveApps
+ * @property {Array<import('./shared/list-utils.js').BreakList>} breakLists
+ * @property {Array<import('./shared/list-utils.js').ProductiveList>} productiveLists
+ * @property {string} activeBreakListId - ID of the selected break list
+ * @property {string} activeProductiveListId - ID of the selected productive list
+ * @property {string[]} productiveSites - legacy flat array (use productiveLists instead)
+ * @property {string[]} productiveApps - legacy flat array (use productiveLists instead)
  * @property {string[]} blockedApps
  * @property {Object} nuclearBlockData
  * @property {Array<Object>} sessionHistory
@@ -52,8 +59,9 @@ function getDefaults() {
     productiveMode: DEFAULT_PRODUCTIVE_MODE,
     breakLists: [
       {
-        id: 'default',
-        name: 'Default Block List',
+        id: DEFAULT_BREAK_LIST_ID,
+        name: DEFAULT_BREAK_LIST_NAME,
+        isActive: true,
         mode: BLOCKING_MODES.MANUAL,
         sites: [...DEFAULT_BLOCKED_SITES],
         apps: [...DEFAULT_BLOCKED_APPS],
@@ -61,6 +69,17 @@ function getDefaults() {
         schedule: null,
       },
     ],
+    productiveLists: [
+      {
+        id: DEFAULT_PRODUCTIVE_LIST_ID,
+        name: DEFAULT_PRODUCTIVE_LIST_NAME,
+        isActive: true,
+        sites: [...DEFAULT_PRODUCTIVE_SITES],
+        apps: [...DEFAULT_PRODUCTIVE_APPS],
+      },
+    ],
+    activeBreakListId: DEFAULT_BREAK_LIST_ID,
+    activeProductiveListId: DEFAULT_PRODUCTIVE_LIST_ID,
     productiveSites: [...DEFAULT_PRODUCTIVE_SITES],
     productiveApps: [...DEFAULT_PRODUCTIVE_APPS],
     blockedApps: [...DEFAULT_BLOCKED_APPS],
