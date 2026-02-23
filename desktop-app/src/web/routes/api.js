@@ -9,7 +9,7 @@ import { Router } from 'express';
 import { getAll, set } from '../../storage.js';
 import {
   getBlockedSites, getAllowedPaths,
-  getProductiveSites, getProductiveApps,
+  getProductiveMode, getProductiveSites, getProductiveApps,
 } from '../../shared/list-utils.js';
 
 /**
@@ -97,12 +97,8 @@ function extractSettings(data) {
     strictMode: data.strictMode,
     blockTaskManager: data.blockTaskManager,
     idleTimeoutSeconds: data.idleTimeoutSeconds,
-    productiveMode: data.productiveMode,
-    breakLists: data.breakLists,
-    productiveLists: data.productiveLists,
-    activeBreakListId: data.activeBreakListId,
-    activeProductiveListId: data.activeProductiveListId,
-    blockedApps: data.blockedApps,
+    lists: data.lists,
+    activeListId: data.activeListId,
     nuclearBlockData: data.nuclearBlockData,
   };
 }
@@ -117,10 +113,10 @@ function extractSettings(data) {
  */
 function applySettingsToEngine(engine, data) {
   engine.updateConfig({
-    productiveSites: getProductiveSites(data.productiveLists, data.activeProductiveListId),
-    productiveApps: getProductiveApps(data.productiveLists, data.activeProductiveListId),
-    blockedSites: getBlockedSites(data.breakLists, data.activeBreakListId),
-    productiveMode: data.productiveMode,
+    productiveSites: getProductiveSites(data.lists, data.activeListId),
+    productiveApps: getProductiveApps(data.lists, data.activeListId),
+    blockedSites: getBlockedSites(data.lists, data.activeListId),
+    productiveMode: getProductiveMode(data.lists, data.activeListId),
     workMinutes: data.workMinutes,
     rewardMinutes: data.rewardMinutes,
     strictMode: data.strictMode,

@@ -44,12 +44,12 @@ describe('storage', () => {
     expect(data.strictMode).toBe(false);
     expect(data.blockTaskManager).toBe(false);
     expect(data.idleTimeoutSeconds).toBe(180);
-    expect(data.productiveMode).toBe('all-except-blocked');
-    expect(data.breakLists).toHaveLength(1);
-    expect(data.breakLists[0].sites).toContain('youtube.com');
-    expect(data.productiveSites).toContain('github.com');
-    expect(data.productiveApps).toContain('Code.exe');
-    expect(data.blockedApps).toContain('steam.exe');
+    expect(data.lists).toHaveLength(1);
+    expect(data.lists[0].blocked.sites).toContain('youtube.com');
+    expect(data.lists[0].blocked.apps).toContain('steam.exe');
+    expect(data.lists[0].productive.mode).toBe('all-except-blocked');
+    expect(data.lists[0].productive.sites).toContain('github.com');
+    expect(data.lists[0].productive.apps).toContain('Code.exe');
     // File should now exist on disk
     expect(existsSync(dataPath)).toBe(true);
   });
@@ -73,7 +73,7 @@ describe('storage', () => {
     // Other defaults preserved
     expect(data.rewardMinutes).toBe(10);
     expect(data.idleTimeoutSeconds).toBe(180);
-    expect(data.breakLists).toHaveLength(1);
+    expect(data.lists).toHaveLength(1);
   });
 
   it('get() retrieves a single key', async () => {
@@ -101,6 +101,6 @@ describe('storage', () => {
     // File should still be valid JSON
     const data = await getAll();
     expect(typeof data.workMinutes).toBe('number');
-    expect(data.breakLists).toHaveLength(1);
+    expect(data.lists).toHaveLength(1);
   });
 });

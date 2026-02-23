@@ -1,149 +1,133 @@
 /**
- * Pure helper functions for working with break lists and productive lists.
+ * Pure helper functions for working with unified lists.
+ * Each list contains both blocking and productive config.
  * No side effects, no storage access — takes data in, returns data out.
- *
- * Ported from: extension/list-utils.js (chrome.storage replaced with pure functions)
  */
 
 import { randomUUID } from 'node:crypto';
-import { BLOCKING_MODES } from './constants.js';
+import { BLOCKING_MODES, DEFAULT_PRODUCTIVE_MODE } from './constants.js';
 
 /**
- * @typedef {Object} BreakList
- * @property {string} id
- * @property {string} name
- * @property {boolean} isActive
- * @property {string} mode - 'off' | 'manual' | 'scheduled' | 'always-on'
- * @property {string[]} sites
- * @property {string[]} apps
- * @property {string[]} allowedPaths
- * @property {Object|null} schedule
+ * @typedef {import('../storage.js').UnifiedList} UnifiedList
  */
 
 /**
- * @typedef {Object} ProductiveList
- * @property {string} id
- * @property {string} name
- * @property {boolean} isActive
- * @property {string[]} sites
- * @property {string[]} apps
- */
-
-/**
- * Find the active break list by ID, falling back to the first list.
+ * Find the active list by ID, falling back to the first list.
  *
- * @param {BreakList[]} breakLists
+ * @param {UnifiedList[]} lists
  * @param {string} activeId
- * @returns {BreakList|null}
+ * @returns {UnifiedList|null}
  */
-export function getActiveBreakList(breakLists, activeId) {
-  if (!breakLists || breakLists.length === 0) return null;
-  return breakLists.find((l) => l.id === activeId) || breakLists[0];
+export function getActiveList(lists, activeId) {
+  if (!lists || lists.length === 0) return null;
+  return lists.find((l) => l.id === activeId) || lists[0];
 }
 
 /**
- * Find the active productive list by ID, falling back to the first list.
+ * Get blocked sites from the active list.
  *
- * @param {ProductiveList[]} productiveLists
- * @param {string} activeId
- * @returns {ProductiveList|null}
- */
-export function getActiveProductiveList(productiveLists, activeId) {
-  if (!productiveLists || productiveLists.length === 0) return null;
-  return productiveLists.find((l) => l.id === activeId) || productiveLists[0];
-}
-
-/**
- * Get blocked sites from the active break list.
- *
- * @param {BreakList[]} breakLists
+ * @param {UnifiedList[]} lists
  * @param {string} activeId
  * @returns {string[]}
  */
-export function getBlockedSites(breakLists, activeId) {
-  const list = getActiveBreakList(breakLists, activeId);
-  return list?.sites || [];
+export function getBlockedSites(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return list?.blocked?.sites || [];
 }
 
 /**
- * Get allowed paths from the active break list.
+ * Get blocked apps from the active list.
  *
- * @param {BreakList[]} breakLists
+ * @param {UnifiedList[]} lists
  * @param {string} activeId
  * @returns {string[]}
  */
-export function getAllowedPaths(breakLists, activeId) {
-  const list = getActiveBreakList(breakLists, activeId);
-  return list?.allowedPaths || [];
+export function getBlockedApps(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return list?.blocked?.apps || [];
 }
 
 /**
- * Get blocking mode from the active break list.
+ * Get allowed paths from the active list.
  *
- * @param {BreakList[]} breakLists
+ * @param {UnifiedList[]} lists
+ * @param {string} activeId
+ * @returns {string[]}
+ */
+export function getAllowedPaths(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return list?.blocked?.allowedPaths || [];
+}
+
+/**
+ * Get blocking mode from the active list.
+ *
+ * @param {UnifiedList[]} lists
  * @param {string} activeId
  * @returns {string}
  */
-export function getBlockingMode(breakLists, activeId) {
-  const list = getActiveBreakList(breakLists, activeId);
+export function getBlockingMode(lists, activeId) {
+  const list = getActiveList(lists, activeId);
   return list?.mode || BLOCKING_MODES.MANUAL;
 }
 
 /**
- * Get productive sites from the active productive list.
+ * Get productive mode from the active list.
  *
- * @param {ProductiveList[]} productiveLists
+ * @param {UnifiedList[]} lists
+ * @param {string} activeId
+ * @returns {string}
+ */
+export function getProductiveMode(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return list?.productive?.mode || DEFAULT_PRODUCTIVE_MODE;
+}
+
+/**
+ * Get productive sites from the active list.
+ *
+ * @param {UnifiedList[]} lists
  * @param {string} activeId
  * @returns {string[]}
  */
-export function getProductiveSites(productiveLists, activeId) {
-  const list = getActiveProductiveList(productiveLists, activeId);
-  return list?.sites || [];
+export function getProductiveSites(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return list?.productive?.sites || [];
 }
 
 /**
- * Get productive apps from the active productive list.
+ * Get productive apps from the active list.
  *
- * @param {ProductiveList[]} productiveLists
+ * @param {UnifiedList[]} lists
  * @param {string} activeId
  * @returns {string[]}
  */
-export function getProductiveApps(productiveLists, activeId) {
-  const list = getActiveProductiveList(productiveLists, activeId);
-  return list?.apps || [];
+export function getProductiveApps(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return list?.productive?.apps || [];
 }
 
 /**
- * Create a new empty productive list.
+ * Create a new empty unified list.
  *
  * @param {string} name
- * @returns {ProductiveList}
+ * @returns {UnifiedList}
  */
-export function createProductiveList(name) {
+export function createList(name) {
   return {
     id: randomUUID(),
     name,
-    isActive: false,
-    sites: [],
-    apps: [],
-  };
-}
-
-/**
- * Create a new empty break list.
- *
- * @param {string} name
- * @returns {BreakList}
- */
-export function createBreakList(name) {
-  return {
-    id: randomUUID(),
-    name,
-    isActive: false,
     mode: BLOCKING_MODES.MANUAL,
-    sites: [],
-    apps: [],
-    allowedPaths: [],
+    blocked: {
+      sites: [],
+      apps: [],
+      allowedPaths: [],
+    },
+    productive: {
+      mode: DEFAULT_PRODUCTIVE_MODE,
+      sites: [],
+      apps: [],
+    },
     schedule: null,
   };
 }

@@ -18,27 +18,26 @@ import { startWebServer } from './web/server.js';
 import { getAll } from './storage.js';
 import { PROXY_PORT, WEB_PORT } from './shared/constants.js';
 import {
-  getBlockedSites, getAllowedPaths, getBlockingMode,
-  getProductiveSites, getProductiveApps,
+  getBlockedSites, getBlockedApps, getAllowedPaths, getBlockingMode,
+  getProductiveMode, getProductiveSites, getProductiveApps,
 } from './shared/list-utils.js';
 
 /**
  * Build the blocking state from storage config and session engine status.
  * Pure function: derives flat arrays from the active break list.
  *
- * @param {Object} config - Storage data with breakLists, activeBreakListId, nuclearBlockData
+ * @param {Object} config - Storage data with lists, activeListId, nuclearBlockData
  * @param {Object} sessionStatus - Current session state
  * @returns {import('./proxy/rule-engine.js').BlockingState}
  */
 function buildBlockingState(config, sessionStatus) {
-  const activeId = config.activeBreakListId;
   return {
     sessionActive: sessionStatus.sessionActive,
     rewardActive: sessionStatus.rewardActive || false,
-    blockedSites: getBlockedSites(config.breakLists, activeId),
-    allowedPaths: getAllowedPaths(config.breakLists, activeId),
+    blockedSites: getBlockedSites(config.lists, config.activeListId),
+    allowedPaths: getAllowedPaths(config.lists, config.activeListId),
     nuclearSites: config.nuclearBlockData?.sites || [],
-    blockingMode: getBlockingMode(config.breakLists, activeId),
+    blockingMode: getBlockingMode(config.lists, config.activeListId),
   };
 }
 
@@ -56,12 +55,12 @@ export async function startApp() {
   await ensureCA();
   console.log('[main] CA certificate ready');
 
-  // 2. Create session engine — derive flat arrays from active lists
+  // 2. Create session engine — derive flat arrays from active list
   const engine = createSessionEngine({
-    productiveSites: getProductiveSites(config.productiveLists, config.activeProductiveListId),
-    productiveApps: getProductiveApps(config.productiveLists, config.activeProductiveListId),
-    blockedSites: getBlockedSites(config.breakLists, config.activeBreakListId),
-    productiveMode: config.productiveMode,
+    productiveSites: getProductiveSites(config.lists, config.activeListId),
+    productiveApps: getProductiveApps(config.lists, config.activeListId),
+    blockedSites: getBlockedSites(config.lists, config.activeListId),
+    productiveMode: getProductiveMode(config.lists, config.activeListId),
     workMinutes: config.workMinutes,
     rewardMinutes: config.rewardMinutes,
     strictMode: config.strictMode,
@@ -105,8 +104,8 @@ export async function startApp() {
 
     // Kill blocked apps during session
     if (engine.getStatus().sessionActive) {
-      const blockedApps = config.blockedApps || [];
-      const isBlocked = blockedApps.some(
+      const blockedAppsList = getBlockedApps(config.lists, config.activeListId);
+      const isBlocked = blockedAppsList.some(
         (app) => app.toLowerCase().replace('.exe', '') ===
           focus.processName.toLowerCase()
       );

@@ -48,8 +48,6 @@
     .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
     .btn-danger { background: var(--red); color: white; }
     .btn-danger:hover:not(:disabled) { background: #d63050; }
-    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-    .btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
 
     /* Status badge */
     .status-badge {
@@ -65,6 +63,30 @@
     .status-badge.active .status-dot { background: var(--green); }
     .status-badge.inactive .status-dot { background: var(--text-muted); }
 
+    /* Idle overlay */
+    .idle-indicator {
+      display: none; text-align: center; padding: 8px;
+      background: rgba(255,214,0,0.1); border-radius: 8px;
+      color: var(--yellow); font-size: 13px; margin-bottom: 16px;
+    }
+    .idle-indicator.visible { display: block; }
+
+    /* Active List selector */
+    .list-selector {
+      background: var(--surface); border-radius: 10px; padding: 10px 12px;
+      border: 1px solid var(--border); margin-bottom: 20px;
+    }
+    .list-selector .label {
+      font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .list-selector select {
+      width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 6px 8px; font-size: 13px; cursor: pointer;
+    }
+    .list-selector select:focus { outline: none; border-color: var(--accent); }
+
     /* Timer cards */
     .timer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
     .timer-card {
@@ -76,36 +98,23 @@
     .timer-card.work .value { color: var(--text); }
     .timer-card.productive .value { color: var(--green); }
 
-    /* Info cards */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .info-card {
-      background: var(--surface); border-radius: 10px; padding: 12px 14px;
-      border: 1px solid var(--border);
+    /* Current Focus box */
+    .focus-box {
+      border-radius: 10px; padding: 12px 14px;
+      border: 1px solid var(--border); margin-bottom: 20px;
+      transition: background 0.2s, border-color 0.2s;
     }
-    .info-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .info-card .value { font-size: 14px; font-weight: 500; margin-top: 4px; }
-
-    /* Toggles */
-    .toggles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-    .toggle-row {
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--surface); border-radius: 10px; padding: 12px 14px;
-      border: 1px solid var(--border);
+    .focus-box.normal {
+      background: var(--surface);
     }
-    .toggle-row .toggle-label { font-size: 14px; }
-    .toggle-row .toggle-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .switch {
-      position: relative; width: 44px; height: 24px;
-      background: var(--border); border-radius: 12px; cursor: pointer;
-      transition: background 0.2s; flex-shrink: 0;
+    .focus-box.productive {
+      background: rgba(0,200,83,0.15);
+      border-color: rgba(0,200,83,0.3);
     }
-    .switch.on { background: var(--accent); }
-    .switch .knob {
-      position: absolute; top: 3px; left: 3px;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: white; transition: transform 0.2s;
-    }
-    .switch.on .knob { transform: translateX(20px); }
+    .focus-box .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .focus-box .value { font-size: 14px; font-weight: 500; margin-top: 4px; }
+    .focus-box.normal .value { color: var(--text-muted); }
+    .focus-box.productive .value { color: var(--green); }
 
     /* Blocked attempts */
     .blocked-bar {
@@ -122,33 +131,6 @@
       color: var(--accent); text-decoration: none; font-size: 14px;
     }
     .nav-link:hover { text-decoration: underline; }
-
-    /* List selectors */
-    .list-selectors {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
-    }
-    .list-selector {
-      background: var(--surface); border-radius: 10px; padding: 10px 12px;
-      border: 1px solid var(--border);
-    }
-    .list-selector .label {
-      font-size: 11px; color: var(--text-muted); text-transform: uppercase;
-      letter-spacing: 0.5px; margin-bottom: 4px;
-    }
-    .list-selector select {
-      width: 100%; background: var(--bg); color: var(--text);
-      border: 1px solid var(--border); border-radius: 6px;
-      padding: 6px 8px; font-size: 13px; cursor: pointer;
-    }
-    .list-selector select:focus { outline: none; border-color: var(--accent); }
-
-    /* Idle overlay */
-    .idle-indicator {
-      display: none; text-align: center; padding: 8px;
-      background: rgba(255,214,0,0.1); border-radius: 8px;
-      color: var(--yellow); font-size: 13px; margin-bottom: 16px;
-    }
-    .idle-indicator.visible { display: block; }
   </style>
 </head>
 <body>
@@ -159,8 +141,8 @@
     </div>
 
     <div class="action-bar">
-      <button class="btn btn-primary" id="lockIn">Lock In</button>
-      <button class="btn btn-danger" id="endSession" disabled>End Session</button>
+      <button class="btn btn-primary" id="lockInBtn">Lock In</button>
+      <button class="btn btn-danger" id="endBtn" disabled>End Session</button>
     </div>
 
     <div class="status-badge inactive" id="statusBadge">
@@ -170,71 +152,30 @@
 
     <div class="idle-indicator" id="idleIndicator">Idle — timers paused</div>
 
-    <div class="list-selectors">
-      <div class="list-selector">
-        <div class="label">Block List</div>
-        <select id="breakListSelect"></select>
-      </div>
-      <div class="list-selector">
-        <div class="label">Productive List</div>
-        <select id="productiveListSelect"></select>
-      </div>
+    <div class="list-selector">
+      <div class="label">Active List</div>
+      <select id="listSelect"></select>
     </div>
 
     <div class="timer-grid">
       <div class="timer-card work">
         <div class="label">Work Timer</div>
-        <div class="value" id="workTimer">00:00</div>
+        <div class="value" id="workTimerEl">00:00</div>
       </div>
       <div class="timer-card productive">
         <div class="label">Productive Time</div>
-        <div class="value" id="productiveTimer">00:00</div>
+        <div class="value" id="productiveTimerEl">00:00</div>
       </div>
     </div>
 
-    <div class="info-grid">
-      <div class="info-card">
-        <div class="label">Current Site</div>
-        <div class="value" id="currentSite">—</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Current App</div>
-        <div class="value" id="currentApp">—</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Productive Site</div>
-        <div class="value" id="prodSite">—</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Productive App</div>
-        <div class="value" id="prodApp">—</div>
-      </div>
+    <div class="focus-box normal" id="focusBox">
+      <div class="label">Current Focus</div>
+      <div class="value" id="currentFocusEl">—</div>
     </div>
 
     <div class="blocked-bar">
       <span class="label">Blocked Attempts</span>
-      <span class="count" id="blockedAttempts">0</span>
-    </div>
-
-    <div class="toggles">
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Block Task Manager</div>
-          <div class="toggle-desc">Prevent opening Task Manager during sessions</div>
-        </div>
-        <div class="switch" id="toggleTaskMgr" data-key="blockTaskManager">
-          <div class="knob"></div>
-        </div>
-      </div>
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Strict Mode</div>
-          <div class="toggle-desc">Must earn reward before ending session</div>
-        </div>
-        <div class="switch" id="toggleStrict" data-key="strictMode">
-          <div class="knob"></div>
-        </div>
-      </div>
+      <span class="count" id="blockedAttemptsEl">0</span>
     </div>
 
     <a href="/settings.html" class="nav-link">Settings</a>
@@ -242,22 +183,17 @@
 
   <script>
     /* --- DOM refs --- */
-    const lockInBtn = document.getElementById('lockIn');
-    const endBtn = document.getElementById('endSession');
+    const lockInBtn = document.getElementById('lockInBtn');
+    const endBtn = document.getElementById('endBtn');
     const statusBadge = document.getElementById('statusBadge');
     const statusText = document.getElementById('statusText');
     const idleIndicator = document.getElementById('idleIndicator');
-    const workTimerEl = document.getElementById('workTimer');
-    const productiveTimerEl = document.getElementById('productiveTimer');
-    const currentSiteEl = document.getElementById('currentSite');
-    const currentAppEl = document.getElementById('currentApp');
-    const prodSiteEl = document.getElementById('prodSite');
-    const prodAppEl = document.getElementById('prodApp');
-    const blockedAttemptsEl = document.getElementById('blockedAttempts');
-    const toggleTaskMgr = document.getElementById('toggleTaskMgr');
-    const toggleStrict = document.getElementById('toggleStrict');
-    const breakListSelect = document.getElementById('breakListSelect');
-    const productiveListSelect = document.getElementById('productiveListSelect');
+    const listSelect = document.getElementById('listSelect');
+    const workTimerEl = document.getElementById('workTimerEl');
+    const productiveTimerEl = document.getElementById('productiveTimerEl');
+    const focusBox = document.getElementById('focusBox');
+    const currentFocusEl = document.getElementById('currentFocusEl');
+    const blockedAttemptsEl = document.getElementById('blockedAttemptsEl');
 
     /** Format ms to MM:SS or H:MM:SS */
     function formatTimer(ms) {
@@ -282,16 +218,12 @@
 
       workTimerEl.textContent = formatTimer(state.workTimerMs);
       productiveTimerEl.textContent = formatTimer(state.productiveMs);
-      currentSiteEl.textContent = state.currentSite || '—';
-      currentAppEl.textContent = state.currentApp || '—';
-      prodSiteEl.textContent = state.isOnProductiveSite ? 'Yes' : 'No';
-      prodAppEl.textContent = state.isOnProductiveApp ? 'Yes' : 'No';
-      blockedAttemptsEl.textContent = state.blockedAttempts;
-    }
 
-    /** Update toggle switch visuals */
-    function setToggle(el, on) {
-      el.classList.toggle('on', on);
+      const isProductive = state.isOnProductiveSite || state.isOnProductiveApp;
+      focusBox.className = 'focus-box ' + (isProductive ? 'productive' : 'normal');
+      currentFocusEl.textContent = state.currentSite || state.currentApp || '—';
+
+      blockedAttemptsEl.textContent = state.blockedAttempts;
     }
 
     /** Populate a <select> with list options */
@@ -306,51 +238,24 @@
       }
     }
 
-    /** Load settings and apply toggle states + list selectors */
+    /** Load settings and populate list dropdown */
     async function loadSettings() {
       try {
         const res = await fetch('/api/settings');
         const settings = await res.json();
-        setToggle(toggleTaskMgr, settings.blockTaskManager);
-        setToggle(toggleStrict, settings.strictMode);
-        populateListSelect(breakListSelect, settings.breakLists, settings.activeBreakListId);
-        populateListSelect(productiveListSelect, settings.productiveLists, settings.activeProductiveListId);
+        populateListSelect(listSelect, settings.lists, settings.activeListId);
       } catch (e) {
         console.error('Failed to load settings:', e);
       }
     }
 
-    /** Save a single setting */
-    async function saveSetting(key, value) {
-      try {
-        await fetch('/api/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ [key]: value }),
-        });
-      } catch (e) {
-        console.error('Failed to save setting:', e);
-      }
-    }
-
-    /* --- Toggle click handlers --- */
-    function setupToggle(el) {
-      el.addEventListener('click', () => {
-        const key = el.dataset.key;
-        const isOn = el.classList.contains('on');
-        setToggle(el, !isOn);
-        saveSetting(key, !isOn);
-      });
-    }
-    setupToggle(toggleTaskMgr);
-    setupToggle(toggleStrict);
-
-    /* --- List selector change handlers --- */
-    breakListSelect.addEventListener('change', () => {
-      saveSetting('activeBreakListId', breakListSelect.value);
-    });
-    productiveListSelect.addEventListener('change', () => {
-      saveSetting('activeProductiveListId', productiveListSelect.value);
+    /* --- List selector change handler --- */
+    listSelect.addEventListener('change', () => {
+      fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activeListId: listSelect.value }),
+      }).catch(e => console.error('Failed to save activeListId:', e));
     });
 
     /* --- Session button handlers --- */
@@ -375,10 +280,7 @@
           updateUI(msg.data);
         }
         if (msg.type === 'settings-updated') {
-          setToggle(toggleTaskMgr, msg.data.blockTaskManager);
-          setToggle(toggleStrict, msg.data.strictMode);
-          populateListSelect(breakListSelect, msg.data.breakLists, msg.data.activeBreakListId);
-          populateListSelect(productiveListSelect, msg.data.productiveLists, msg.data.activeProductiveListId);
+          populateListSelect(listSelect, msg.data.lists, msg.data.activeListId);
         }
       };
       ws.onclose = () => {

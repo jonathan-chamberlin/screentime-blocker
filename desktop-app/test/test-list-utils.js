@@ -1,148 +1,155 @@
 /**
- * Tests for src/shared/list-utils.js — pure list helper functions.
+ * Tests for src/shared/list-utils.js — pure unified list helper functions.
  */
 
 import { describe, it, expect } from 'vitest';
 import {
-  getActiveBreakList, getActiveProductiveList,
-  getBlockedSites, getAllowedPaths, getBlockingMode,
-  getProductiveSites, getProductiveApps,
-  createBreakList, createProductiveList,
+  getActiveList, getBlockedSites, getBlockedApps,
+  getAllowedPaths, getBlockingMode, getProductiveMode,
+  getProductiveSites, getProductiveApps, createList,
 } from '../src/shared/list-utils.js';
 
-const BREAK_LISTS = [
+const LISTS = [
   {
-    id: 'bl-1', name: 'Social Media', isActive: true, mode: 'manual',
-    sites: ['youtube.com', 'reddit.com'], apps: ['discord.exe'],
-    allowedPaths: ['youtube.com/veritasium'], schedule: null,
+    id: 'list-1', name: 'Social Media', mode: 'manual',
+    blocked: {
+      sites: ['youtube.com', 'reddit.com'],
+      apps: ['discord.exe'],
+      allowedPaths: ['youtube.com/veritasium'],
+    },
+    productive: {
+      mode: 'all-except-blocked',
+      sites: ['github.com', 'docs.google.com'],
+      apps: ['Code.exe'],
+    },
+    schedule: null,
   },
   {
-    id: 'bl-2', name: 'Gaming', isActive: false, mode: 'always-on',
-    sites: ['twitch.tv'], apps: ['steam.exe'],
-    allowedPaths: [], schedule: null,
+    id: 'list-2', name: 'Gaming', mode: 'always-on',
+    blocked: {
+      sites: ['twitch.tv'],
+      apps: ['steam.exe'],
+      allowedPaths: [],
+    },
+    productive: {
+      mode: 'whitelist',
+      sites: ['coursera.org'],
+      apps: ['Notion.exe'],
+    },
+    schedule: null,
   },
 ];
 
-const PRODUCTIVE_LISTS = [
-  {
-    id: 'pl-1', name: 'Work', isActive: true,
-    sites: ['github.com', 'docs.google.com'], apps: ['Code.exe'],
-  },
-  {
-    id: 'pl-2', name: 'Study', isActive: false,
-    sites: ['coursera.org'], apps: ['Notion.exe'],
-  },
-];
-
-describe('list-utils: getActiveBreakList', () => {
+describe('list-utils: getActiveList', () => {
   it('returns the list matching the active ID', () => {
-    const list = getActiveBreakList(BREAK_LISTS, 'bl-2');
+    const list = getActiveList(LISTS, 'list-2');
     expect(list.name).toBe('Gaming');
   });
 
   it('falls back to the first list if ID not found', () => {
-    const list = getActiveBreakList(BREAK_LISTS, 'nonexistent');
+    const list = getActiveList(LISTS, 'nonexistent');
     expect(list.name).toBe('Social Media');
   });
 
   it('returns null for empty array', () => {
-    expect(getActiveBreakList([], 'bl-1')).toBeNull();
-  });
-});
-
-describe('list-utils: getActiveProductiveList', () => {
-  it('returns the list matching the active ID', () => {
-    const list = getActiveProductiveList(PRODUCTIVE_LISTS, 'pl-2');
-    expect(list.name).toBe('Study');
-  });
-
-  it('falls back to the first list if ID not found', () => {
-    const list = getActiveProductiveList(PRODUCTIVE_LISTS, 'nonexistent');
-    expect(list.name).toBe('Work');
+    expect(getActiveList([], 'list-1')).toBeNull();
   });
 });
 
 describe('list-utils: getBlockedSites', () => {
-  it('returns sites from the active break list', () => {
-    const sites = getBlockedSites(BREAK_LISTS, 'bl-1');
+  it('returns blocked sites from the active list', () => {
+    const sites = getBlockedSites(LISTS, 'list-1');
     expect(sites).toEqual(['youtube.com', 'reddit.com']);
   });
 
   it('returns different sites for different active ID', () => {
-    const sites = getBlockedSites(BREAK_LISTS, 'bl-2');
+    const sites = getBlockedSites(LISTS, 'list-2');
     expect(sites).toEqual(['twitch.tv']);
   });
 
   it('returns empty array for empty lists', () => {
-    expect(getBlockedSites([], 'bl-1')).toEqual([]);
+    expect(getBlockedSites([], 'list-1')).toEqual([]);
+  });
+});
+
+describe('list-utils: getBlockedApps', () => {
+  it('returns blocked apps from the active list', () => {
+    expect(getBlockedApps(LISTS, 'list-1')).toEqual(['discord.exe']);
+    expect(getBlockedApps(LISTS, 'list-2')).toEqual(['steam.exe']);
+  });
+
+  it('returns empty array for empty lists', () => {
+    expect(getBlockedApps([], 'list-1')).toEqual([]);
   });
 });
 
 describe('list-utils: getAllowedPaths', () => {
-  it('returns allowed paths from the active break list', () => {
-    const paths = getAllowedPaths(BREAK_LISTS, 'bl-1');
+  it('returns allowed paths from the active list', () => {
+    const paths = getAllowedPaths(LISTS, 'list-1');
     expect(paths).toEqual(['youtube.com/veritasium']);
   });
 
   it('returns empty for list with no allowed paths', () => {
-    const paths = getAllowedPaths(BREAK_LISTS, 'bl-2');
+    const paths = getAllowedPaths(LISTS, 'list-2');
     expect(paths).toEqual([]);
   });
 });
 
 describe('list-utils: getBlockingMode', () => {
-  it('returns mode from the active break list', () => {
-    expect(getBlockingMode(BREAK_LISTS, 'bl-1')).toBe('manual');
-    expect(getBlockingMode(BREAK_LISTS, 'bl-2')).toBe('always-on');
+  it('returns mode from the active list', () => {
+    expect(getBlockingMode(LISTS, 'list-1')).toBe('manual');
+    expect(getBlockingMode(LISTS, 'list-2')).toBe('always-on');
+  });
+});
+
+describe('list-utils: getProductiveMode', () => {
+  it('returns productive mode from the active list', () => {
+    expect(getProductiveMode(LISTS, 'list-1')).toBe('all-except-blocked');
+    expect(getProductiveMode(LISTS, 'list-2')).toBe('whitelist');
+  });
+
+  it('returns default for empty lists', () => {
+    expect(getProductiveMode([], 'list-1')).toBe('all-except-blocked');
   });
 });
 
 describe('list-utils: getProductiveSites', () => {
-  it('returns sites from the active productive list', () => {
-    const sites = getProductiveSites(PRODUCTIVE_LISTS, 'pl-1');
+  it('returns productive sites from the active list', () => {
+    const sites = getProductiveSites(LISTS, 'list-1');
     expect(sites).toEqual(['github.com', 'docs.google.com']);
   });
 
   it('returns different sites for different active ID', () => {
-    const sites = getProductiveSites(PRODUCTIVE_LISTS, 'pl-2');
+    const sites = getProductiveSites(LISTS, 'list-2');
     expect(sites).toEqual(['coursera.org']);
   });
 });
 
 describe('list-utils: getProductiveApps', () => {
-  it('returns apps from the active productive list', () => {
-    expect(getProductiveApps(PRODUCTIVE_LISTS, 'pl-1')).toEqual(['Code.exe']);
-    expect(getProductiveApps(PRODUCTIVE_LISTS, 'pl-2')).toEqual(['Notion.exe']);
+  it('returns productive apps from the active list', () => {
+    expect(getProductiveApps(LISTS, 'list-1')).toEqual(['Code.exe']);
+    expect(getProductiveApps(LISTS, 'list-2')).toEqual(['Notion.exe']);
   });
 });
 
-describe('list-utils: createBreakList', () => {
-  it('returns a valid break list shape', () => {
-    const list = createBreakList('Test List');
+describe('list-utils: createList', () => {
+  it('returns a valid unified list shape', () => {
+    const list = createList('Test List');
     expect(list.name).toBe('Test List');
     expect(list.id).toBeTruthy();
-    expect(list.isActive).toBe(false);
     expect(list.mode).toBe('manual');
-    expect(list.sites).toEqual([]);
-    expect(list.apps).toEqual([]);
-    expect(list.allowedPaths).toEqual([]);
+    expect(list.blocked.sites).toEqual([]);
+    expect(list.blocked.apps).toEqual([]);
+    expect(list.blocked.allowedPaths).toEqual([]);
+    expect(list.productive.mode).toBe('all-except-blocked');
+    expect(list.productive.sites).toEqual([]);
+    expect(list.productive.apps).toEqual([]);
     expect(list.schedule).toBeNull();
   });
 
   it('generates unique IDs', () => {
-    const a = createBreakList('A');
-    const b = createBreakList('B');
+    const a = createList('A');
+    const b = createList('B');
     expect(a.id).not.toBe(b.id);
-  });
-});
-
-describe('list-utils: createProductiveList', () => {
-  it('returns a valid productive list shape', () => {
-    const list = createProductiveList('Work');
-    expect(list.name).toBe('Work');
-    expect(list.id).toBeTruthy();
-    expect(list.isActive).toBe(false);
-    expect(list.sites).toEqual([]);
-    expect(list.apps).toEqual([]);
   });
 });

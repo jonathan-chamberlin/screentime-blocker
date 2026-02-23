@@ -1,7 +1,7 @@
 /**
  * Tests for settings API endpoints (GET/PUT /api/settings).
  * Verifies settings retrieval, partial updates, persistence,
- * live engine config propagation, and multi-list support.
+ * live engine config propagation, and unified list support.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -55,7 +55,7 @@ afterAll(async () => {
 });
 
 describe('settings API: GET /api/settings', () => {
-  it('returns full settings shape including list fields', async () => {
+  it('returns full settings shape including unified list fields', async () => {
     const data = await getSettings();
 
     expect(data).toHaveProperty('workMinutes');
@@ -63,12 +63,8 @@ describe('settings API: GET /api/settings', () => {
     expect(data).toHaveProperty('strictMode');
     expect(data).toHaveProperty('blockTaskManager');
     expect(data).toHaveProperty('idleTimeoutSeconds');
-    expect(data).toHaveProperty('productiveMode');
-    expect(data).toHaveProperty('breakLists');
-    expect(data).toHaveProperty('productiveLists');
-    expect(data).toHaveProperty('activeBreakListId');
-    expect(data).toHaveProperty('activeProductiveListId');
-    expect(data).toHaveProperty('blockedApps');
+    expect(data).toHaveProperty('lists');
+    expect(data).toHaveProperty('activeListId');
     expect(data).toHaveProperty('nuclearBlockData');
   });
 
@@ -79,19 +75,18 @@ describe('settings API: GET /api/settings', () => {
     expect(data).not.toHaveProperty('streakData');
   });
 
-  it('returns default break list with isActive field', async () => {
+  it('returns default list with unified shape', async () => {
     const data = await getSettings();
-    expect(data.breakLists.length).toBeGreaterThan(0);
-    expect(data.breakLists[0]).toHaveProperty('isActive');
-    expect(data.breakLists[0]).toHaveProperty('sites');
-    expect(data.breakLists[0]).toHaveProperty('allowedPaths');
-  });
-
-  it('returns default productive list', async () => {
-    const data = await getSettings();
-    expect(data.productiveLists.length).toBeGreaterThan(0);
-    expect(data.productiveLists[0]).toHaveProperty('sites');
-    expect(data.productiveLists[0]).toHaveProperty('apps');
+    expect(data.lists.length).toBeGreaterThan(0);
+    const list = data.lists[0];
+    expect(list).toHaveProperty('blocked');
+    expect(list).toHaveProperty('productive');
+    expect(list.blocked).toHaveProperty('sites');
+    expect(list.blocked).toHaveProperty('apps');
+    expect(list.blocked).toHaveProperty('allowedPaths');
+    expect(list.productive).toHaveProperty('mode');
+    expect(list.productive).toHaveProperty('sites');
+    expect(list.productive).toHaveProperty('apps');
   });
 });
 
@@ -142,32 +137,33 @@ describe('settings API: PUT /api/settings', () => {
     const text = await res.text();
     expect(text).toContain('Settings');
     expect(text).toContain('Work Duration');
-    expect(text).toContain('What is Distracting');
-    expect(text).toContain('What is Productive');
-    expect(text).toContain('New Block List');
-    expect(text).toContain('New Productive List');
+    expect(text).toContain('What to Block');
+    expect(text).toContain('What Counts as Productive');
+    expect(text).toContain('New List');
   });
 });
 
-describe('settings API: multi-list support', () => {
-  it('switching active break list persists', async () => {
-    // Add a second break list
+describe('settings API: unified list support', () => {
+  it('switching active list persists', async () => {
+    // Add a second list
     const data = await getSettings();
     const newList = {
-      id: 'test-bl-2', name: 'Gaming', isActive: false, mode: 'manual',
-      sites: ['twitch.tv'], apps: [], allowedPaths: [], schedule: null,
+      id: 'test-list-2', name: 'Gaming', mode: 'manual',
+      blocked: { sites: ['twitch.tv'], apps: [], allowedPaths: [] },
+      productive: { mode: 'all-except-blocked', sites: [], apps: [] },
+      schedule: null,
     };
-    data.breakLists.push(newList);
-    await putSettings({ breakLists: data.breakLists });
+    data.lists.push(newList);
+    await putSettings({ lists: data.lists });
 
     // Switch active list
-    await putSettings({ activeBreakListId: 'test-bl-2' });
+    await putSettings({ activeListId: 'test-list-2' });
     const updated = await getSettings();
-    expect(updated.activeBreakListId).toBe('test-bl-2');
+    expect(updated.activeListId).toBe('test-list-2');
   });
 
-  it('switching active break list updates engine blocked sites', async () => {
-    // Engine should now be using twitch.tv from 'test-bl-2'
+  it('switching active list updates engine blocked sites', async () => {
+    // Engine should now be using twitch.tv from 'test-list-2'
     engine.reportSiteVisit({
       url: 'https://twitch.tv/', domain: 'twitch.tv', path: '/', timestamp: Date.now(),
     });
@@ -175,51 +171,38 @@ describe('settings API: multi-list support', () => {
     expect(status.isOnBlockedSite).toBe(true);
   });
 
-  it('switching active productive list persists', async () => {
-    const data = await getSettings();
-    const newList = {
-      id: 'test-pl-2', name: 'Study', isActive: false,
-      sites: ['coursera.org'], apps: ['Notion.exe'],
-    };
-    data.productiveLists.push(newList);
-    await putSettings({ productiveLists: data.productiveLists });
-
-    await putSettings({ activeProductiveListId: 'test-pl-2' });
-    const updated = await getSettings();
-    expect(updated.activeProductiveListId).toBe('test-pl-2');
-  });
-
-  it('creating a new break list persists', async () => {
+  it('creating a new list persists', async () => {
     const before = await getSettings();
-    const countBefore = before.breakLists.length;
+    const countBefore = before.lists.length;
 
-    before.breakLists.push({
-      id: 'test-bl-3', name: 'New List', isActive: false, mode: 'off',
-      sites: [], apps: [], allowedPaths: [], schedule: null,
+    before.lists.push({
+      id: 'test-list-3', name: 'New List', mode: 'off',
+      blocked: { sites: [], apps: [], allowedPaths: [] },
+      productive: { mode: 'all-except-blocked', sites: [], apps: [] },
+      schedule: null,
     });
-    await putSettings({ breakLists: before.breakLists });
+    await putSettings({ lists: before.lists });
 
     const after = await getSettings();
-    expect(after.breakLists.length).toBe(countBefore + 1);
-    expect(after.breakLists.find(l => l.id === 'test-bl-3')).toBeTruthy();
+    expect(after.lists.length).toBe(countBefore + 1);
+    expect(after.lists.find(l => l.id === 'test-list-3')).toBeTruthy();
   });
 
-  it('deleting a break list persists', async () => {
+  it('deleting a list persists', async () => {
     const before = await getSettings();
-    const filtered = before.breakLists.filter(l => l.id !== 'test-bl-3');
-    await putSettings({ breakLists: filtered });
+    const filtered = before.lists.filter(l => l.id !== 'test-list-3');
+    await putSettings({ lists: filtered });
 
     const after = await getSettings();
-    expect(after.breakLists.find(l => l.id === 'test-bl-3')).toBeFalsy();
+    expect(after.lists.find(l => l.id === 'test-list-3')).toBeFalsy();
   });
 
   it('active list ID persists across reads', async () => {
-    await putSettings({ activeBreakListId: 'default' });
+    await putSettings({ activeListId: 'default' });
     const d1 = await getSettings();
-    expect(d1.activeBreakListId).toBe('default');
+    expect(d1.activeListId).toBe('default');
 
-    // Read again to confirm persistence
     const d2 = await getSettings();
-    expect(d2.activeBreakListId).toBe('default');
+    expect(d2.activeListId).toBe('default');
   });
 });
