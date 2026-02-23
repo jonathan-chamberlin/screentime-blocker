@@ -21,6 +21,8 @@ import {
   DEFAULT_PRODUCTIVE_MODE,
   DEFAULT_LIST_ID,
   DEFAULT_LIST_NAME,
+  DEFAULT_LIST_2_ID,
+  DEFAULT_LIST_2_NAME,
   BLOCKING_MODES,
 } from './shared/constants.js';
 
@@ -70,6 +72,22 @@ function getDefaults() {
         },
         productive: {
           mode: DEFAULT_PRODUCTIVE_MODE,
+          sites: [],
+          apps: [],
+        },
+        schedule: null,
+      },
+      {
+        id: DEFAULT_LIST_2_ID,
+        name: DEFAULT_LIST_2_NAME,
+        mode: BLOCKING_MODES.MANUAL,
+        blocked: {
+          sites: [...DEFAULT_BLOCKED_SITES],
+          apps: [...DEFAULT_BLOCKED_APPS],
+          allowedPaths: [...DEFAULT_ALLOWED_PATHS],
+        },
+        productive: {
+          mode: 'whitelist',
           sites: [...DEFAULT_PRODUCTIVE_SITES],
           apps: [...DEFAULT_PRODUCTIVE_APPS],
         },

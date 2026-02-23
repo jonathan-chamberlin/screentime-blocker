@@ -26,6 +26,17 @@ export const DEFAULT_IDLE_TIMEOUT_SECONDS = 180;
 export const DEFAULT_PRODUCTIVE_MODE = 'all-except-blocked';
 export const DEFAULT_LIST_NAME = 'Default List';
 export const DEFAULT_LIST_ID = 'default';
+export const DEFAULT_LIST_2_NAME = 'Default List 2';
+export const DEFAULT_LIST_2_ID = 'default-2';
+
+// --- Browser Detection ---
+// Process names (lowercase, without .exe) recognized as browsers.
+// When the foreground app is a browser, Current Focus shows "Browser > domain".
+export const BROWSER_PROCESS_NAMES = [
+  'chrome', 'msedge', 'firefox', 'comet', 'sidekick',
+  'brave', 'opera', 'vivaldi', 'arc', 'waterfox', 'librewolf',
+  'chromium', 'iridium', 'thorium', 'zen',
+];
 
 // --- Blocking Modes ---
 export const BLOCKING_MODES = /** @type {const} */ ({

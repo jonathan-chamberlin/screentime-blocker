@@ -195,6 +195,24 @@
     const currentFocusEl = document.getElementById('currentFocusEl');
     const blockedAttemptsEl = document.getElementById('blockedAttemptsEl');
 
+    /* Known browser process names (lowercase, no .exe) */
+    const BROWSERS = new Set([
+      'chrome', 'msedge', 'firefox', 'comet', 'sidekick',
+      'brave', 'opera', 'vivaldi', 'arc', 'waterfox', 'librewolf',
+      'chromium', 'iridium', 'thorium', 'zen',
+    ]);
+
+    /** Format the Current Focus label from app + site state */
+    function formatFocus(state) {
+      const app = state.currentApp || '';
+      const site = state.currentSite || '';
+      const appLower = app.toLowerCase().replace('.exe', '');
+      if (app && BROWSERS.has(appLower) && site) {
+        return `${app} \u203a ${site}`;
+      }
+      return site || app || '\u2014';
+    }
+
     /** Format ms to MM:SS or H:MM:SS */
     function formatTimer(ms) {
       const totalSeconds = Math.floor(ms / 1000);
@@ -221,7 +239,7 @@
 
       const isProductive = state.isOnProductiveSite || state.isOnProductiveApp;
       focusBox.className = 'focus-box ' + (isProductive ? 'productive' : 'normal');
-      currentFocusEl.textContent = state.currentSite || state.currentApp || '—';
+      currentFocusEl.textContent = formatFocus(state);
 
       blockedAttemptsEl.textContent = state.blockedAttempts;
     }

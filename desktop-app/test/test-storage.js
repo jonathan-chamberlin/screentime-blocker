@@ -44,12 +44,18 @@ describe('storage', () => {
     expect(data.strictMode).toBe(false);
     expect(data.blockTaskManager).toBe(false);
     expect(data.idleTimeoutSeconds).toBe(180);
-    expect(data.lists).toHaveLength(1);
+    expect(data.lists).toHaveLength(2);
+    // List 1: blocked only, no productive items
     expect(data.lists[0].blocked.sites).toContain('youtube.com');
     expect(data.lists[0].blocked.apps).toContain('steam.exe');
     expect(data.lists[0].productive.mode).toBe('all-except-blocked');
-    expect(data.lists[0].productive.sites).toContain('github.com');
-    expect(data.lists[0].productive.apps).toContain('Code.exe');
+    expect(data.lists[0].productive.sites).toEqual([]);
+    expect(data.lists[0].productive.apps).toEqual([]);
+    // List 2: blocked + productive items
+    expect(data.lists[1].blocked.sites).toContain('youtube.com');
+    expect(data.lists[1].productive.mode).toBe('whitelist');
+    expect(data.lists[1].productive.sites).toContain('github.com');
+    expect(data.lists[1].productive.apps).toContain('Code.exe');
     // File should now exist on disk
     expect(existsSync(dataPath)).toBe(true);
   });
@@ -73,7 +79,7 @@ describe('storage', () => {
     // Other defaults preserved
     expect(data.rewardMinutes).toBe(10);
     expect(data.idleTimeoutSeconds).toBe(180);
-    expect(data.lists).toHaveLength(1);
+    expect(data.lists).toHaveLength(2);
   });
 
   it('get() retrieves a single key', async () => {
@@ -101,6 +107,6 @@ describe('storage', () => {
     // File should still be valid JSON
     const data = await getAll();
     expect(typeof data.workMinutes).toBe('number');
-    expect(data.lists).toHaveLength(1);
+    expect(data.lists).toHaveLength(2);
   });
 });
