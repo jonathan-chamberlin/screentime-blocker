@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Brainrot Blocker</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface-hover: #232340;
+      --border: #2a2a45;
+      --text: #e0e0ef;
+      --text-muted: #8888a8;
+      --accent: #6c5ce7;
+      --accent-hover: #7d6ff0;
+      --green: #00c853;
+      --red: #e94560;
+      --yellow: #ffd600;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 520px; margin: 0 auto; }
+
+    /* Header */
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .header h1 { font-size: 22px; font-weight: 700; }
+    .back-link {
+      color: var(--accent); text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .back-link:hover { background: var(--surface-hover); }
+
+    /* Save indicator */
+    .save-indicator {
+      position: fixed; top: 16px; right: 16px;
+      background: var(--green); color: #000; font-size: 13px; font-weight: 600;
+      padding: 6px 14px; border-radius: 20px;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .save-indicator.visible { opacity: 1; }
+
+    /* Section */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px; cursor: pointer;
+      user-select: none;
+    }
+    .section-header:hover { background: var(--surface-hover); }
+    .section-title { font-size: 15px; font-weight: 600; }
+    .section-arrow {
+      font-size: 12px; color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    .section.open .section-arrow { transform: rotate(90deg); }
+    .section-body {
+      display: none; padding: 0 16px 16px;
+    }
+    .section.open .section-body { display: block; }
+
+    /* Form rows */
+    .form-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-row:last-child { border-bottom: none; }
+    .form-row .label { font-size: 14px; }
+    .form-row .desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Select dropdowns */
+    select {
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 6px 10px; font-size: 13px;
+      cursor: pointer; min-width: 100px;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    /* Toggle switch */
+    .switch {
+      position: relative; width: 44px; height: 24px;
+      background: var(--border); border-radius: 12px; cursor: pointer;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .switch.on { background: var(--accent); }
+    .switch .knob {
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: white; transition: transform 0.2s;
+    }
+    .switch.on .knob { transform: translateX(20px); }
+
+    /* Tag list (for sites/apps) */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 10px; font-size: 13px;
+    }
+    .tag .remove {
+      cursor: pointer; color: var(--red); font-weight: bold;
+      margin-left: 4px; font-size: 14px; line-height: 1;
+    }
+    .tag .remove:hover { color: #ff6b81; }
+
+    /* Add input row */
+    .add-row { display: flex; gap: 8px; margin-top: 10px; }
+    .add-row input {
+      flex: 1; background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 6px 10px; font-size: 13px;
+    }
+    .add-row input:focus { outline: none; border-color: var(--accent); }
+    .add-row button {
+      background: var(--accent); color: white; border: none;
+      border-radius: 6px; padding: 6px 14px; font-size: 13px;
+      cursor: pointer; font-weight: 600;
+    }
+    .add-row button:hover { background: var(--accent-hover); }
+
+    /* Productive mode toggle */
+    .mode-toggle {
+      display: flex; border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border); margin-top: 8px;
+    }
+    .mode-toggle button {
+      flex: 1; padding: 8px 12px; font-size: 13px;
+      background: var(--bg); color: var(--text-muted);
+      border: none; cursor: pointer; font-weight: 500;
+    }
+    .mode-toggle button.active {
+      background: var(--accent); color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="/" class="back-link">← Dashboard</a>
+      <h1>Settings</h1>
+    </div>
+
+    <div class="save-indicator" id="saveIndicator">Saved</div>
+
+    <!-- Sessions -->
+    <div class="section open" id="sec-sessions">
+      <div class="section-header" onclick="toggleSection('sec-sessions')">
+        <span class="section-title">Sessions</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div>
+            <div class="label">Work Duration</div>
+            <div class="desc">How long each focus session lasts</div>
+          </div>
+          <select id="workMinutes" data-key="workMinutes"></select>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="label">Break Duration</div>
+            <div class="desc">Reward time earned per focus session</div>
+          </div>
+          <select id="rewardMinutes" data-key="rewardMinutes"></select>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="label">Strict Mode</div>
+            <div class="desc">Must earn reward before ending session</div>
+          </div>
+          <div class="switch" id="toggle-strictMode" data-key="strictMode">
+            <div class="knob"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="label">Block Task Manager</div>
+            <div class="desc">Kill Task Manager during active sessions</div>
+          </div>
+          <div class="switch" id="toggle-blockTaskManager" data-key="blockTaskManager">
+            <div class="knob"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Idle Timeout -->
+    <div class="section" id="sec-idle">
+      <div class="section-header" onclick="toggleSection('sec-idle')">
+        <span class="section-title">Idle Timeout</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div>
+            <div class="label">Pause timers after</div>
+            <div class="desc">Timers pause when you stop using the computer</div>
+          </div>
+          <select id="idleTimeoutSeconds" data-key="idleTimeoutSeconds"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- What is Distracting -->
+    <div class="section" id="sec-distracting">
+      <div class="section-header" onclick="toggleSection('sec-distracting')">
+        <span class="section-title">What is Distracting</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="label" style="margin-bottom: 4px;">Blocked Sites</div>
+        <div class="desc" style="margin-bottom: 8px;">Sites blocked during focus sessions</div>
+        <div class="tag-list" id="blockedSitesTags"></div>
+        <div class="add-row">
+          <input type="text" id="addBlockedSite" placeholder="e.g. tiktok.com">
+          <button onclick="addToList('blockedSites', 'addBlockedSite')">Add</button>
+        </div>
+
+        <div class="label" style="margin-top: 16px; margin-bottom: 4px;">Allowed Paths</div>
+        <div class="desc" style="margin-bottom: 8px;">Exceptions — these paths bypass blocking</div>
+        <div class="tag-list" id="allowedPathsTags"></div>
+        <div class="add-row">
+          <input type="text" id="addAllowedPath" placeholder="e.g. youtube.com/veritasium">
+          <button onclick="addToList('allowedPaths', 'addAllowedPath')">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- What is Productive -->
+    <div class="section" id="sec-productive">
+      <div class="section-header" onclick="toggleSection('sec-productive')">
+        <span class="section-title">What is Productive</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row" style="flex-direction: column; align-items: stretch;">
+          <div class="label" style="margin-bottom: 4px;">Productive Mode</div>
+          <div class="mode-toggle" id="productiveModeToggle">
+            <button data-mode="all-except-blocked" onclick="setProductiveMode('all-except-blocked')">All except blocked</button>
+            <button data-mode="whitelist" onclick="setProductiveMode('whitelist')">Whitelist only</button>
+          </div>
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="label" style="margin-bottom: 4px;">Productive Sites</div>
+          <div class="desc" style="margin-bottom: 8px;">Sites that count as productive (whitelist mode)</div>
+          <div class="tag-list" id="productiveSitesTags"></div>
+          <div class="add-row">
+            <input type="text" id="addProductiveSite" placeholder="e.g. stackoverflow.com">
+            <button onclick="addToList('productiveSites', 'addProductiveSite')">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop App Tracking -->
+    <div class="section" id="sec-apps">
+      <div class="section-header" onclick="toggleSection('sec-apps')">
+        <span class="section-title">Desktop App Tracking</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="label" style="margin-bottom: 4px;">Productive Apps</div>
+        <div class="desc" style="margin-bottom: 8px;">Apps that count as productive</div>
+        <div class="tag-list" id="productiveAppsTags"></div>
+        <div class="add-row">
+          <input type="text" id="addProductiveApp" placeholder="e.g. Code.exe">
+          <button onclick="addToList('productiveApps', 'addProductiveApp')">Add</button>
+        </div>
+
+        <div class="label" style="margin-top: 16px; margin-bottom: 4px;">Blocked Apps</div>
+        <div class="desc" style="margin-bottom: 8px;">Apps killed during focus sessions</div>
+        <div class="tag-list" id="blockedAppsTags"></div>
+        <div class="add-row">
+          <input type="text" id="addBlockedApp" placeholder="e.g. steam.exe">
+          <button onclick="addToList('blockedApps', 'addBlockedApp')">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nuclear Block -->
+    <div class="section" id="sec-nuclear">
+      <div class="section-header" onclick="toggleSection('sec-nuclear')">
+        <span class="section-title">Nuclear Block</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="desc" style="margin-bottom: 8px;">Sites blocked permanently with cooldown-based unblock process</div>
+        <div class="tag-list" id="nuclearSitesTags"></div>
+        <div class="add-row">
+          <input type="text" id="addNuclearSite" placeholder="e.g. onlyfans.com">
+          <button onclick="addNuclearSite()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced -->
+    <div class="section" id="sec-advanced">
+      <div class="section-header" onclick="toggleSection('sec-advanced')">
+        <span class="section-title">Advanced</span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div>
+            <div class="label">Reset All Settings</div>
+            <div class="desc">Restore factory defaults (keeps nuclear blocks)</div>
+          </div>
+          <button class="btn btn-danger" style="padding: 6px 14px; font-size: 13px;" onclick="resetSettings()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================================================
+     * Dropdown option definitions
+     * Test values (5s, 10s) are available for development.
+     * ================================================ */
+    const WORK_OPTIONS = [
+      { value: 0.083, label: '5s (test)' },
+      { value: 0.167, label: '10s (test)' },
+      { value: 1, label: '1 min' },
+      { value: 5, label: '5 min' },
+      { value: 10, label: '10 min' },
+      { value: 15, label: '15 min' },
+      { value: 25, label: '25 min' },
+      { value: 50, label: '50 min' },
+      { value: 90, label: '90 min' },
+      { value: 120, label: '2 hours' },
+      { value: 180, label: '3 hours' },
+    ];
+
+    const REWARD_OPTIONS = [
+      { value: 0.083, label: '5s (test)' },
+      { value: 0.167, label: '10s (test)' },
+      { value: 1, label: '1 min' },
+      { value: 5, label: '5 min' },
+      { value: 10, label: '10 min' },
+      { value: 15, label: '15 min' },
+      { value: 30, label: '30 min' },
+      { value: 60, label: '60 min' },
+    ];
+
+    const IDLE_OPTIONS = [
+      { value: 5, label: '5s (test)' },
+      { value: 10, label: '10 sec' },
+      { value: 30, label: '30 sec' },
+      { value: 60, label: '1 min' },
+      { value: 120, label: '2 min' },
+      { value: 180, label: '3 min' },
+      { value: 300, label: '5 min' },
+    ];
+
+    /* Current settings cache */
+    let settings = {};
+
+    /** Populate a <select> with options */
+    function populateSelect(id, options, currentValue) {
+      const select = document.getElementById(id);
+      select.innerHTML = '';
+      for (const opt of options) {
+        const el = document.createElement('option');
+        el.value = opt.value;
+        el.textContent = opt.label;
+        if (opt.value === currentValue) el.selected = true;
+        select.appendChild(el);
+      }
+    }
+
+    /** Show "Saved" indicator briefly */
+    function flashSaved() {
+      const el = document.getElementById('saveIndicator');
+      el.classList.add('visible');
+      setTimeout(() => el.classList.remove('visible'), 1200);
+    }
+
+    /** Save partial settings to API */
+    async function save(updates) {
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates),
+        });
+        settings = await res.json();
+        flashSaved();
+      } catch (e) {
+        console.error('Save failed:', e);
+      }
+    }
+
+    /** Toggle section expand/collapse */
+    function toggleSection(id) {
+      document.getElementById(id).classList.toggle('open');
+    }
+
+    /** Setup toggle switch */
+    function setupToggle(id) {
+      const el = document.getElementById(id);
+      el.addEventListener('click', () => {
+        const key = el.dataset.key;
+        const isOn = el.classList.contains('on');
+        el.classList.toggle('on', !isOn);
+        save({ [key]: !isOn });
+      });
+    }
+
+    /** Setup select dropdown with auto-save */
+    function setupSelect(id, parseValue) {
+      const el = document.getElementById(id);
+      el.addEventListener('change', () => {
+        const key = el.dataset.key;
+        save({ [key]: parseValue(el.value) });
+      });
+    }
+
+    /** Render a tag list from an array */
+    function renderTags(containerId, items, listKey, subKey) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      for (let i = 0; i < items.length; i++) {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.innerHTML = `${items[i]} <span class="remove" onclick="removeFromList('${listKey}', ${i}, '${subKey || ''}')">&times;</span>`;
+        container.appendChild(tag);
+      }
+    }
+
+    /** Add an item to a list field */
+    function addToList(listKey, inputId) {
+      const input = document.getElementById(inputId);
+      const value = input.value.trim().toLowerCase();
+      if (!value) return;
+      input.value = '';
+
+      if (listKey === 'blockedSites' || listKey === 'allowedPaths') {
+        const breakList = settings.breakLists?.[0];
+        if (!breakList) return;
+        const arr = listKey === 'blockedSites' ? breakList.sites : breakList.allowedPaths;
+        if (arr.includes(value)) return;
+        arr.push(value);
+        save({ breakLists: settings.breakLists });
+      } else {
+        const arr = settings[listKey] || [];
+        if (arr.includes(value)) return;
+        arr.push(value);
+        save({ [listKey]: arr });
+      }
+      renderAllTags();
+    }
+
+    /** Remove an item from a list field */
+    function removeFromList(listKey, index, subKey) {
+      if (listKey === 'blockedSites' || listKey === 'allowedPaths') {
+        const breakList = settings.breakLists?.[0];
+        if (!breakList) return;
+        const arr = listKey === 'blockedSites' ? breakList.sites : breakList.allowedPaths;
+        arr.splice(index, 1);
+        save({ breakLists: settings.breakLists });
+      } else {
+        const arr = settings[listKey] || [];
+        arr.splice(index, 1);
+        save({ [listKey]: arr });
+      }
+      renderAllTags();
+    }
+
+    /** Set the productive mode */
+    function setProductiveMode(mode) {
+      save({ productiveMode: mode });
+      updateProductiveModeUI(mode);
+    }
+
+    function updateProductiveModeUI(mode) {
+      const buttons = document.querySelectorAll('#productiveModeToggle button');
+      buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+    }
+
+    /** Add a nuclear site */
+    function addNuclearSite() {
+      const input = document.getElementById('addNuclearSite');
+      const domain = input.value.trim().toLowerCase();
+      if (!domain) return;
+      input.value = '';
+
+      const nuclear = settings.nuclearBlockData || { sites: [] };
+      if (nuclear.sites.some(s => s.domain === domain)) return;
+      nuclear.sites.push({
+        domain,
+        addedAt: Date.now(),
+        cooldown1Ms: 86400000,
+        cooldown2Ms: 64800000,
+        unblockClickedAt: null,
+      });
+      save({ nuclearBlockData: nuclear });
+      renderAllTags();
+    }
+
+    /** Remove a nuclear site */
+    function removeNuclearSite(index) {
+      const nuclear = settings.nuclearBlockData || { sites: [] };
+      nuclear.sites.splice(index, 1);
+      save({ nuclearBlockData: nuclear });
+      renderAllTags();
+    }
+
+    /** Render nuclear site tags */
+    function renderNuclearTags() {
+      const container = document.getElementById('nuclearSitesTags');
+      container.innerHTML = '';
+      const sites = settings.nuclearBlockData?.sites || [];
+      for (let i = 0; i < sites.length; i++) {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.innerHTML = `${sites[i].domain} <span class="remove" onclick="removeNuclearSite(${i})">&times;</span>`;
+        container.appendChild(tag);
+      }
+    }
+
+    /** Render all tag lists */
+    function renderAllTags() {
+      const bl = settings.breakLists?.[0] || { sites: [], allowedPaths: [] };
+      renderTags('blockedSitesTags', bl.sites || [], 'blockedSites');
+      renderTags('allowedPathsTags', bl.allowedPaths || [], 'allowedPaths');
+      renderTags('productiveSitesTags', settings.productiveSites || [], 'productiveSites');
+      renderTags('productiveAppsTags', settings.productiveApps || [], 'productiveApps');
+      renderTags('blockedAppsTags', settings.blockedApps || [], 'blockedApps');
+      renderNuclearTags();
+    }
+
+    /** Reset to defaults */
+    async function resetSettings() {
+      if (!confirm('Reset all settings to defaults? Nuclear blocks will be preserved.')) return;
+      try {
+        const res = await fetch('/api/settings');
+        const current = await res.json();
+        const nuclearBackup = current.nuclearBlockData;
+        // Reset by saving defaults over everything
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workMinutes: 50,
+            rewardMinutes: 10,
+            strictMode: false,
+            blockTaskManager: false,
+            idleTimeoutSeconds: 180,
+            productiveMode: 'all-except-blocked',
+            nuclearBlockData: nuclearBackup,
+          }),
+        });
+        await loadSettings();
+        flashSaved();
+      } catch (e) {
+        console.error('Reset failed:', e);
+      }
+    }
+
+    /** Load all settings and render UI */
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        settings = await res.json();
+
+        populateSelect('workMinutes', WORK_OPTIONS, settings.workMinutes);
+        populateSelect('rewardMinutes', REWARD_OPTIONS, settings.rewardMinutes);
+        populateSelect('idleTimeoutSeconds', IDLE_OPTIONS, settings.idleTimeoutSeconds);
+
+        const strictEl = document.getElementById('toggle-strictMode');
+        strictEl.classList.toggle('on', settings.strictMode);
+        const taskMgrEl = document.getElementById('toggle-blockTaskManager');
+        taskMgrEl.classList.toggle('on', settings.blockTaskManager);
+
+        updateProductiveModeUI(settings.productiveMode);
+        renderAllTags();
+      } catch (e) {
+        console.error('Failed to load settings:', e);
+      }
+    }
+
+    /* --- Wire up controls --- */
+    setupToggle('toggle-strictMode');
+    setupToggle('toggle-blockTaskManager');
+    setupSelect('workMinutes', parseFloat);
+    setupSelect('rewardMinutes', parseFloat);
+    setupSelect('idleTimeoutSeconds', parseInt);
+
+    /* --- Enter key support for add inputs --- */
+    document.querySelectorAll('.add-row input').forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          input.parentElement.querySelector('button').click();
+        }
+      });
+    });
+
+    /* --- WebSocket for live settings sync --- */
+    function connectWS() {
+      const ws = new WebSocket(`ws://${location.host}`);
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'settings-updated') {
+          settings = msg.data;
+          renderAllTags();
+        }
+      };
+      ws.onclose = () => setTimeout(connectWS, 2000);
+    }
+    connectWS();
+
+    /* --- Initial load --- */
+    loadSettings();
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "brainrot-blocker-desktop",
+  "version": "1.0.0",
+  "description": "Brainrot Blocker — standalone Windows desktop app with HTTPS proxy blocking",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "http-mitm-proxy": "^1.1.0",
+    "node-forge": "^1.3.1",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

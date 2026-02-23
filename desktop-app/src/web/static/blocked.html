@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLOCKED</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #1a1a2e;
+      color: white;
+      text-align: center;
+    }
+    .container { max-width: 400px; padding: 20px; }
+    h1 { font-size: 48px; margin-bottom: 10px; }
+    .domain { color: #e94560; font-size: 24px; font-weight: bold; }
+    .message { margin-top: 20px; font-size: 18px; color: #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BLOCKED</h1>
+    <p class="domain" id="domain"></p>
+    <p class="message">Get back to work.</p>
+  </div>
+  <script>
+    const domain = new URLSearchParams(location.search).get('domain');
+    document.getElementById('domain').textContent = domain || 'Unknown site';
+  </script>
+</body>
+</html>
