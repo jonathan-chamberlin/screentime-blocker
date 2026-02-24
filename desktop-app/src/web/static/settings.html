@@ -225,31 +225,7 @@
 
     <div class="save-indicator" id="saveIndicator">Saved</div>
 
-    <!-- Section 1: Sessions -->
-    <div class="section open" id="sec-sessions">
-      <div class="section-header" onclick="toggleSection('sec-sessions')">
-        <span class="section-title">Sessions</span>
-        <span class="section-arrow">&#9654;</span>
-      </div>
-      <div class="section-body">
-        <div class="form-row">
-          <div>
-            <div class="label">Work Duration</div>
-            <div class="desc">How long each focus session lasts</div>
-          </div>
-          <select id="workMinutes" data-key="workMinutes"></select>
-        </div>
-        <div class="form-row">
-          <div>
-            <div class="label">Break Duration</div>
-            <div class="desc">Reward time earned per session</div>
-          </div>
-          <select id="rewardMinutes" data-key="rewardMinutes"></select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: Idle Timeout -->
+    <!-- Section 1: Idle Timeout -->
     <div class="section" id="sec-idle">
       <div class="section-header" onclick="toggleSection('sec-idle')">
         <span class="section-title">Idle Timeout</span>
@@ -278,41 +254,7 @@
       </div>
     </div>
 
-    <!-- Section 4: Block Task Manager -->
-    <div class="section" id="sec-taskmanager">
-      <div class="section-header" onclick="toggleSection('sec-taskmanager')">
-        <span class="section-title">Block Task Manager</span>
-        <span class="section-arrow">&#9654;</span>
-      </div>
-      <div class="section-body">
-        <div class="form-row">
-          <div>
-            <div class="label">Block Task Manager</div>
-            <div class="desc">Prevent opening Task Manager during sessions</div>
-          </div>
-          <div class="switch" id="toggle-blockTaskManager" data-key="blockTaskManager"><div class="knob"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 5: Strict Mode -->
-    <div class="section" id="sec-strict">
-      <div class="section-header" onclick="toggleSection('sec-strict')">
-        <span class="section-title">Strict Mode</span>
-        <span class="section-arrow">&#9654;</span>
-      </div>
-      <div class="section-body">
-        <div class="form-row">
-          <div>
-            <div class="label">Strict Mode</div>
-            <div class="desc">Must earn reward before ending session</div>
-          </div>
-          <div class="switch" id="toggle-strictMode" data-key="strictMode"><div class="knob"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 6: Nuclear Block -->
+    <!-- Section 3: Nuclear Block -->
     <div class="section" id="sec-nuclear">
       <div class="section-header" onclick="toggleSection('sec-nuclear')">
         <span class="section-title">Nuclear Block</span>
@@ -351,17 +293,6 @@
 
   <script>
     /* ===== Dropdown Definitions ===== */
-    const WORK_OPTIONS = [
-      { value: 0.083, label: '5s (test)' }, { value: 0.167, label: '10s (test)' },
-      { value: 1, label: '1 min' }, { value: 5, label: '5 min' }, { value: 10, label: '10 min' },
-      { value: 15, label: '15 min' }, { value: 25, label: '25 min' }, { value: 50, label: '50 min' },
-      { value: 90, label: '90 min' }, { value: 120, label: '2 hours' }, { value: 180, label: '3 hours' },
-    ];
-    const REWARD_OPTIONS = [
-      { value: 0.083, label: '5s (test)' }, { value: 0.167, label: '10s (test)' },
-      { value: 1, label: '1 min' }, { value: 5, label: '5 min' }, { value: 10, label: '10 min' },
-      { value: 15, label: '15 min' }, { value: 30, label: '30 min' }, { value: 60, label: '60 min' },
-    ];
     const IDLE_OPTIONS = [
       { value: 5, label: '5s (test)' }, { value: 10, label: '10 sec' }, { value: 30, label: '30 sec' },
       { value: 60, label: '1 min' }, { value: 120, label: '2 min' }, { value: 180, label: '3 min' },
@@ -448,11 +379,7 @@
       try {
         const res = await fetch('/api/settings');
         settings = await res.json();
-        populateSelect('workMinutes', WORK_OPTIONS, settings.workMinutes);
-        populateSelect('rewardMinutes', REWARD_OPTIONS, settings.rewardMinutes);
         populateSelect('idleTimeoutSeconds', IDLE_OPTIONS, settings.idleTimeoutSeconds);
-        document.getElementById('toggle-strictMode').classList.toggle('on', !!settings.strictMode);
-        document.getElementById('toggle-blockTaskManager').classList.toggle('on', !!settings.blockTaskManager);
         renderAll();
       } catch (e) {
         console.error('Failed to load settings:', e);
@@ -599,14 +526,7 @@
     function renderAll() {
       renderLists();
       renderNuclearBlock();
-      // Sync toggles from settings (handles external WS updates)
-      const sm = document.getElementById('toggle-strictMode');
-      if (sm) sm.classList.toggle('on', !!settings.strictMode);
-      const btm = document.getElementById('toggle-blockTaskManager');
-      if (btm) btm.classList.toggle('on', !!settings.blockTaskManager);
-      // Sync dropdowns
-      populateSelect('workMinutes', WORK_OPTIONS, settings.workMinutes);
-      populateSelect('rewardMinutes', REWARD_OPTIONS, settings.rewardMinutes);
+      // Sync dropdown
       populateSelect('idleTimeoutSeconds', IDLE_OPTIONS, settings.idleTimeoutSeconds);
     }
 
@@ -621,16 +541,26 @@
         const productive = list.productive || {};
         const sitesCount = (blocked.sites || []).length;
         const appsCount = (blocked.apps || []).length;
+        const productiveMode = productive.mode || 'all-except-blocked';
+        const prodSitesCount = (productive.sites || []).length;
+        const prodAppsCount = (productive.apps || []).length;
         const summaryParts = [];
         if (sitesCount > 0) summaryParts.push(`${sitesCount} site${sitesCount !== 1 ? 's' : ''} blocked`);
         if (appsCount > 0) summaryParts.push(`${appsCount} app${appsCount !== 1 ? 's' : ''}`);
+        if (productiveMode === 'all-except-blocked') {
+          summaryParts.push('All sites & apps productive');
+        } else {
+          const prodParts = [];
+          if (prodSitesCount > 0) prodParts.push(`${prodSitesCount} productive site${prodSitesCount !== 1 ? 's' : ''}`);
+          if (prodAppsCount > 0) prodParts.push(`${prodAppsCount} productive app${prodAppsCount !== 1 ? 's' : ''}`);
+          if (prodParts.length > 0) summaryParts.push(...prodParts);
+        }
         const summary = summaryParts.length > 0 ? summaryParts.join(' · ') : 'No items';
 
         const modeOpts = MODE_OPTIONS.map(o =>
           `<option value="${o.value}"${o.value === list.mode ? ' selected' : ''}>${o.label}</option>`
         ).join('');
 
-        const productiveMode = productive.mode || 'all-except-blocked';
         const showWhitelistFields = productiveMode === 'whitelist';
 
         const whitelistFields = showWhitelistFields ? `
@@ -745,10 +675,6 @@
 
     /* ===== Init ===== */
 
-    setupToggle('toggle-strictMode');
-    setupToggle('toggle-blockTaskManager');
-    setupSelect('workMinutes', parseFloat);
-    setupSelect('rewardMinutes', parseFloat);
     setupSelect('idleTimeoutSeconds', parseInt);
 
     function connectWS() {

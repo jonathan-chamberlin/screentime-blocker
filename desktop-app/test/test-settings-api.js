@@ -136,7 +136,6 @@ describe('settings API: PUT /api/settings', () => {
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toContain('Settings');
-    expect(text).toContain('Work Duration');
     expect(text).toContain('What to Block');
     expect(text).toContain('What Counts as Productive');
     expect(text).toContain('New List');
