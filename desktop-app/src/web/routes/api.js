@@ -80,6 +80,20 @@ export function createApiRouter({ sessionEngine, broadcast }) {
     }
   });
 
+  /** GET /api/usage — Get session history, daily summaries, and streak data for analytics. */
+  router.get('/usage', async (req, res) => {
+    try {
+      const data = await getAll();
+      res.json({
+        history: data.sessionHistory || [],
+        summaries: data.dailySummaries || {},
+        streakData: data.streakData || { currentStreak: 0, longestStreak: 0, lastActiveDate: null },
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   return router;
 }
 

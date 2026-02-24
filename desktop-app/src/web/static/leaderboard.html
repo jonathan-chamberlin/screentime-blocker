@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Brainrot Blocker</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface-hover: #232340;
+      --border: #2a2a45;
+      --text: #e0e0ef;
+      --text-muted: #8888a8;
+      --accent: #6c5ce7;
+      --green: #00c853;
+      --red: #e94560;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .back-link {
+      display: inline-block;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .page-header .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    thead th {
+      background: var(--surface);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+    thead th.col-rank { width: 56px; text-align: center; }
+    thead th.col-minutes { text-align: right; }
+    thead th.col-attempts { text-align: right; }
+    tbody tr {
+      transition: background 0.12s;
+    }
+    tbody tr:hover { background: var(--surface-hover); }
+    td {
+      padding: 11px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text);
+    }
+    tbody tr:first-child td { border-top: none; }
+    .col-rank {
+      width: 56px;
+      text-align: center;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text-muted);
+    }
+    .rank-1 { color: #FFD700; font-size: 18px; }
+    .rank-2 { color: #C0C0C0; font-size: 16px; }
+    .rank-3 { color: #CD7F32; font-size: 16px; }
+    .player-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .player-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .col-minutes {
+      text-align: right;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .col-attempts {
+      text-align: right;
+      font-weight: 600;
+      color: var(--red);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back-link" href="/">&#8592; Dashboard</a>
+    <div class="page-header">
+      <h1>&#127942; Leaderboard</h1>
+      <div class="subtitle">(EXAMPLE DATA, FEATURE COMING SOON) &mdash; See who&rsquo;s putting in the most focused work time</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th class="col-rank">#</th>
+          <th>Player</th>
+          <th class="col-minutes">Work Minutes</th>
+          <th class="col-attempts">Blocked Site Visits</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const EXAMPLE_DATA = [
+      { displayName: 'Sarah Mitchell', totalMinutes: 1847, totalSlackAttempts: 3 },
+      { displayName: 'Diana Kowalski', totalMinutes: 1623, totalSlackAttempts: 7 },
+      { displayName: 'Patrick Chen', totalMinutes: 1210, totalSlackAttempts: 12 },
+      { displayName: 'Zara Thompson', totalMinutes: 980, totalSlackAttempts: 2 },
+      { displayName: 'Freddy Nguyen', totalMinutes: 845, totalSlackAttempts: 28 },
+      { displayName: 'Marcus Rivera', totalMinutes: 720, totalSlackAttempts: 45 },
+      { displayName: 'Tina Okafor', totalMinutes: 540, totalSlackAttempts: 67 },
+      { displayName: 'David Brennan', totalMinutes: 510, totalSlackAttempts: 5 },
+      { displayName: 'Larry Fitzgerald', totalMinutes: 320, totalSlackAttempts: 112 },
+      { displayName: 'Nathan Cross', totalMinutes: 85, totalSlackAttempts: 203 },
+      { displayName: 'Elena Vasquez', totalMinutes: 1455, totalSlackAttempts: 9 },
+      { displayName: 'James Harrington', totalMinutes: 1102, totalSlackAttempts: 15 },
+      { displayName: 'Priya Sharma', totalMinutes: 975, totalSlackAttempts: 4 },
+      { displayName: 'Robert Tanaka', totalMinutes: 860, totalSlackAttempts: 31 },
+      { displayName: 'Olivia Svensson', totalMinutes: 742, totalSlackAttempts: 22 },
+      { displayName: 'Michael Byrne', totalMinutes: 635, totalSlackAttempts: 38 },
+      { displayName: 'Aisha Odom', totalMinutes: 490, totalSlackAttempts: 58 },
+      { displayName: 'Thomas Lindgren', totalMinutes: 415, totalSlackAttempts: 11 },
+      { displayName: 'Rachel Dominguez', totalMinutes: 295, totalSlackAttempts: 89 },
+      { displayName: 'Connor Walsh', totalMinutes: 150, totalSlackAttempts: 145 },
+    ];
+
+    function buildLocalAvatar(displayName) {
+      const raw = (displayName || '?').trim();
+      const initials = raw
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0].toUpperCase())
+        .join('') || '?';
+      const hue = Array.from(raw).reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 360;
+      const bg = `hsl(${hue} 55% 38%)`;
+      const fg = '#ffffff';
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${bg}"/><text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="${fg}" font-family="Arial, sans-serif" font-size="26" font-weight="700">${initials}</text></svg>`;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    const sorted = EXAMPLE_DATA.slice().sort((a, b) => b.totalMinutes - a.totalMinutes);
+    const tbody = document.getElementById('leaderboard-body');
+    const MEDALS = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+
+    sorted.forEach((entry, i) => {
+      const tr = document.createElement('tr');
+
+      const rankTd = document.createElement('td');
+      rankTd.className = 'col-rank' + (i < 3 ? ` rank-${i + 1}` : '');
+      rankTd.textContent = i < 3 ? MEDALS[i] : i + 1;
+
+      const playerTd = document.createElement('td');
+      const playerCell = document.createElement('div');
+      playerCell.className = 'player-cell';
+      const avatar = document.createElement('img');
+      avatar.className = 'avatar';
+      avatar.alt = '';
+      avatar.src = buildLocalAvatar(entry.displayName);
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'player-name';
+      nameSpan.textContent = entry.displayName;
+      playerCell.appendChild(avatar);
+      playerCell.appendChild(nameSpan);
+      playerTd.appendChild(playerCell);
+
+      const minutesTd = document.createElement('td');
+      minutesTd.className = 'col-minutes';
+      minutesTd.textContent = entry.totalMinutes;
+
+      const attemptsTd = document.createElement('td');
+      attemptsTd.className = 'col-attempts';
+      attemptsTd.textContent = entry.totalSlackAttempts;
+
+      tr.appendChild(rankTd);
+      tr.appendChild(playerTd);
+      tr.appendChild(minutesTd);
+      tr.appendChild(attemptsTd);
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
