@@ -214,6 +214,54 @@
       cursor: pointer; font-weight: 600;
     }
     .btn-danger:hover { background: #d63050; }
+
+    /* ===== Preset Picker ===== */
+    .preset-picker {
+      margin-top: 12px; padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .preset-picker-heading {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+    }
+    .preset-picker-columns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .preset-col-title {
+      font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .preset-col { display: flex; flex-direction: column; gap: 5px; }
+    .preset-circle {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text-muted);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      text-align: left;
+    }
+    .preset-circle::before {
+      content: ''; width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0; background: var(--border); transition: background 0.15s;
+    }
+    .preset-circle.active { border-color: var(--green); color: var(--text); }
+    .preset-circle.active::before { background: var(--green); }
+    .preset-categories { display: flex; flex-wrap: wrap; gap: 6px; }
+    .preset-cat-circle {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text-muted);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .preset-cat-circle::before {
+      content: ''; width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0; background: var(--border); transition: background 0.15s;
+    }
+    .preset-cat-circle.active { border-color: var(--green); color: var(--text); }
+    .preset-cat-circle.active::before { background: var(--green); }
+    .preset-cat-circle.partial { border-color: var(--yellow); color: var(--text); }
+    .preset-cat-circle.partial::before { background: var(--yellow); }
   </style>
 </head>
 <body>
@@ -303,6 +351,212 @@
       { value: 'scheduled', label: 'Scheduled' }, { value: 'always-on', label: 'Always On' },
     ];
 
+    // Ported from: extension/constants.js — PRESET_BLOCKED_SITES
+    const PRESET_BREAK_SITES = [
+      { name: 'Facebook', domain: 'facebook.com', category: 'Social Media' },
+      { name: 'Instagram', domain: 'instagram.com', category: 'Social Media' },
+      { name: 'Twitter / X', domains: ['twitter.com', 'x.com'], category: 'Social Media' },
+      { name: 'TikTok', domain: 'tiktok.com', category: 'Social Media' },
+      { name: 'Snapchat', domain: 'snapchat.com', category: 'Social Media' },
+      { name: 'Reddit', domain: 'reddit.com', category: 'Social Media' },
+      { name: 'Discord', domain: 'discord.com', category: 'Social Media' },
+      { name: 'LinkedIn', domain: 'linkedin.com', category: 'Social Media' },
+      { name: 'Pinterest', domain: 'pinterest.com', category: 'Social Media' },
+      { name: 'Tumblr', domain: 'tumblr.com', category: 'Social Media' },
+      { name: 'Telegram', domain: 'telegram.org', category: 'Social Media' },
+      { name: 'WhatsApp', domain: 'whatsapp.com', category: 'Social Media' },
+      { name: 'Messenger', domain: 'messenger.com', category: 'Social Media' },
+      { name: 'YouTube', domain: 'youtube.com', category: 'Video & Streaming' },
+      { name: 'Twitch', domain: 'twitch.tv', category: 'Video & Streaming' },
+      { name: 'Netflix', domain: 'netflix.com', category: 'Video & Streaming' },
+      { name: 'Hulu', domain: 'hulu.com', category: 'Video & Streaming' },
+      { name: 'Disney+', domain: 'disneyplus.com', category: 'Video & Streaming' },
+      { name: 'Prime Video', domain: 'primevideo.com', category: 'Video & Streaming' },
+      { name: 'HBO Max', domain: 'hbomax.com', category: 'Video & Streaming' },
+      { name: 'Peacock', domain: 'peacocktv.com', category: 'Video & Streaming' },
+      { name: 'Paramount+', domain: 'paramountplus.com', category: 'Video & Streaming' },
+      { name: 'Crunchyroll', domain: 'crunchyroll.com', category: 'Video & Streaming' },
+      { name: 'Vimeo', domain: 'vimeo.com', category: 'Video & Streaming' },
+      { name: 'Dailymotion', domain: 'dailymotion.com', category: 'Video & Streaming' },
+      { name: 'CNN', domain: 'cnn.com', category: 'News' },
+      { name: 'BBC', domain: 'bbc.com', category: 'News' },
+      { name: 'NY Times', domain: 'nytimes.com', category: 'News' },
+      { name: 'The Guardian', domain: 'theguardian.com', category: 'News' },
+      { name: 'Washington Post', domain: 'washingtonpost.com', category: 'News' },
+      { name: 'Fox News', domain: 'foxnews.com', category: 'News' },
+      { name: 'Reuters', domain: 'reuters.com', category: 'News' },
+      { name: 'AP News', domain: 'apnews.com', category: 'News' },
+      { name: 'NBC News', domain: 'nbcnews.com', category: 'News' },
+      { name: 'Bloomberg', domain: 'bloomberg.com', category: 'News' },
+      { name: 'WSJ', domain: 'wsj.com', category: 'News' },
+      { name: 'USA Today', domain: 'usatoday.com', category: 'News' },
+      { name: 'Amazon', domain: 'amazon.com', category: 'Shopping' },
+      { name: 'eBay', domain: 'ebay.com', category: 'Shopping' },
+      { name: 'Walmart', domain: 'walmart.com', category: 'Shopping' },
+      { name: 'Target', domain: 'target.com', category: 'Shopping' },
+      { name: 'Costco', domain: 'costco.com', category: 'Shopping' },
+      { name: 'Etsy', domain: 'etsy.com', category: 'Shopping' },
+      { name: 'Wish', domain: 'wish.com', category: 'Shopping' },
+      { name: 'Temu', domain: 'temu.com', category: 'Shopping' },
+      { name: 'AliExpress', domain: 'aliexpress.com', category: 'Shopping' },
+      { name: 'Best Buy', domain: 'bestbuy.com', category: 'Shopping' },
+      { name: 'Newegg', domain: 'newegg.com', category: 'Shopping' },
+      { name: 'Wayfair', domain: 'wayfair.com', category: 'Shopping' },
+      { name: 'Overstock', domain: 'overstock.com', category: 'Shopping' },
+      { name: 'Home Depot', domain: 'homedepot.com', category: 'Shopping' },
+      { name: 'SHEIN', domain: 'shein.com', category: 'Shopping' },
+      { name: 'ASOS', domain: 'asos.com', category: 'Shopping' },
+      { name: 'Zara', domain: 'zara.com', category: 'Shopping' },
+      { name: 'H&M', domain: 'hm.com', category: 'Shopping' },
+      { name: 'Nike', domain: 'nike.com', category: 'Shopping' },
+      { name: 'Adidas', domain: 'adidas.com', category: 'Shopping' },
+      { name: 'Nordstrom', domain: 'nordstrom.com', category: 'Shopping' },
+      { name: "Macy's", domain: 'macys.com', category: 'Shopping' },
+      { name: 'Zappos', domain: 'zappos.com', category: 'Shopping' },
+      { name: 'Steam', domain: 'steampowered.com', category: 'Gaming' },
+      { name: 'Epic Games', domain: 'epicgames.com', category: 'Gaming' },
+      { name: 'Roblox', domain: 'roblox.com', category: 'Gaming' },
+      { name: 'Minecraft', domain: 'minecraft.net', category: 'Gaming' },
+      { name: 'League of Legends', domain: 'leagueoflegends.com', category: 'Gaming' },
+      { name: 'Valorant', domain: 'playvalorant.com', category: 'Gaming' },
+      { name: 'Fortnite', domain: 'fortnite.com', category: 'Gaming' },
+      { name: 'Apex Legends', domain: 'apexlegends.com', category: 'Gaming' },
+      { name: 'World of Warcraft', domain: 'worldofwarcraft.com', category: 'Gaming' },
+      { name: 'Overwatch 2', domain: 'playoverwatch.com', category: 'Gaming' },
+      { name: 'IGN', domain: 'ign.com', category: 'Gaming' },
+      { name: 'GameSpot', domain: 'gamespot.com', category: 'Gaming' },
+      { name: 'Polygon', domain: 'polygon.com', category: 'Gaming' },
+      { name: 'Kotaku', domain: 'kotaku.com', category: 'Gaming' },
+      { name: 'PC Gamer', domain: 'pcgamer.com', category: 'Gaming' },
+      { name: 'DraftKings', domain: 'draftkings.com', category: 'Gambling' },
+      { name: 'FanDuel', domain: 'fanduel.com', category: 'Gambling' },
+      { name: 'BetMGM', domain: 'betmgm.com', category: 'Gambling' },
+      { name: 'Caesars', domain: 'caesarssportsbook.com', category: 'Gambling' },
+      { name: 'bet365', domain: 'bet365.com', category: 'Gambling' },
+      { name: 'Betway', domain: 'betway.com', category: 'Gambling' },
+      { name: 'William Hill', domain: 'williamhill.com', category: 'Gambling' },
+      { name: 'BetRivers', domain: 'betrivers.com', category: 'Gambling' },
+      { name: 'PointsBet', domain: 'pointsbet.com', category: 'Gambling' },
+      { name: 'Bovada', domain: 'bovada.lv', category: 'Gambling' },
+      { name: 'PokerStars', domain: 'pokerstars.com', category: 'Gambling' },
+      { name: 'GGPoker', domain: 'ggpoker.com', category: 'Gambling' },
+      { name: 'OnlyFans', domain: 'onlyfans.com', category: 'Adult Sites' },
+      { name: 'Adult Websites', domains: [
+        'pornhub.com','xvideos.com','xnxx.com','redtube.com','youporn.com',
+        'xhamster.com','tube8.com','spankbang.com','beeg.com','eporner.com',
+        'vporn.com','txxx.com','tnaflix.com','fuq.com','hclips.com',
+        'drtuber.com','nuvid.com','pornone.com','empflix.com','brazzers.com',
+        'realitykings.com','bangbros.com','naughtyamerica.com','anyporn.com',
+        'hotmovs.com','cliphunter.com','ixxx.com','pornmd.com','alphaporno.com',
+        'porntrex.com','sxyprn.com','porntube.com','fapster.xxx','gotporn.com',
+        'faphouse.com',
+      ], category: 'Adult Sites' },
+    ];
+
+    // Ported from: extension/constants.js — PRESET_BREAK_APPS
+    const PRESET_BREAK_APPS = [
+      { name: 'Steam', process: 'steam', category: 'Gaming' },
+      { name: 'Epic Games Launcher', process: 'EpicGamesLauncher', category: 'Gaming' },
+      { name: 'Discord', process: 'Discord', category: 'Communication' },
+      { name: 'Minecraft', process: 'javaw', category: 'Gaming' },
+      { name: 'League of Legends', process: 'LeagueClientUx.exe', category: 'Gaming' },
+      { name: 'Valorant', process: 'VALORANT-Win64-Shipping.exe', category: 'Gaming' },
+      { name: 'Fortnite', process: 'FortniteClient-Win64-Shipping.exe', category: 'Gaming' },
+      { name: 'Apex Legends', process: 'r5apex.exe', category: 'Gaming' },
+      { name: 'World of Warcraft', process: 'Wow.exe', category: 'Gaming' },
+      { name: 'Overwatch 2', process: 'Overwatch.exe', category: 'Gaming' },
+    ];
+
+    // Ported from: extension/constants.js — PRESET_PRODUCTIVE_SITES
+    const PRESET_PRODUCTIVE_SITES = [
+      { name: 'Google Docs', domain: 'docs.google.com', category: 'Productivity' },
+      { name: 'Google Drive', domain: 'drive.google.com', category: 'Productivity' },
+      { name: 'Google Sheets', domain: 'sheets.google.com', category: 'Productivity' },
+      { name: 'Notion', domain: 'notion.so', category: 'Productivity' },
+      { name: 'Trello', domain: 'trello.com', category: 'Productivity' },
+      { name: 'Asana', domain: 'asana.com', category: 'Productivity' },
+      { name: 'ClickUp', domain: 'app.clickup.com', category: 'Productivity' },
+      { name: 'Linear', domain: 'linear.app', category: 'Productivity' },
+      { name: 'GitHub', domain: 'github.com', category: 'Development' },
+      { name: 'Stack Overflow', domain: 'stackoverflow.com', category: 'Development' },
+      { name: 'MDN Web Docs', domain: 'developer.mozilla.org', category: 'Development' },
+      { name: 'GitLab', domain: 'gitlab.com', category: 'Development' },
+      { name: 'CodePen', domain: 'codepen.io', category: 'Development' },
+      { name: 'Claude', domain: 'claude.ai', category: 'AI Tools' },
+      { name: 'ChatGPT', domain: 'chatgpt.com', category: 'AI Tools' },
+      { name: 'Gemini', domain: 'gemini.google.com', category: 'AI Tools' },
+      { name: 'Perplexity', domain: 'perplexity.ai', category: 'AI Tools' },
+      { name: 'Grok', domain: 'grok.com', category: 'AI Tools' },
+      { name: 'Splice', domain: 'splice.com', category: 'Music Production' },
+      { name: 'Bandcamp', domain: 'bandcamp.com', category: 'Music Production' },
+      { name: 'SoundCloud', domain: 'soundcloud.com', category: 'Music Production' },
+      { name: 'Beatport', domain: 'beatport.com', category: 'Music Production' },
+      { name: 'Sonic Academy', domain: 'sonicacademy.com', category: 'Music Production' },
+      { name: 'Point Blank School', domain: 'pointblankmusicschool.com', category: 'Music Production' },
+      { name: 'ProducerTech', domain: 'producertech.com', category: 'Music Production' },
+      { name: 'Canvas', domain: 'instructure.com', category: 'School & Academics' },
+      { name: 'Gradescope', domain: 'gradescope.com', category: 'School & Academics' },
+      { name: 'Google Classroom', domain: 'classroom.google.com', category: 'School & Academics' },
+      { name: 'Blackboard', domain: 'blackboard.com', category: 'School & Academics' },
+      { name: 'Coursera', domain: 'coursera.org', category: 'School & Academics' },
+      { name: 'Khan Academy', domain: 'khanacademy.org', category: 'School & Academics' },
+      { name: 'Quizlet', domain: 'quizlet.com', category: 'School & Academics' },
+      { name: 'Chegg', domain: 'chegg.com', category: 'School & Academics' },
+    ];
+
+    // Ported from: extension/constants.js — CURATED_APPS
+    const PRESET_PRODUCTIVE_APPS = [
+      { name: 'PowerShell', process: 'powershell', category: 'Commonly Used' },
+      { name: 'VS Code', process: 'Code', category: 'Commonly Used' },
+      { name: 'Windows Terminal', process: 'WindowsTerminal', category: 'Commonly Used' },
+      { name: 'Discord', process: 'Discord', category: 'Communication' },
+      { name: 'Teams', process: 'ms-teams', category: 'Communication' },
+      { name: 'Slack', process: 'slack', category: 'Communication' },
+      { name: 'Zoom', process: 'Zoom', category: 'Communication' },
+      { name: 'Adobe Acrobat', process: 'Acrobat', category: 'Office' },
+      { name: 'Excel', process: 'EXCEL', category: 'Office' },
+      { name: 'PowerPoint', process: 'POWERPNT', category: 'Office' },
+      { name: 'Word', process: 'WINWORD', category: 'Office' },
+      { name: 'ClickUp', process: 'ClickUp', category: 'Productivity' },
+      { name: 'Notion', process: 'Notion', category: 'Productivity' },
+      { name: 'Obsidian', process: 'Obsidian', category: 'Productivity' },
+      { name: 'OneNote', process: 'ONENOTE', category: 'Productivity' },
+      { name: 'Todoist', process: 'Todoist', category: 'Productivity' },
+      { name: 'ChatGPT Desktop', process: 'ChatGPT', category: 'AI Assistants' },
+      { name: 'Claude Desktop', process: 'claude', category: 'AI Assistants' },
+      { name: 'Cursor', process: 'Cursor', category: 'AI Assistants' },
+      { name: 'Illustrator', process: 'Illustrator', category: 'Design' },
+      { name: 'Photoshop', process: 'Photoshop', category: 'Design' },
+      { name: 'Blender', process: 'blender', category: 'Design' },
+      { name: 'Figma', process: 'Figma', category: 'Design' },
+      { name: 'Unity', process: 'Unity', category: 'Design' },
+      { name: 'FL Studio', process: 'FL64', category: 'Music Production' },
+      { name: 'Kontakt', process: 'Kontakt', category: 'Music Production' },
+      { name: 'Maschine 2', process: 'Maschine 2', category: 'Music Production' },
+      { name: 'Pro Tools', process: 'Protools', category: 'Music Production' },
+      { name: 'Reaper', process: 'reaper', category: 'Music Production' },
+      { name: 'Reason', process: 'reason', category: 'Music Production' },
+      { name: 'rekordbox', process: 'rekordbox', category: 'Music Production' },
+      { name: 'Serato DJ Pro', process: 'Serato DJ Pro', category: 'Music Production' },
+      { name: 'Splice', process: 'Splice', category: 'Music Production' },
+      { name: 'Studio One', process: 'Studio One', category: 'Music Production' },
+      { name: 'Cubase', process: 'cubase', category: 'Music Production' },
+      { name: 'VirtualDJ', process: 'virtualdj_pro', category: 'Music Production' },
+      { name: 'Android Studio', process: 'studio64', category: 'Development' },
+      { name: 'JetBrains IDEs', process: 'idea64', category: 'Development' },
+      { name: 'Notepad++', process: 'notepad++', category: 'Development' },
+      { name: 'PyCharm', process: 'pycharm64', category: 'Development' },
+      { name: 'Sublime Text', process: 'sublime_text', category: 'Development' },
+      { name: 'Vim/Neovim', process: 'nvim', category: 'Development' },
+      { name: 'Visual Studio', process: 'devenv', category: 'Development' },
+      { name: 'WebStorm', process: 'webstorm64', category: 'Development' },
+      { name: 'Docker Desktop', process: 'Docker Desktop', category: 'Development' },
+      { name: 'Git Bash', process: 'mintty', category: 'Development' },
+      { name: 'Postman', process: 'Postman', category: 'Development' },
+      { name: 'DBeaver', process: 'dbeaver', category: 'Development' },
+      { name: 'SSMS', process: 'Ssms', category: 'Development' },
+    ];
+
     /* ===== State ===== */
     let settings = {};
     let expandedListId = null;
@@ -371,6 +625,121 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    /* ===== Preset Picker ===== */
+
+    function presetDomains(item) {
+      return item.domains ? item.domains : [item.domain];
+    }
+
+    function isPresetActive(list, section, field, item) {
+      const arr = (list[section] && list[section][field]) || [];
+      const keys = field === 'sites' ? presetDomains(item) : [item.process];
+      return keys.every(k => arr.includes(k));
+    }
+
+    function renderPresetPicker(list, section) {
+      const isBlocked = section === 'blocked';
+      const sitePresets = isBlocked ? PRESET_BREAK_SITES : PRESET_PRODUCTIVE_SITES;
+      const appPresets = isBlocked ? PRESET_BREAK_APPS : PRESET_PRODUCTIVE_APPS;
+
+      const siteButtons = sitePresets.map(item => {
+        const keys = presetDomains(item);
+        const active = isPresetActive(list, section, 'sites', item);
+        return `<button class="preset-circle${active ? ' active' : ''}"
+          data-list="${list.id}" data-section="${section}" data-field="sites"
+          data-keys='${JSON.stringify(keys).replace(/'/g, '&#39;')}'
+          onclick="togglePreset(this)">${escHtml(item.name)}</button>`;
+      }).join('');
+
+      const appButtons = appPresets.map(item => {
+        const active = isPresetActive(list, section, 'apps', item);
+        return `<button class="preset-circle${active ? ' active' : ''}"
+          data-list="${list.id}" data-section="${section}" data-field="apps"
+          data-keys='${JSON.stringify([item.process]).replace(/'/g, '&#39;')}'
+          onclick="togglePreset(this)">${escHtml(item.name)}</button>`;
+      }).join('');
+
+      const cats = [...new Set([
+        ...sitePresets.map(i => i.category),
+        ...appPresets.map(i => i.category),
+      ])];
+      const catButtons = cats.map(cat => {
+        const catSiteKeys = sitePresets.filter(i => i.category === cat).flatMap(presetDomains);
+        const catAppKeys = appPresets.filter(i => i.category === cat).map(i => i.process);
+        const siteArr = (list[section] && list[section].sites) || [];
+        const appArr = (list[section] && list[section].apps) || [];
+        const allKeys = [...catSiteKeys, ...catAppKeys];
+        const allArr = [...siteArr, ...appArr];
+        const allIn = allKeys.length > 0 && allKeys.every(k => allArr.includes(k));
+        const anyIn = allKeys.some(k => allArr.includes(k));
+        const cls = allIn ? 'active' : anyIn ? 'partial' : '';
+        return `<button class="preset-cat-circle${cls ? ' ' + cls : ''}"
+          data-list="${list.id}" data-section="${section}" data-category="${escHtml(cat)}"
+          onclick="toggleCategory(this)">${escHtml(cat)}</button>`;
+      }).join('');
+
+      return `
+        <div class="preset-picker">
+          <div class="preset-picker-heading">Category Filters</div>
+          <div class="preset-categories">${catButtons}</div>
+          <div class="preset-picker-heading" style="margin-top:10px">Common Filters</div>
+          <div class="preset-picker-columns">
+            <div class="preset-col">
+              <div class="preset-col-title">Sites</div>
+              ${siteButtons}
+            </div>
+            <div class="preset-col">
+              <div class="preset-col-title">Apps</div>
+              ${appButtons}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function togglePreset(btn) {
+      const listId = btn.dataset.list;
+      const section = btn.dataset.section;
+      const field = btn.dataset.field;
+      const keys = JSON.parse(btn.dataset.keys);
+      const list = (settings.lists || []).find(l => l.id === listId);
+      if (!list) return;
+      if (!list[section]) list[section] = {};
+      if (!list[section][field]) list[section][field] = [];
+      const arr = list[section][field];
+      if (keys.every(k => arr.includes(k))) {
+        list[section][field] = arr.filter(k => !keys.includes(k));
+      } else {
+        for (const k of keys) { if (!arr.includes(k)) arr.push(k); }
+      }
+      save({ lists: settings.lists });
+    }
+
+    function toggleCategory(btn) {
+      const listId = btn.dataset.list;
+      const section = btn.dataset.section;
+      const catName = btn.dataset.category;
+      const isBlocked = section === 'blocked';
+      const sitePresets = isBlocked ? PRESET_BREAK_SITES : PRESET_PRODUCTIVE_SITES;
+      const appPresets = isBlocked ? PRESET_BREAK_APPS : PRESET_PRODUCTIVE_APPS;
+      const list = (settings.lists || []).find(l => l.id === listId);
+      if (!list) return;
+      if (!list[section]) list[section] = {};
+      if (!list[section].sites) list[section].sites = [];
+      if (!list[section].apps) list[section].apps = [];
+      const siteKeys = sitePresets.filter(i => i.category === catName).flatMap(presetDomains);
+      const appKeys = appPresets.filter(i => i.category === catName).map(i => i.process);
+      const allSitesIn = siteKeys.every(k => list[section].sites.includes(k));
+      const allAppsIn = appKeys.every(k => list[section].apps.includes(k));
+      if (allSitesIn && allAppsIn && (siteKeys.length + appKeys.length > 0)) {
+        list[section].sites = list[section].sites.filter(k => !siteKeys.includes(k));
+        list[section].apps = list[section].apps.filter(k => !appKeys.includes(k));
+      } else {
+        for (const k of siteKeys) { if (!list[section].sites.includes(k)) list[section].sites.push(k); }
+        for (const k of appKeys) { if (!list[section].apps.includes(k)) list[section].apps.push(k); }
+      }
+      save({ lists: settings.lists });
     }
 
     /* ===== API ===== */
@@ -581,7 +950,8 @@
                 onkeydown="if(event.key==='Enter')addToList('${list.id}','productive','apps','input-productive-apps-${list.id}')">
               <button onclick="addToList('${list.id}','productive','apps','input-productive-apps-${list.id}')">Add</button>
             </div>
-          </div>` : '';
+          </div>
+          ${renderPresetPicker(list, 'productive')}` : '';
 
         return `
           <div class="list-card${isOpen ? ' open' : ''}" id="list-card-${list.id}">
@@ -622,6 +992,7 @@
                   <button onclick="addToList('${list.id}','blocked','apps','input-blocked-apps-${list.id}')">Add</button>
                 </div>
               </div>
+              ${renderPresetPicker(list, 'blocked')}
               <div class="card-field">
                 <div class="card-field-label">Allowed Paths</div>
                 <div class="card-field-sublabel">Exceptions within blocked sites</div>
