@@ -76,6 +76,7 @@ export function createSessionEngine(config) {
 
   let currentSite = null;
   let currentApp = null;
+  let currentWindowTitle = null;
   let isOnProductiveSite = false;
   let isOnProductiveApp = false;
   let isOnBlockedSite = false;
@@ -147,6 +148,7 @@ export function createSessionEngine(config) {
       unusedRewardMs: 0,
       currentSite,
       currentApp,
+      currentWindowTitle,
       isOnProductiveSite,
       isOnProductiveApp,
       isOnBlockedSite,
@@ -233,10 +235,11 @@ export function createSessionEngine(config) {
    * Report app focus change from the app monitor.
    * Updates current app and productive state.
    *
-   * @param {{ processName: string, timestamp: number }} appFocus
+   * @param {{ processName: string, windowTitle?: string, timestamp: number }} appFocus
    */
   function reportAppFocus(appFocus) {
     currentApp = appFocus.processName;
+    currentWindowTitle = appFocus.windowTitle || null;
 
     // Check if this app is productive
     isOnProductiveApp = productiveApps.some(

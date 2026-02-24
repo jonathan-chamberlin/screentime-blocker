@@ -17,21 +17,26 @@ import { APP_MONITOR_POLL_MS } from '../shared/constants.js';
 const execFileAsync = promisify(execFile);
 
 /**
- * PowerShell script that returns the foreground window's process name.
+ * PowerShell script that returns the foreground window's process name and title.
  * Uses Add-Type to compile C# code that calls Win32 APIs.
+ * Output format: "processName|windowTitle" (pipe-delimited).
  */
 const PS_GET_FOREGROUND = `
 Add-Type @"
 using System;
+using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 public class FG {
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
+  [DllImport("user32.dll", CharSet = CharSet.Auto)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder sb, int maxCount);
   public static string Get() {
     IntPtr hw = GetForegroundWindow();
     uint pid; GetWindowThreadProcessId(hw, out pid);
-    try { return Process.GetProcessById((int)pid).ProcessName; }
+    StringBuilder sb = new StringBuilder(512);
+    GetWindowText(hw, sb, 512);
+    try { return Process.GetProcessById((int)pid).ProcessName + "|" + sb.ToString(); }
     catch { return ""; }
   }
 }
@@ -40,17 +45,23 @@ public class FG {
 `.trim();
 
 /**
- * Get the name of the currently focused foreground process.
- * @returns {Promise<string>} Process name (without .exe), e.g., "Code"
+ * Get the currently focused foreground process name and window title.
+ * @returns {Promise<{ processName: string, windowTitle: string }>}
  */
 export async function getForegroundProcess() {
   try {
     const { stdout } = await execFileAsync('powershell', [
       '-NoProfile', '-NonInteractive', '-Command', PS_GET_FOREGROUND,
     ], { timeout: 5000 });
-    return stdout.trim();
+    const raw = stdout.trim();
+    const pipeIdx = raw.indexOf('|');
+    if (pipeIdx === -1) return { processName: raw, windowTitle: '' };
+    return {
+      processName: raw.slice(0, pipeIdx),
+      windowTitle: raw.slice(pipeIdx + 1),
+    };
   } catch {
-    return '';
+    return { processName: '', windowTitle: '' };
   }
 }
 
@@ -62,24 +73,28 @@ export async function getForegroundProcess() {
  * @returns {{ emitter: EventEmitter, stop: () => void }}
  *
  * Events emitted:
- * - 'app-changed' ({ processName: string, timestamp: number })
+ * - 'app-changed' ({ processName: string, windowTitle: string, timestamp: number })
  *   Subscribers: session-engine (via main.js wiring)
  */
 export function startAppMonitor(options = {}) {
   const { pollMs = APP_MONITOR_POLL_MS } = options;
   const emitter = new EventEmitter();
   let lastProcess = '';
+  let lastTitle = '';
   let running = true;
   let timeoutId = null;
 
   async function poll() {
     if (!running) return;
 
-    const processName = await getForegroundProcess();
-    if (processName && processName !== lastProcess) {
+    const { processName, windowTitle } = await getForegroundProcess();
+    // Emit when process OR window title changes (catches browser tab switches)
+    if (processName && (processName !== lastProcess || windowTitle !== lastTitle)) {
       lastProcess = processName;
+      lastTitle = windowTitle;
       emitter.emit('app-changed', {
         processName,
+        windowTitle,
         timestamp: Date.now(),
       });
     }

@@ -112,6 +112,7 @@ describe('session-engine: core timer tests', () => {
     expect(status).toHaveProperty('rewardActive');
     expect(status).toHaveProperty('currentSite');
     expect(status).toHaveProperty('currentApp');
+    expect(status).toHaveProperty('currentWindowTitle');
     expect(status).toHaveProperty('isOnProductiveSite');
     expect(status).toHaveProperty('isOnProductiveApp');
     expect(status).toHaveProperty('isOnBlockedSite');

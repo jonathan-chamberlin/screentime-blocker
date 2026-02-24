@@ -202,15 +202,33 @@
       'chromium', 'iridium', 'thorium', 'zen',
     ]);
 
+    /**
+     * Extract the tab/page portion from a browser window title.
+     * Browser titles are typically "Page Title - BrowserName".
+     * Returns the part before the last " - " separator.
+     */
+    function extractTabTitle(windowTitle) {
+      if (!windowTitle) return '';
+      const lastDash = windowTitle.lastIndexOf(' - ');
+      if (lastDash > 0) return windowTitle.slice(0, lastDash).trim();
+      // Some browsers use " — " (em dash)
+      const lastEmDash = windowTitle.lastIndexOf(' \u2014 ');
+      if (lastEmDash > 0) return windowTitle.slice(0, lastEmDash).trim();
+      return windowTitle.trim();
+    }
+
     /** Format the Current Focus label from app + site state */
     function formatFocus(state) {
       const app = state.currentApp || '';
-      const site = state.currentSite || '';
       const appLower = app.toLowerCase().replace('.exe', '');
-      if (app && BROWSERS.has(appLower) && site) {
-        return `${app} \u203a ${site}`;
+      if (app && BROWSERS.has(appLower)) {
+        // Prefer proxy-reported domain, fall back to window title
+        const site = state.currentSite || '';
+        const tabTitle = extractTabTitle(state.currentWindowTitle);
+        const detail = site || tabTitle;
+        if (detail) return `${app} \u203a ${detail}`;
       }
-      return site || app || '\u2014';
+      return state.currentSite || app || '\u2014';
     }
 
     /** Format ms to MM:SS or H:MM:SS */

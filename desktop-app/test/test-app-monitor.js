@@ -18,10 +18,13 @@ afterEach(() => {
 });
 
 describe('app-monitor', () => {
-  it('getForegroundProcess() reports current foreground app name (non-empty string)', async () => {
-    const name = await getForegroundProcess();
-    expect(typeof name).toBe('string');
-    expect(name.length).toBeGreaterThan(0);
+  it('getForegroundProcess() reports current foreground app name and window title', async () => {
+    const result = await getForegroundProcess();
+    expect(result).toHaveProperty('processName');
+    expect(result).toHaveProperty('windowTitle');
+    expect(typeof result.processName).toBe('string');
+    expect(result.processName.length).toBeGreaterThan(0);
+    expect(typeof result.windowTitle).toBe('string');
   });
 
   it('startAppMonitor emits app-changed with valid AppFocus shape', async () => {
@@ -35,8 +38,10 @@ describe('app-monitor', () => {
     expect(events.length).toBeGreaterThan(0);
     const event = events[0];
     expect(event).toHaveProperty('processName');
+    expect(event).toHaveProperty('windowTitle');
     expect(event).toHaveProperty('timestamp');
     expect(typeof event.processName).toBe('string');
+    expect(typeof event.windowTitle).toBe('string');
     expect(typeof event.timestamp).toBe('number');
   });
 
