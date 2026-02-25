@@ -4,6 +4,10 @@ A site blocker that fights back.
 
 Brainrot Blocker is a Chrome extension that locks distracting sites during timed "Lock In" sessions, earns you reward minutes for real work, roasts every cheat attempt with escalating shame GIFs, and gives you a nuclear option for sites you never want to visit again.
 
+➡️ DOWNLOAD NOW: 
+https://chromewebstore.google.com/detail/brainrot-blocker/cijlhepnapgbpnfjgbbepimgcaindalj?utm_source=item-share-cb
+
+
 Built for students, founders, and anyone who swears they'll work but doomscrolls instead.
 
 ![Default state](screenshots_for_readme/default_screenshot.png)
