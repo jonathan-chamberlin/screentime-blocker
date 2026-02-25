@@ -12,7 +12,8 @@
  * @property {boolean} rewardActive
  * @property {string[]} blockedSites - domains to block (e.g., "youtube.com")
  * @property {string[]} allowedPaths - domain/path prefixes to allow (e.g., "youtube.com/veritasium")
- * @property {Array<{domain: string, stage: string}>} nuclearSites
+ * @property {Array<{domain?: string, domains?: string[], stage: string}>} nuclearSites
+ * @property {string[]} nuclearExceptions - path exceptions for nuclear-blocked sites
  * @property {string} blockingMode - 'off' | 'manual' | 'scheduled' | 'always-on'
  */
 
@@ -108,20 +109,23 @@ export function isDomainBlocked(domain, blockedSites) {
 
 /**
  * Check if a domain is nuclear-blocked.
+ * Supports both single-domain (entry.domain) and multi-domain (entry.domains) entries.
+ *
  * @param {string} domain
- * @param {Array<{domain: string, stage: string}>} nuclearSites
+ * @param {Array<{domain?: string, domains?: string[], stage: string}>} nuclearSites
  * @returns {{ isNuclear: boolean, stage?: string }}
  */
 export function isNuclearBlocked(domain, nuclearSites) {
   const normalized = domain.replace(/^www\./, '').toLowerCase();
-  const entry = nuclearSites.find(
-    (s) => normalized === s.domain.replace(/^www\./, '').toLowerCase()
-  );
+  const entry = nuclearSites.find((s) => {
+    // Check domains array first, fall back to single domain
+    const domains = s.domains || (s.domain ? [s.domain] : []);
+    return domains.some(d => normalized === d.replace(/^www\./, '').toLowerCase());
+  });
   if (!entry) return { isNuclear: false };
 
-  // Only block if in locked or unblocking stage
-  // "ready" still blocks (unblock button visible but site blocked)
-  const activeStages = ['locked', 'ready', 'unblocking'];
+  // Block in all active stages including confirm (redirects to last-chance page)
+  const activeStages = ['locked', 'ready', 'unblocking', 'confirm'];
   if (activeStages.includes(entry.stage)) {
     return { isNuclear: true, stage: entry.stage };
   }
@@ -132,7 +136,8 @@ export function isNuclearBlocked(domain, nuclearSites) {
  * Evaluate a URL and determine the proxy action.
  *
  * Priority order (highest first):
- * 1. Nuclear block → redirect to nuclear-blocked page
+ * 1. Nuclear block → redirect to nuclear-blocked or last-chance page
+ *    1a. Nuclear exceptions → allow through even if nuclear-blocked
  * 2. Allowed path exceptions → allow through
  * 3. Session active + domain blocked → redirect to blocked page
  * 4. Reward active → allow blocked sites temporarily
@@ -148,10 +153,21 @@ export function evaluateUrl(url, state) {
   // 1. Nuclear block (highest priority, always active regardless of session)
   const nuclear = isNuclearBlocked(domain, state.nuclearSites);
   if (nuclear.isNuclear) {
+    // 1a. Check nuclear exceptions — allow if URL matches an exception path
+    if (state.nuclearExceptions && state.nuclearExceptions.length > 0) {
+      if (matchesAllowedPath(url, state.nuclearExceptions)) {
+        return { action: 'allow', reason: 'Nuclear exception' };
+      }
+    }
+
+    // Confirm stage → last-chance page; all other stages → nuclear-blocked page
+    const page = nuclear.stage === 'confirm'
+      ? 'nuclear-block-last-chance.html'
+      : 'nuclear-blocked.html';
     return {
       action: 'nuclear-block',
       reason: `Nuclear blocked (${nuclear.stage})`,
-      redirectUrl: `http://localhost:${WEB_PORT}/nuclear-blocked?domain=${domain}`,
+      redirectUrl: `http://localhost:${WEB_PORT}/${page}?domain=${domain}`,
     };
   }
 
@@ -176,7 +192,7 @@ export function evaluateUrl(url, state) {
     return {
       action: 'block',
       reason: 'Blocked site',
-      redirectUrl: `http://localhost:${WEB_PORT}/blocked?domain=${domain}`,
+      redirectUrl: `http://localhost:${WEB_PORT}/blocked.html?domain=${domain}`,
     };
   }
 

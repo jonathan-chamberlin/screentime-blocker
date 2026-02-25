@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Good Choice</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a150f 0%, #0e2418 50%, #0a1a10 100%);
+      color: #d4ede0;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 620px;
+      width: 100%;
+    }
+
+    .icon {
+      font-size: 72px;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.4));
+    }
+
+    .headline {
+      font-size: 52px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .subtext {
+      font-size: 18px;
+      color: rgba(212, 237, 224, 0.75);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .affirmation-box {
+      background: rgba(0, 255, 136, 0.06);
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .affirmation-box .box-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(0, 255, 136, 0.6);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .affirmation-box p {
+      font-size: 15px;
+      color: rgba(212, 237, 224, 0.85);
+      line-height: 1.7;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(0, 204, 102, 0.45);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 28px;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(212, 237, 224, 0.85);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      color: rgba(212, 237, 224, 0.45);
+    }
+
+    .block-again-box {
+      background: rgba(255, 100, 100, 0.06);
+      border: 1px solid rgba(255, 100, 100, 0.22);
+      border-radius: 12px;
+      padding: 22px 28px;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .block-again-box .box-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255, 130, 130, 0.6);
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .block-again-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-block-again {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-block-again:hover:not(:disabled) {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .btn-block-again:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .block-again-select {
+      background: #0d1f14;
+      color: #d4ede0;
+      border: 1px solid rgba(255, 100, 100, 0.3);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .block-again-select:focus {
+      outline: none;
+      border-color: rgba(255, 100, 100, 0.6);
+    }
+
+    .block-again-select:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .block-again-success {
+      display: none;
+      margin-top: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #00cc66;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.7s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="icon">&#x2728;</div>
+    <h1 class="headline">You are in control.</h1>
+    <p class="subtext">You made a deliberate, thoughtful choice.<br>That matters more than you might think.</p>
+
+    <div class="affirmation-box">
+      <div class="box-label">Remember this</div>
+      <p>You went through every step intentionally. You weren't running on autopilot — you paused, you considered, and you made an active decision. That kind of self-awareness is exactly what long-term change is built on.</p>
+    </div>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text"></p>
+      <p class="quote-author" id="quote-author"></p>
+    </div>
+
+    <div class="block-again-box" id="block-again-box">
+      <div class="box-label">Was this a mistake?</div>
+      <div class="block-again-controls">
+        <button class="btn-block-again" id="btn-block-again">Block Again</button>
+        <select class="block-again-select" id="cooldown-select">
+          <option value="86400000">24 hours</option>
+          <option value="172800000" selected>48 hours</option>
+          <option value="604800000">1 week</option>
+          <option value="2592000000">1 month</option>
+          <option value="7776000000">3 months</option>
+          <option value="15552000000">6 months</option>
+          <option value="31536000000">1 year</option>
+        </select>
+      </div>
+      <div class="block-again-success" id="block-again-success">Site re-blocked. You&#x2019;re back in control.</div>
+    </div>
+  </div>
+
+  <script>
+    const GOOD_CHOICE_QUOTES = [
+      { text: 'The measure of intelligence is the ability to change.', author: 'Albert Einstein' },
+      { text: 'You are the author of your own story. Make it a good one.', author: 'Unknown' },
+      { text: 'What lies behind us and what lies before us are tiny matters compared to what lies within us.', author: 'Ralph Waldo Emerson' },
+      { text: 'The only person you are destined to become is the person you decide to be.', author: 'Ralph Waldo Emerson' },
+      { text: 'Act as if what you do makes a difference. It does.', author: 'William James' },
+      { text: 'You have power over your mind, not outside events. Realize this, and you will find strength.', author: 'Marcus Aurelius' },
+      { text: 'Be yourself. Everyone else is already taken.', author: 'Oscar Wilde' },
+      { text: 'Life is 10% what happens to you and 90% how you react to it.', author: 'Charles R. Swindoll' },
+      { text: 'The greatest glory in living lies not in never falling, but in rising every time we fall.', author: 'Nelson Mandela' },
+      { text: 'In the middle of difficulty lies opportunity.', author: 'Albert Einstein' },
+      { text: 'To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.', author: 'Ralph Waldo Emerson' },
+      { text: 'Knowing yourself is the beginning of all wisdom.', author: 'Aristotle' },
+      { text: 'The privilege of a lifetime is to become who you truly are.', author: 'Carl Jung' },
+      { text: 'It is never too late to be what you might have been.', author: 'George Eliot' },
+      { text: 'Happiness is not something ready-made. It comes from your own actions.', author: 'Dalai Lama' },
+      { text: 'The only real failure is the failure to try.', author: 'Unknown' },
+      { text: 'Every saint has a past, and every sinner has a future.', author: 'Oscar Wilde' },
+      { text: 'You are never too old to set another goal or to dream a new dream.', author: 'C.S. Lewis' },
+      { text: 'Growth is uncomfortable. You have to embrace being uncomfortable if you want to grow.', author: 'Unknown' },
+      { text: 'What you get by achieving your goals is not as important as what you become by achieving them.', author: 'Zig Ziglar' },
+    ];
+
+    (function init() {
+      var quote = GOOD_CHOICE_QUOTES[Math.floor(Math.random() * GOOD_CHOICE_QUOTES.length)];
+      document.getElementById('quote-text').textContent = '\u201c' + quote.text + '\u201d';
+      document.getElementById('quote-author').textContent = '\u2014 ' + quote.author;
+
+      var params = new URLSearchParams(window.location.search);
+      var domainsParam = params.get('domains') || '';
+      var domains = domainsParam ? domainsParam.split(',').map(function(d) { return d.trim(); }).filter(Boolean) : [];
+
+      if (!domains.length) {
+        document.getElementById('block-again-box').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('btn-block-again').addEventListener('click', function() {
+        var btn = document.getElementById('btn-block-again');
+        var select = document.getElementById('cooldown-select');
+        var cooldown1Ms = parseInt(select.value, 10);
+
+        var entry = {
+          id: 'nuclear-' + Date.now(),
+          domains: domains,
+          addedAt: Date.now(),
+          cooldown1Ms: cooldown1Ms,
+          cooldown2Ms: 64800000,
+          unblockClickedAt: null
+        };
+
+        btn.disabled = true;
+        select.disabled = true;
+
+        fetch('/api/nuclear/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entry: entry })
+        })
+          .then(function(res) {
+            if (!res.ok) throw new Error('Request failed');
+            document.getElementById('block-again-success').style.display = 'block';
+          })
+          .catch(function() {
+            btn.disabled = false;
+            select.disabled = false;
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

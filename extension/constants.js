@@ -447,6 +447,7 @@ const NATIVE_HOST_NAME = 'com.brainrotblocker.native';
 const ALARM_PERIOD_MINUTES = 0.25;
 const ALLOW_RULE_ID_OFFSET = 1000;
 const NUCLEAR_RULE_ID_OFFSET = 2000;
+const NUCLEAR_EXCEPTION_RULE_ID_OFFSET = 3000;
 
 // Preset sites for Nuclear Block (permanent, always-on blocking with staged cooldowns)
 const PRESET_NUCLEAR_SITES = [

@@ -57,8 +57,10 @@ function resetSessionState() {
 async function loadSiteConfig() {
   const result = await getStorage(['breakLists', 'allowedPaths']);
   const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const globalPaths = result.allowedPaths || DEFAULTS.allowedPaths;
+  const listExceptions = getBlockingExceptions(breakLists, state.sessionActive);
   return {
     sites: getBlockingSites(breakLists, state.sessionActive),
-    allowedPaths: result.allowedPaths || DEFAULTS.allowedPaths,
+    allowedPaths: [...globalPaths, ...listExceptions],
   };
 }

@@ -43,13 +43,13 @@ function getNuclearSiteStage(site) {
 async function applyNuclearRules() {
   const data = await getNuclearData();
 
-  // Remove existing nuclear rules, add new ones
+  // Remove existing nuclear rules (block + exception allow rules)
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
   const nuclearIds = existingRules
     .filter(r => r.id >= NUCLEAR_RULE_ID_OFFSET)
     .map(r => r.id);
 
-  // Build rules per site, routing confirm-stage sites to the last-chance page
+  // Build block rules per site, routing confirm-stage sites to the last-chance page
   const addRules = [];
   let ruleIndex = 0;
   for (const site of data.sites) {
@@ -64,6 +64,22 @@ async function applyNuclearRules() {
         priority: 3,
         action: { type: 'redirect', redirect: { extensionPath: page } },
         condition: { requestDomains: [clean], resourceTypes: ['main_frame'] },
+      });
+    }
+  }
+
+  // Build allow rules for nuclear exceptions (priority 4 overrides nuclear block priority 3)
+  let exceptionIndex = 0;
+  for (const site of data.sites) {
+    if (!site.exceptions || site.exceptions.length === 0) continue;
+    for (const ex of site.exceptions) {
+      const path = ex.trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+      if (!path) continue;
+      addRules.push({
+        id: NUCLEAR_EXCEPTION_RULE_ID_OFFSET + exceptionIndex++,
+        priority: 4,
+        action: { type: 'allow' },
+        condition: { urlFilter: `||${path}`, resourceTypes: ['main_frame'] },
       });
     }
   }

@@ -15,13 +15,16 @@ async function checkCurrentTab() {
     }
 
     const result = await getStorage(['breakLists', 'productiveLists', 'productiveMode', 'allowedPaths']);
-    const allowedPaths = result.allowedPaths || DEFAULTS.allowedPaths;
+    const breakLists = result.breakLists || DEFAULTS.breakLists;
+    const globalPaths = result.allowedPaths || DEFAULTS.allowedPaths;
+    const listExceptions = getBlockingExceptions(breakLists, state.sessionActive);
+    const allowedPaths = [...globalPaths, ...listExceptions];
 
     // Use scheduler cache for blocked sites (mode-aware); fall back to storage if cache empty
     const cache = typeof getSchedulerCache === 'function' ? getSchedulerCache() : null;
     const blockedSites = (cache && cache.blockingSites.length > 0)
       ? cache.blockingSites
-      : getActiveBreakSites(result.breakLists || DEFAULTS.breakLists);
+      : getActiveBreakSites(breakLists);
 
     if (state.sessionActive || blocking) {
       const mode = result.productiveMode || DEFAULTS.productiveMode;

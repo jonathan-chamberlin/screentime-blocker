@@ -30,8 +30,11 @@ async function evaluateScheduler() {
 }
 
 async function updateBlockingRules(sites) {
-  const result = await getStorage(['allowedPaths']);
-  const allowedPaths = result.allowedPaths || DEFAULTS.allowedPaths;
+  const result = await getStorage(['allowedPaths', 'breakLists']);
+  const globalPaths = result.allowedPaths || DEFAULTS.allowedPaths;
+  const breakLists = result.breakLists || DEFAULTS.breakLists;
+  const listExceptions = getBlockingExceptions(breakLists, state.sessionActive);
+  const allowedPaths = [...globalPaths, ...listExceptions];
 
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
   const removeIds = existingRules.filter(r => r.id < NUCLEAR_RULE_ID_OFFSET).map(r => r.id);

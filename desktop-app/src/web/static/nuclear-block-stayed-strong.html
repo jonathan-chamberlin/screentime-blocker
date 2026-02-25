@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You Stayed Strong</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #12082a 50%, #0e0620 100%);
+      color: #e8d8f8;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 620px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+
+    .icon {
+      font-size: 72px;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 0 20px rgba(192, 132, 252, 0.5));
+      display: inline-block;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .headline {
+      font-size: 52px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c084fc, #a855f7, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .subtext {
+      font-size: 18px;
+      color: rgba(232, 216, 248, 0.75);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .hype-box {
+      background: rgba(168, 85, 247, 0.07);
+      border: 1px solid rgba(168, 85, 247, 0.28);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .hype-box .box-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(192, 132, 252, 0.65);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .hype-box p {
+      font-size: 15px;
+      color: rgba(232, 216, 248, 0.85);
+      line-height: 1.7;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(168, 85, 247, 0.45);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(232, 216, 248, 0.85);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      color: rgba(232, 216, 248, 0.45);
+    }
+
+    .btn-close {
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 32px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-close:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.7s ease-out;
+    }
+
+    @keyframes confetti-fall {
+      0% { opacity: 1; transform: translateY(0) rotateZ(0deg); }
+      100% { opacity: 0; transform: translateY(100vh) rotateZ(720deg); }
+    }
+
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      opacity: 0;
+      animation: confetti-fall 3s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="icon">&#x1F4AA;</div>
+    <h1 class="headline">You chose yourself.</h1>
+    <p class="subtext">You looked temptation in the eye<br>and walked away. That&#x2019;s no small thing.</p>
+
+    <div class="hype-box">
+      <div class="box-label">What just happened</div>
+      <p>You were at the edge &#x2014; you had the chance to give in &#x2014; and you didn&#x2019;t. Most people never even get to that moment of real choice. You did, and you chose your future self over your present impulse. That is the exact habit that separates people who change from people who don&#x2019;t.</p>
+    </div>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text"></p>
+      <p class="quote-author" id="quote-author"></p>
+    </div>
+
+    <button class="btn-close" id="btn-close">Close this tab</button>
+  </div>
+
+  <script>
+    const QUOTES = [
+      { text: 'Discipline is choosing between what you want now and what you want most.', author: 'Abraham Lincoln' },
+      { text: 'The pain of discipline is nothing like the pain of disappointment.', author: 'Justin Langer' },
+      { text: 'You will never always be motivated. You have to learn to be disciplined.', author: 'Unknown' },
+      { text: 'Strength does not come from winning. Your struggles develop your strengths.', author: 'Arnold Schwarzenegger' },
+      { text: "The successful person has the habit of doing the things failures don't like to do.", author: 'Thomas Edison' },
+      { text: 'It is not that I am so smart. It is just that I stay with problems longer.', author: 'Albert Einstein' },
+      { text: 'Fall seven times, stand up eight.', author: 'Japanese Proverb' },
+      { text: 'Hard choices, easy life. Easy choices, hard life.', author: 'Jerzy Gregorek' },
+      { text: 'The mind is everything. What you think, you become.', author: 'Buddha' },
+      { text: 'Courage is not the absence of fear, but the triumph over it.', author: 'Nelson Mandela' },
+      { text: 'You just proved that your commitment is stronger than your impulse.', author: 'Unknown' },
+      { text: 'Character is what you do when no one is watching.', author: 'John Wooden' },
+      { text: 'The only discipline that lasts is self-discipline.', author: 'Bum Phillips' },
+      { text: 'Winners embrace hard work. They love the discipline of it.', author: 'Lou Holtz' },
+      { text: 'Self-control is strength. Calmness is mastery.', author: 'James Allen' },
+      { text: 'You are stronger than your strongest excuse.', author: 'Unknown' },
+      { text: 'What you do today can improve all your tomorrows.', author: 'Ralph Marston' },
+      { text: 'Champions keep playing until they get it right.', author: 'Billie Jean King' },
+      { text: 'The harder the battle, the sweeter the victory.', author: 'Les Brown' },
+      { text: 'Perseverance is not a long race; it is many short races one after the other.', author: 'Walter Elliot' },
+      { text: 'With self-discipline, most anything is possible.', author: 'Theodore Roosevelt' },
+      { text: 'Every champion was once a contender that refused to give up.', author: 'Rocky Balboa' },
+    ];
+
+    function spawnConfetti() {
+      var container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+
+      var colors = ['#c084fc', '#a855f7', '#7c3aed', '#f472b6', '#4ade80', '#eab308'];
+
+      for (var i = 0; i < 50; i++) {
+        (function() {
+          var piece = document.createElement('div');
+          piece.className = 'confetti';
+          piece.style.left = Math.random() * 100 + '%';
+          piece.style.top = '-10px';
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.animationDelay = (Math.random() * 0.8) + 's';
+          if (Math.random() > 0.5) {
+            piece.style.borderRadius = '50%';
+          }
+          container.appendChild(piece);
+        })();
+      }
+
+      setTimeout(function() {
+        if (container.parentNode) {
+          container.parentNode.removeChild(container);
+        }
+      }, 4000);
+    }
+
+    (function init() {
+      var quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+      document.getElementById('quote-text').textContent = '\u201c' + quote.text + '\u201d';
+      document.getElementById('quote-author').textContent = '\u2014 ' + quote.author;
+
+      document.getElementById('btn-close').addEventListener('click', function() {
+        window.close();
+      });
+
+      spawnConfetti();
+    })();
+  </script>
+</body>
+</html>

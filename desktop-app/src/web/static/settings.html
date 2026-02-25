@@ -262,6 +262,92 @@
     .preset-cat-circle.active::before { background: var(--green); }
     .preset-cat-circle.partial { border-color: var(--yellow); color: var(--text); }
     .preset-cat-circle.partial::before { background: var(--yellow); }
+
+    /* Nuclear Block section */
+    #sec-nuclear { border-color: rgba(255,140,0,0.25); background: rgba(255,100,0,0.04); }
+    #sec-nuclear .section-title { color: #ffaa44; }
+    .nuclear-desc { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+    .nuclear-desc strong { color: #ffaa44; }
+
+    .nuclear-add-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,140,0,0.1); }
+    .nuclear-add-section label {
+      display: block; color: var(--text-muted); font-size: 11px; margin-bottom: 8px;
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .nuclear-presets {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px; margin-bottom: 14px;
+    }
+    .nuclear-preset-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; background: rgba(255,140,0,0.04);
+      border: 1px solid rgba(255,140,0,0.1); border-radius: 6px;
+      cursor: pointer; transition: all 0.2s; font-size: 13px; color: var(--text);
+    }
+    .nuclear-preset-item:hover { background: rgba(255,140,0,0.08); border-color: rgba(255,140,0,0.2); }
+    .nuclear-preset-item input[type="checkbox"] { accent-color: #ffaa44; cursor: pointer; }
+    .nuclear-preset-item span { cursor: pointer; user-select: none; }
+
+    .nuclear-add-row {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 12px;
+    }
+    .nuclear-add-row .form-group { min-width: 140px; flex: 1; }
+    .nuclear-add-row .form-group label { font-size: 11px; margin-bottom: 4px; display: block; color: var(--text-muted); }
+    .nuclear-add-row select {
+      width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 7px 10px; font-size: 13px; cursor: pointer;
+    }
+    .btn-nuclear-add {
+      background: linear-gradient(135deg, #ff8c00, #ff6600); color: #fff;
+      border: none; border-radius: 6px; padding: 8px 18px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.3px; white-space: nowrap; transition: all 0.2s;
+    }
+    .btn-nuclear-add:hover { background: linear-gradient(135deg, #ffa033, #ff7722); }
+
+    .nuclear-site-card {
+      background: rgba(255,140,0,0.05); border: 1px solid rgba(255,140,0,0.15);
+      border-radius: 8px; padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .nuclear-site-card .site-info { flex: 1; min-width: 150px; }
+    .nuclear-site-card .site-name { font-size: 14px; font-weight: 600; color: #ede9e3; }
+    .nuclear-site-card .site-countdown { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .nuclear-site-card .site-countdown.unblocking { color: #ffaa44; }
+
+    .btn-unblock {
+      background: rgba(255,140,0,0.1); color: #ffaa44;
+      border: 1px solid rgba(255,140,0,0.25); padding: 6px 14px;
+      font-size: 12px; font-weight: 600; border-radius: 6px;
+      cursor: pointer; white-space: nowrap; transition: all 0.2s;
+    }
+    .btn-unblock:hover { background: rgba(255,140,0,0.2); }
+
+    .select-block-again {
+      background: var(--bg); color: var(--text-muted);
+      border: 1px solid var(--border); padding: 6px 10px;
+      border-radius: 6px; font-size: 13px; cursor: pointer; max-width: 150px;
+    }
+    .select-block-again:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+    .nuclear-empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
+    .nuclear-test-warning { display: none; margin-top: 8px; font-size: 11px; color: #ffaa44; }
+
+    .nuclear-exception-list { margin-top: 6px; }
+    .exception-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; background: rgba(255,140,0,0.08);
+      border: 1px solid rgba(255,140,0,0.2); border-radius: 20px;
+      font-size: 12px; color: #b0b0b0; margin: 2px 4px 2px 0;
+    }
+    .exception-chip .remove-chip {
+      cursor: pointer; color: var(--red); font-size: 14px; line-height: 1; opacity: 0.7;
+    }
+    .exception-chip .remove-chip:hover { opacity: 1; }
+    .exception-add-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .exception-add-row input { flex: 1; }
+    .exception-add-row button { padding: 6px 14px; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -305,18 +391,89 @@
     <!-- Section 3: Nuclear Block -->
     <div class="section" id="sec-nuclear">
       <div class="section-header" onclick="toggleSection('sec-nuclear')">
-        <span class="section-title">Nuclear Block</span>
+        <span class="section-title">☢️ Nuclear Block</span>
         <span class="section-arrow">&#9654;</span>
       </div>
       <div class="section-body">
-        <div class="desc" style="margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">
-          Permanently blocked sites with cooldown-based unblock
+        <p class="nuclear-desc">Sites permanently blocked — never accessible, even during breaks. Removing a site requires waiting through a cooldown you set when adding it.</p>
+        <p class="nuclear-desc" style="margin-top: -8px; font-size: 12px;"><strong>How it works:</strong> Adding a site blocks it instantly — the hard part is getting it back. To remove a site, you click "Unblock" and wait through the removal cooldown. If a second confirmation cooldown is enabled, you'll need to confirm again and wait a second time.</p>
+
+        <div class="nuclear-add-section">
+          <label>Add sites to Nuclear Block</label>
+          <div id="nuclearPresetsList" class="nuclear-presets"></div>
+
+          <div style="margin-bottom: 10px;">
+            <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)"
+              style="width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-size:13px;"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addNuclearSiteFromUI()}">
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <label style="font-size: 11px; margin-bottom: 4px;">Path exceptions (allowed despite nuclear block)</label>
+            <div class="exception-add-row">
+              <input type="text" id="nuclearExceptionInput" placeholder="youtube.com/@Veritasium"
+                style="background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:13px;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addNuclearException()}">
+              <button onclick="addNuclearException()"
+                style="background:var(--accent); color:white; border:none; border-radius:6px; padding:6px 14px; font-size:13px; cursor:pointer; font-weight:600;">Add</button>
+            </div>
+            <div id="nuclearExceptionChips" style="display:flex; flex-wrap:wrap; gap:4px; min-height:0;"></div>
+          </div>
+
+          <div class="nuclear-add-row">
+            <div class="form-group">
+              <label>Removal cooldown</label>
+              <select id="nuclearCooldown">
+                <option value="10000">⚠ 10s (test)</option>
+                <option value="3600000">1 hour</option>
+                <option value="7200000">2 hours</option>
+                <option value="14400000">4 hours</option>
+                <option value="28800000">8 hours</option>
+                <option value="43200000">12 hours</option>
+                <option value="86400000">24 hours</option>
+                <option value="172800000" selected>48 hours</option>
+                <option value="259200000">3 days</option>
+                <option value="432000000">5 days</option>
+                <option value="604800000">1 week</option>
+                <option value="1209600000">2 weeks</option>
+                <option value="2592000000">1 month</option>
+                <option value="5184000000">2 months</option>
+                <option value="7776000000">3 months</option>
+                <option value="15552000000">6 months</option>
+                <option value="31536000000">1 year</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Confirmation cooldown</label>
+              <select id="nuclearSecondCooldown">
+                <option value="5000">⚠ 5s (test)</option>
+                <option value="600000">10 minutes</option>
+                <option value="1200000">20 minutes</option>
+                <option value="3600000">1 hour</option>
+                <option value="7200000">2 hours</option>
+                <option value="14400000">4 hours</option>
+                <option value="28800000">8 hours</option>
+                <option value="43200000">12 hours</option>
+                <option value="64800000" selected>18 hours</option>
+                <option value="86400000">24 hours</option>
+                <option value="129600000">36 hours</option>
+                <option value="172800000">48 hours</option>
+                <option value="259200000">3 days</option>
+                <option value="432000000">5 days</option>
+                <option value="604800000">1 week</option>
+                <option value="1209600000">2 weeks</option>
+                <option value="2592000000">1 month</option>
+                <option value="0">Off</option>
+              </select>
+            </div>
+            <button class="btn-nuclear-add" onclick="addNuclearSiteFromUI()">Add to Nuclear Block</button>
+          </div>
+          <div id="nuclearCooldownTestWarning" class="nuclear-test-warning">⚠ Testing mode — cooldown expires in seconds. Switch to a real duration before using seriously.</div>
         </div>
-        <div class="tag-list" id="nuclearSitesTags"></div>
-        <div class="add-row">
-          <input type="text" id="addNuclearSite" placeholder="e.g. onlyfans.com"
-            onkeydown="if(event.key==='Enter')addNuclearSiteEntry()">
-          <button onclick="addNuclearSiteEntry()">Add</button>
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,140,0,0.1);">
+          <label style="display:block; color:var(--text-muted); font-size:12px; margin-bottom:8px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px;">Currently nuclear-blocked sites</label>
+          <div id="nuclearSitesList"><p class="nuclear-empty">No sites added yet.</p></div>
         </div>
       </div>
     </div>
@@ -845,26 +1002,200 @@
 
     /* ===== Nuclear Block ===== */
 
-    function addNuclearSiteEntry() {
-      const input = document.getElementById('addNuclearSite');
-      const domain = input.value.trim().toLowerCase();
-      if (!domain) return;
-      input.value = '';
-      const nuclear = settings.nuclearBlockData ? { ...settings.nuclearBlockData } : { sites: [] };
-      if (!nuclear.sites) nuclear.sites = [];
-      if (nuclear.sites.some(s => s.domain === domain)) return;
-      nuclear.sites.push({
-        domain, addedAt: Date.now(),
-        cooldown1Ms: 86400000, cooldown2Ms: 64800000, unblockClickedAt: null,
-      });
+    const PRESET_NUCLEAR_SITES = [
+      { name: 'OnlyFans', domain: 'onlyfans.com' },
+      { name: 'Adult Websites', domains: [
+        'pornhub.com','xvideos.com','xnxx.com','redtube.com','youporn.com',
+        'xhamster.com','tube8.com','spankbang.com','beeg.com','eporner.com',
+        'vporn.com','txxx.com','tnaflix.com','fuq.com','hclips.com',
+        'drtuber.com','nuvid.com','pornone.com','empflix.com','brazzers.com',
+        'realitykings.com','bangbros.com','naughtyamerica.com','anyporn.com',
+        'hotmovs.com','cliphunter.com','ixxx.com','pornmd.com','alphaporno.com',
+        'porntrex.com','sxyprn.com','porntube.com','fapster.xxx','gotporn.com','faphouse.com',
+      ]},
+      { name: 'Gambling Sites', domains: [
+        'draftkings.com','fanduel.com','betmgm.com','caesarssportsbook.com',
+        'bet365.com','betway.com','williamhill.com','betrivers.com',
+        'pointsbet.com','hardrock.bet','unibet.com','bwin.com',
+        'bovada.lv','mybookie.ag','betonline.ag','sportsbetting.ag',
+        'prizepicks.com','getfliff.com','barstoolsports.com','ladbrokes.com',
+        'paddypower.com','888casino.com','pokerstars.com','ggpoker.com','partypoker.com','wsop.com',
+      ]},
+      { name: 'Steam', domain: 'steampowered.com' },
+      { name: 'Epic Games', domain: 'epicgames.com' },
+      { name: 'League of Legends', domain: 'leagueoflegends.com' },
+      { name: 'World of Warcraft', domain: 'worldofwarcraft.com' },
+      { name: 'Valorant', domain: 'playvalorant.com' },
+    ];
+
+    function getNuclearSiteStage(site) {
+      const now = Date.now();
+      if (now - site.addedAt < site.cooldown1Ms) return 'locked';
+      if (!site.unblockClickedAt) return 'ready';
+      if (site.cooldown2Ms > 0 && now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
+      return 'confirm';
+    }
+
+    function getNuclearCountdownMs(site) {
+      const now = Date.now();
+      const stage = getNuclearSiteStage(site);
+      if (stage === 'locked') return site.cooldown1Ms - (now - site.addedAt);
+      if (stage === 'unblocking') return site.cooldown2Ms - (now - site.unblockClickedAt);
+      return 0;
+    }
+
+    function fuzzyTimeLeft(ms) {
+      const MONTH = 30*24*60*60*1000, DAY = 24*60*60*1000, HOUR = 60*60*1000;
+      if (ms <= 0) return null;
+      if (ms >= MONTH) return Math.ceil(ms / MONTH) + ' months';
+      if (ms >= 2 * DAY) return Math.ceil(ms / DAY) + ' days';
+      if (ms >= DAY) return '1 day';
+      if (ms >= 2 * HOUR) return Math.floor(ms / HOUR) + ' hours';
+      if (ms >= HOUR) return '1 hour';
+      return 'Less than 1 hour';
+    }
+
+    function getNuclearData() {
+      return settings.nuclearBlockData && settings.nuclearBlockData.sites
+        ? settings.nuclearBlockData : { sites: [] };
+    }
+
+    function saveNuclear(nuclear) {
       save({ nuclearBlockData: nuclear });
     }
 
-    function removeNuclearSite(index) {
-      const nuclear = settings.nuclearBlockData ? { ...settings.nuclearBlockData } : { sites: [] };
-      if (!nuclear.sites) nuclear.sites = [];
-      nuclear.sites.splice(index, 1);
-      save({ nuclearBlockData: nuclear });
+    function addNuclearException() {
+      const input = document.getElementById('nuclearExceptionInput');
+      const path = input.value.trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+      if (!path) return;
+      input.value = '';
+      const container = document.getElementById('nuclearExceptionChips');
+      // Check for duplicate
+      if (container.querySelector(`[data-path="${CSS.escape(path)}"]`)) return;
+      const chip = document.createElement('span');
+      chip.className = 'exception-chip';
+      chip.dataset.path = path;
+      chip.textContent = path;
+      const remove = document.createElement('span');
+      remove.className = 'remove-chip';
+      remove.textContent = '\u00d7';
+      remove.onclick = () => chip.remove();
+      chip.appendChild(remove);
+      container.appendChild(chip);
+    }
+
+    function collectNuclearExceptions() {
+      return Array.from(document.querySelectorAll('#nuclearExceptionChips .exception-chip'))
+        .map(c => c.dataset.path);
+    }
+
+    function addNuclearSiteFromUI() {
+      const cooldown1Ms = parseInt(document.getElementById('nuclearCooldown').value, 10);
+      const cooldown2Ms = parseInt(document.getElementById('nuclearSecondCooldown').value, 10);
+      const exceptions = collectNuclearExceptions();
+      const nuclear = getNuclearData();
+      const existingDomains = new Set();
+      nuclear.sites.forEach(s => {
+        if (s.domains) s.domains.forEach(d => existingDomains.add(d));
+        else if (s.domain) existingDomains.add(s.domain);
+      });
+
+      const entries = [];
+
+      // Collect checked presets
+      PRESET_NUCLEAR_SITES.forEach(preset => {
+        const key = preset.domain || preset.domains[0];
+        const cb = document.getElementById('nuclear-preset-' + key);
+        if (cb && cb.checked && !cb.disabled) {
+          entries.push({
+            id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+            name: preset.name,
+            ...(preset.domain ? { domain: preset.domain } : { domains: preset.domains }),
+            addedAt: Date.now(), cooldown1Ms, cooldown2Ms, unblockClickedAt: null,
+            exceptions,
+          });
+        }
+      });
+
+      // Collect custom domain
+      const customInput = document.getElementById('nuclearCustomDomain');
+      const customDomain = customInput.value.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '').toLowerCase();
+      if (customDomain && !existingDomains.has(customDomain)) {
+        entries.push({
+          id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+          name: customDomain, domain: customDomain,
+          addedAt: Date.now(), cooldown1Ms, cooldown2Ms, unblockClickedAt: null,
+          exceptions,
+        });
+      }
+
+      if (entries.length === 0) {
+        alert('Select at least one preset or enter a domain to add.');
+        return;
+      }
+
+      entries.forEach(e => nuclear.sites.push(e));
+      customInput.value = '';
+      document.getElementById('nuclearExceptionChips').innerHTML = '';
+      // Uncheck presets
+      PRESET_NUCLEAR_SITES.forEach(p => {
+        const cb = document.getElementById('nuclear-preset-' + (p.domain || p.domains[0]));
+        if (cb) cb.checked = false;
+      });
+      saveNuclear(nuclear);
+    }
+
+    function clickUnblockNuclear(id) {
+      const nuclear = getNuclearData();
+      const site = nuclear.sites.find(s => s.id === id);
+      if (!site) return;
+      if (!site.cooldown2Ms || site.cooldown2Ms <= 0) {
+        nuclear.sites = nuclear.sites.filter(s => s.id !== id);
+      } else {
+        site.unblockClickedAt = Date.now();
+      }
+      saveNuclear(nuclear);
+    }
+
+    function confirmUnblockNuclear(id) {
+      if (!confirm('Are you sure you want to permanently unblock this site?')) return;
+      const nuclear = getNuclearData();
+      nuclear.sites = nuclear.sites.filter(s => s.id !== id);
+      saveNuclear(nuclear);
+    }
+
+    function blockAgainNuclear(id, selectEl) {
+      const ms = parseInt(selectEl.value, 10);
+      if (!ms) return;
+      const nuclear = getNuclearData();
+      const site = nuclear.sites.find(s => s.id === id);
+      if (!site) return;
+      site.addedAt = Date.now();
+      site.cooldown1Ms = ms;
+      site.unblockClickedAt = null;
+      saveNuclear(nuclear);
+    }
+
+    function addNuclearSiteException(id) {
+      const input = document.getElementById('nuclear-ex-input-' + id);
+      if (!input) return;
+      const path = input.value.trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+      if (!path) return;
+      const nuclear = getNuclearData();
+      const site = nuclear.sites.find(s => s.id === id);
+      if (!site) return;
+      if (!site.exceptions) site.exceptions = [];
+      if (site.exceptions.includes(path)) return;
+      site.exceptions.push(path);
+      saveNuclear(nuclear);
+    }
+
+    function removeNuclearSiteException(id, exPath) {
+      const nuclear = getNuclearData();
+      const site = nuclear.sites.find(s => s.id === id);
+      if (!site || !site.exceptions) return;
+      site.exceptions = site.exceptions.filter(e => e !== exPath);
+      saveNuclear(nuclear);
     }
 
     /* ===== Reset ===== */
@@ -1036,17 +1367,127 @@
     }
 
     function renderNuclearBlock() {
-      const container = document.getElementById('nuclearSitesTags');
-      if (!container) return;
-      const sites = settings.nuclearBlockData?.sites || [];
-      container.innerHTML = sites.map((s, i) =>
-        `<span class="tag">${escHtml(s.domain)}<button onclick="removeNuclearSite(${i})">&times;</button></span>`
-      ).join('');
+      // Render presets
+      const presetsGrid = document.getElementById('nuclearPresetsList');
+      if (!presetsGrid) return;
+      const nuclear = getNuclearData();
+      const existingDomains = new Set();
+      nuclear.sites.forEach(s => {
+        if (s.domains) s.domains.forEach(d => existingDomains.add(d));
+        else if (s.domain) existingDomains.add(s.domain);
+      });
+
+      presetsGrid.innerHTML = PRESET_NUCLEAR_SITES.map(preset => {
+        const key = preset.domain || preset.domains[0];
+        const domains = preset.domains || [preset.domain];
+        const alreadyAdded = domains.every(d => existingDomains.has(d));
+        return `<label class="nuclear-preset-item" style="${alreadyAdded ? 'opacity:0.5;' : ''}">
+          <input type="checkbox" id="nuclear-preset-${escHtml(key)}" ${alreadyAdded ? 'disabled' : ''}>
+          <span>${escHtml(preset.name)}</span>
+        </label>`;
+      }).join('');
+
+      // Render site cards
+      const list = document.getElementById('nuclearSitesList');
+      if (!nuclear.sites.length) {
+        list.innerHTML = '<p class="nuclear-empty">No sites added yet.</p>';
+      } else {
+        list.innerHTML = nuclear.sites.map(site => {
+          const stage = getNuclearSiteStage(site);
+          const name = escHtml(site.name || site.domain || (site.domains || [])[0] || '?');
+          let countdownHtml = '';
+          if (stage === 'locked') {
+            const fuzzy = fuzzyTimeLeft(getNuclearCountdownMs(site)) || '1 day';
+            countdownHtml = `<div class="site-countdown">${fuzzy} until you can request unblock</div>`;
+          } else if (stage === 'ready') {
+            countdownHtml = '';
+          } else if (stage === 'unblocking') {
+            const fuzzy = fuzzyTimeLeft(getNuclearCountdownMs(site)) || '1 day';
+            countdownHtml = `<div class="site-countdown unblocking">${fuzzy} until site is removed</div>`;
+          } else if (stage === 'confirm') {
+            countdownHtml = `<div class="site-countdown">Waiting for your final decision</div>`;
+          }
+
+          // Exception display
+          let exceptionsHtml = '';
+          if (site.exceptions && site.exceptions.length > 0) {
+            const chips = site.exceptions.map(ex => {
+              const removeBtn = stage === 'confirm'
+                ? `<span class="remove-chip" onclick="removeNuclearSiteException('${site.id}','${escHtml(ex)}')">&times;</span>`
+                : '';
+              return `<span class="exception-chip">${escHtml(ex)}${removeBtn}</span>`;
+            }).join('');
+            exceptionsHtml = `<div class="nuclear-exception-list"><span style="font-size:11px;color:var(--text-muted);margin-right:6px;">Exceptions:</span>${chips}</div>`;
+          }
+
+          // Add exception input for confirm stage
+          let addExHtml = '';
+          if (stage === 'confirm') {
+            addExHtml = `<div class="exception-add-row" style="margin-top:6px;">
+              <input type="text" id="nuclear-ex-input-${site.id}" placeholder="Add exception path..."
+                style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addNuclearSiteException('${site.id}')}">
+              <button onclick="addNuclearSiteException('${site.id}')"
+                style="padding:4px 10px;font-size:11px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;">Add</button>
+            </div>`;
+          }
+
+          // Action buttons
+          let actionsHtml = '';
+          if (stage === 'ready' || stage === 'confirm') {
+            const btnLabel = (stage === 'confirm' || !site.cooldown2Ms || site.cooldown2Ms <= 0) ? 'Unblock Now' : 'Unblock';
+            const btnAction = stage === 'confirm'
+              ? `confirmUnblockNuclear('${site.id}')`
+              : `clickUnblockNuclear('${site.id}')`;
+            actionsHtml += `<button class="btn-unblock" onclick="${btnAction}">${btnLabel}</button>`;
+            actionsHtml += `<select class="select-block-again" onchange="blockAgainNuclear('${site.id}', this)">
+              <option value="" disabled selected>Block Again</option>
+              <option value="10000">⚠ 10s (test)</option>
+              <option value="86400000">24 hours</option>
+              <option value="172800000">48 hours</option>
+              <option value="604800000">1 week</option>
+              <option value="2592000000">1 month</option>
+              <option value="7776000000">3 months</option>
+              <option value="15552000000">6 months</option>
+              <option value="31536000000">1 year</option>
+            </select>`;
+          }
+
+          return `<div class="nuclear-site-card">
+            <div class="site-info">
+              <div class="site-name">${name}</div>
+              ${countdownHtml}
+              ${exceptionsHtml}
+              ${addExHtml}
+            </div>
+            ${actionsHtml}
+          </div>`;
+        }).join('');
+      }
+
+      // Cooldown test warning
+      updateNuclearCooldownWarning();
+    }
+
+    function updateNuclearCooldownWarning() {
+      const c1 = document.getElementById('nuclearCooldown');
+      const c2 = document.getElementById('nuclearSecondCooldown');
+      const warn = document.getElementById('nuclearCooldownTestWarning');
+      if (!c1 || !c2 || !warn) return;
+      const testMode = c1.value === '10000' || c2.value === '5000';
+      warn.style.display = testMode ? 'block' : 'none';
     }
 
     /* ===== Init ===== */
 
     setupSelect('idleTimeoutSeconds', parseInt);
+
+    // Nuclear cooldown warning listeners
+    document.getElementById('nuclearCooldown').addEventListener('change', updateNuclearCooldownWarning);
+    document.getElementById('nuclearSecondCooldown').addEventListener('change', updateNuclearCooldownWarning);
+
+    // Refresh nuclear countdowns every minute
+    setInterval(() => renderNuclearBlock(), 60 * 1000);
 
     function connectWS() {
       const ws = new WebSocket(`ws://${location.host}`);

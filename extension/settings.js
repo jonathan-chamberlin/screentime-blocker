@@ -316,6 +316,73 @@ async function loadNuclearBlock() {
 
         info.appendChild(nameEl);
         info.appendChild(countdownEl);
+
+        // Show exceptions if any
+        if (site.exceptions && site.exceptions.length > 0) {
+          const exDiv = document.createElement('div');
+          exDiv.className = 'nuclear-exception-list';
+          const exLabel = document.createElement('span');
+          exLabel.style.cssText = 'font-size: 11px; color: #8a8690; margin-right: 6px;';
+          exLabel.textContent = 'Exceptions:';
+          exDiv.appendChild(exLabel);
+          site.exceptions.forEach(ex => {
+            const chip = document.createElement('span');
+            chip.className = 'exception-chip';
+            chip.textContent = ex;
+            if (stage === 'confirm') {
+              const remove = document.createElement('span');
+              remove.className = 'remove-chip';
+              remove.textContent = '\u00d7';
+              remove.addEventListener('click', async () => {
+                const nbData = await getNuclearData();
+                const s = nbData.sites.find(s => s.id === site.id);
+                if (s) {
+                  s.exceptions = (s.exceptions || []).filter(e => e !== ex);
+                  await saveNuclearData(nbData);
+                  await applyNuclearRules();
+                  loadNuclearBlock();
+                }
+              });
+              chip.appendChild(remove);
+            }
+            exDiv.appendChild(chip);
+          });
+          info.appendChild(exDiv);
+        }
+
+        // Add exception input when in confirm stage
+        if (stage === 'confirm') {
+          const addRow = document.createElement('div');
+          addRow.className = 'exception-add-row';
+          addRow.style.marginTop = '6px';
+          const addInput = document.createElement('input');
+          addInput.type = 'text';
+          addInput.placeholder = 'Add exception path...';
+          addInput.style.fontSize = '11px';
+          const addBtn = document.createElement('button');
+          addBtn.className = 'btn-secondary';
+          addBtn.textContent = 'Add';
+          addBtn.style.cssText = 'padding: 4px 10px; font-size: 11px;';
+          const doAdd = async () => {
+            const path = cleanExceptionPath(addInput.value);
+            if (!path) return;
+            const nbData = await getNuclearData();
+            const s = nbData.sites.find(s => s.id === site.id);
+            if (s) {
+              if (!s.exceptions) s.exceptions = [];
+              if (!s.exceptions.includes(path)) s.exceptions.push(path);
+              await saveNuclearData(nbData);
+              await applyNuclearRules();
+              loadNuclearBlock();
+            }
+          };
+          addBtn.addEventListener('click', doAdd);
+          addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } });
+          addRow.appendChild(addInput);
+          addRow.appendChild(addBtn);
+          info.appendChild(addRow);
+        }
+
         card.appendChild(info);
 
         if (stage === 'ready' || stage === 'confirm') {
@@ -525,12 +592,17 @@ function addNuclearSiteFromUI() {
     return;
   }
 
+  // Attach exceptions to all entries
+  const exceptions = collectExceptionChips('nuclearExceptionChips');
+  entries.forEach(entry => { entry.exceptions = exceptions; });
+
   let pending = entries.length;
   entries.forEach(entry => {
     chrome.runtime.sendMessage({ action: 'addNuclearSite', entry }, () => {
       pending--;
       if (pending === 0) {
         customInput.value = '';
+        renderExceptionChips('nuclearExceptionChips', []);
         loadNuclearBlock();
         showSavedIndicator();
       }
@@ -766,6 +838,9 @@ function openBreakListEditor(listId) {
       if (typeof a === 'string') return a;
       return `${a.name}:${a.process}`;
     }).join('\n');
+
+    // Render exception chips
+    renderExceptionChips('breakListEditorExceptions', list.exceptions || []);
   });
 }
 
@@ -782,17 +857,22 @@ async function saveBreakList() {
   // Collect apps
   const apps = collectBreakAppsFromEditor('breakListEditorApps', PRESET_BREAK_APPS, 'breakListEditorCustomApps');
 
+  // Collect exceptions
+  const exceptions = collectExceptionChips('breakListEditorExceptions');
+
   if (editingBreakListId) {
     const list = breakLists.find(l => l.id === editingBreakListId);
     if (list) {
       list.name = name;
       list.sites = sites;
       list.apps = apps;
+      list.exceptions = exceptions;
     }
   } else {
     const newList = createNewList('break', name);
     newList.sites = sites;
     newList.apps = apps;
+    newList.exceptions = exceptions;
     breakLists.push(newList);
   }
 
@@ -1360,6 +1440,57 @@ function renderProductiveAppPresets(containerId, presets, selectedApps) {
   });
 }
 
+// === Exception Chips ===
+
+function renderExceptionChips(containerId, exceptions) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  (exceptions || []).forEach(path => {
+    const chip = document.createElement('span');
+    chip.className = 'exception-chip';
+    chip.dataset.path = path;
+    chip.textContent = path;
+    const remove = document.createElement('span');
+    remove.className = 'remove-chip';
+    remove.textContent = '\u00d7';
+    remove.addEventListener('click', () => {
+      chip.remove();
+    });
+    chip.appendChild(remove);
+    container.appendChild(chip);
+  });
+}
+
+function collectExceptionChips(containerId) {
+  const container = document.getElementById(containerId);
+  return Array.from(container.querySelectorAll('.exception-chip')).map(c => c.dataset.path);
+}
+
+function cleanExceptionPath(raw) {
+  return raw.trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+}
+
+function addExceptionFromInput(inputId, containerId) {
+  const input = document.getElementById(inputId);
+  const path = cleanExceptionPath(input.value);
+  if (!path) return;
+  const existing = collectExceptionChips(containerId);
+  if (existing.includes(path)) { input.value = ''; return; }
+  // Render one more chip
+  const container = document.getElementById(containerId);
+  const chip = document.createElement('span');
+  chip.className = 'exception-chip';
+  chip.dataset.path = path;
+  chip.textContent = path;
+  const remove = document.createElement('span');
+  remove.className = 'remove-chip';
+  remove.textContent = '\u00d7';
+  remove.addEventListener('click', () => chip.remove());
+  chip.appendChild(remove);
+  container.appendChild(chip);
+  input.value = '';
+}
+
 // === Collecting from Editors ===
 
 function collectSitesFromEditor(presetContainerId, presets, customTextareaId) {
@@ -1556,6 +1687,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('nuclearSecondCooldown').addEventListener('change', () => saveNuclearSettings());
 
   document.getElementById('btn-add-nuclear').addEventListener('click', addNuclearSiteFromUI);
+  document.getElementById('btn-add-nuclear-exception').addEventListener('click', () => {
+    addExceptionFromInput('nuclearExceptionInput', 'nuclearExceptionChips');
+  });
+  document.getElementById('nuclearExceptionInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addExceptionFromInput('nuclearExceptionInput', 'nuclearExceptionChips');
+    }
+  });
 
   const cooldownSelect = document.getElementById('nuclearCooldown');
   const secondCooldownSelect = document.getElementById('nuclearSecondCooldown');
@@ -1605,6 +1745,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('breakListEditorCustomSites').value = '';
     renderAppPresets('breakListEditorApps', PRESET_BREAK_APPS, []);
     document.getElementById('breakListEditorCustomApps').value = '';
+    renderExceptionChips('breakListEditorExceptions', []);
     // Show/hide apps section
     getStorage(['companionMode']).then(r => {
       document.getElementById('breakListEditorAppsSection').style.display = (r.companionMode || DEFAULTS.companionMode) === 'on' ? 'block' : 'none';
@@ -1612,6 +1753,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('btn-save-break-list').addEventListener('click', saveBreakList);
   document.getElementById('btn-cancel-break-list').addEventListener('click', closeBreakListEditor);
+  document.getElementById('btn-add-break-exception').addEventListener('click', () => {
+    addExceptionFromInput('breakListEditorExceptionInput', 'breakListEditorExceptions');
+  });
+  document.getElementById('breakListEditorExceptionInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addExceptionFromInput('breakListEditorExceptionInput', 'breakListEditorExceptions');
+    }
+  });
 
   // Productive list CRUD buttons
   document.getElementById('btn-create-productive-list').addEventListener('click', () => {

@@ -9,8 +9,12 @@
  *   Web UI ──fetch(/api/*)──▶ Web Server ──▶ Session Engine
  */
 
-import { ensureCA } from './proxy/ca-manager.js';
+import { ensureCA, isCAInstalled, installCA } from './proxy/ca-manager.js';
 import { startProxy } from './proxy/proxy-server.js';
+import {
+  enableSystemProxy, disableSystemProxy,
+  getProxySettings, saveProxyBackup, restoreProxyBackup,
+} from './proxy/system-proxy.js';
 import { createSessionEngine } from './session/session-engine.js';
 import { startAppMonitor } from './monitor/app-monitor.js';
 import { killApp } from './monitor/app-killer.js';
@@ -21,22 +25,29 @@ import {
   getBlockedSites, getBlockedApps, getAllowedPaths, getBlockingMode,
   getProductiveMode, getProductiveSites, getProductiveApps,
 } from './shared/list-utils.js';
+import { computeNuclearStage, collectNuclearExceptions, getNuclearSiteDomains } from './shared/nuclear-utils.js';
 
 /**
  * Build the blocking state from storage config and session engine status.
- * Pure function: derives flat arrays from the active break list.
+ * Derives flat arrays from the active break list and computes nuclear stages.
  *
  * @param {Object} config - Storage data with lists, activeListId, nuclearBlockData
  * @param {Object} sessionStatus - Current session state
  * @returns {import('./proxy/rule-engine.js').BlockingState}
  */
 function buildBlockingState(config, sessionStatus) {
+  const nuclearRawSites = config.nuclearBlockData?.sites || [];
   return {
     sessionActive: sessionStatus.sessionActive,
     rewardActive: sessionStatus.rewardActive || false,
     blockedSites: getBlockedSites(config.lists, config.activeListId),
     allowedPaths: getAllowedPaths(config.lists, config.activeListId),
-    nuclearSites: config.nuclearBlockData?.sites || [],
+    nuclearSites: nuclearRawSites.map(site => ({
+      ...site,
+      domains: getNuclearSiteDomains(site),
+      stage: computeNuclearStage(site),
+    })),
+    nuclearExceptions: collectNuclearExceptions(nuclearRawSites),
     blockingMode: getBlockingMode(config.lists, config.activeListId),
   };
 }
@@ -48,12 +59,24 @@ function buildBlockingState(config, sessionStatus) {
 export async function startApp() {
   console.log('[main] Starting Brainrot Blocker...');
 
-  // Load config from storage
-  const config = await getAll();
+  // Load config from storage (mutable — refreshed on settings changes)
+  let config = await getAll();
 
-  // 1. Ensure CA certificate exists
+  // 1. Ensure CA certificate exists and is trusted
   await ensureCA();
   console.log('[main] CA certificate ready');
+
+  try {
+    const caInstalled = await isCAInstalled();
+    if (!caInstalled) {
+      console.log('[main] Installing CA certificate to Windows trust store (may trigger UAC)...');
+      await installCA();
+      console.log('[main] CA certificate installed to trust store');
+    }
+  } catch (err) {
+    console.warn('[main] Could not install CA to trust store:', err.message);
+    console.warn('[main] Browsers may show certificate warnings. Run as admin to install.');
+  }
 
   // 2. Create session engine — derive flat arrays from active list
   const engine = createSessionEngine({
@@ -67,7 +90,7 @@ export async function startApp() {
     blockTaskManager: config.blockTaskManager,
   });
 
-  // Mutable blocking state — updated when session changes
+  // Mutable blocking state — updated when session or settings change
   let currentBlockingState = buildBlockingState(config, engine.getStatus());
 
   // Wire: session engine updates blocking state for proxy
@@ -82,6 +105,12 @@ export async function startApp() {
     }
   });
 
+  // Callback for when settings change via API — refreshes config and blocking state
+  function onSettingsChanged(mergedData) {
+    config = mergedData;
+    currentBlockingState = buildBlockingState(config, engine.getStatus());
+  }
+
   // 3. Start HTTPS proxy
   const proxyHandle = await startProxy({
     port: PROXY_PORT,
@@ -90,14 +119,24 @@ export async function startApp() {
   });
   console.log('[main] HTTPS proxy ready');
 
-  // 4. Start web server
+  // 4. Enable system proxy so browser traffic routes through our MITM proxy
+  //    First, recover from any previous crash (backup file = unclean shutdown)
+  await restoreProxyBackup();
+  //    Save current settings, then enable ours
+  const originalProxy = await getProxySettings();
+  await saveProxyBackup(originalProxy);
+  await enableSystemProxy(PROXY_PORT);
+  console.log('[main] System proxy enabled (localhost:' + PROXY_PORT + ')');
+
+  // 5. Start web server
   const webHandle = await startWebServer({
     port: WEB_PORT,
     sessionEngine: engine,
+    onSettingsChanged,
   });
   console.log('[main] Web server ready');
 
-  // 5. Start app monitor
+  // 6. Start app monitor
   const appMonitor = startAppMonitor();
   appMonitor.emitter.on('app-changed', (focus) => {
     engine.reportAppFocus(focus);
@@ -118,9 +157,16 @@ export async function startApp() {
 
   console.log(`[main] Brainrot Blocker running — Dashboard: http://localhost:${WEB_PORT}`);
 
-  // Graceful shutdown
+  // Graceful shutdown — restore proxy settings before stopping
   async function shutdown() {
     console.log('[main] Shutting down...');
+    try {
+      await restoreProxyBackup();
+      console.log('[main] System proxy restored');
+    } catch (err) {
+      console.error('[main] Failed to restore proxy settings:', err.message);
+      try { await disableSystemProxy(); } catch { /* last resort */ }
+    }
     appMonitor.stop();
     engine.destroy();
     await proxyHandle.stop();
@@ -138,14 +184,27 @@ export async function startApp() {
     process.exit(0);
   });
 
+  // Crash safety — try to restore proxy on unexpected errors
+  process.on('uncaughtException', async (err) => {
+    console.error('[main] Uncaught exception:', err);
+    try { await restoreProxyBackup(); } catch { /* best effort */ }
+    process.exit(1);
+  });
+  process.on('unhandledRejection', async (err) => {
+    console.error('[main] Unhandled rejection:', err);
+    try { await restoreProxyBackup(); } catch { /* best effort */ }
+    process.exit(1);
+  });
+
   return { shutdown };
 }
 
 // Auto-start when run directly
 const isDirectRun = process.argv[1]?.endsWith('main.js');
 if (isDirectRun) {
-  startApp().catch((err) => {
+  startApp().catch(async (err) => {
     console.error('[main] Failed to start:', err);
+    try { await restoreProxyBackup(); } catch { /* best effort */ }
     process.exit(1);
   });
 }

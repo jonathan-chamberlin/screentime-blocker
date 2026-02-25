@@ -9,6 +9,9 @@ function migrateBreakList(list) {
   if (!list.schedules) {
     list.schedules = [];
   }
+  if (!list.exceptions) {
+    list.exceptions = [];
+  }
   return list;
 }
 
@@ -82,6 +85,7 @@ function createNewList(type, name) {
     isActive: false,
     mode: 'off',
     schedules: [],
+    exceptions: [],
   };
 }
 
@@ -141,6 +145,19 @@ function getBlockingSites(breakLists, sessionActive) {
   }
 
   return Array.from(sites);
+}
+
+function getBlockingExceptions(breakLists, sessionActive) {
+  const blockingLists = getListsBlockingNow(breakLists, sessionActive);
+  const exceptions = new Set();
+
+  for (const list of blockingLists) {
+    if (list.exceptions) {
+      for (const ex of list.exceptions) exceptions.add(ex);
+    }
+  }
+
+  return Array.from(exceptions);
 }
 
 function getBlockingApps(breakLists, sessionActive) {

@@ -1092,6 +1092,54 @@
             font-size: 12px;
             color: #8a8690;
         }
+
+        /* Exception chips */
+        .exception-add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .exception-add-row input {
+            flex: 1;
+        }
+        .exception-add-row button {
+            padding: 8px 16px;
+            white-space: nowrap;
+        }
+        .exception-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 0;
+        }
+        .exception-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+        .exception-chip .remove-chip {
+            cursor: pointer;
+            color: #ff4757;
+            font-size: 14px;
+            line-height: 1;
+            opacity: 0.7;
+        }
+        .exception-chip .remove-chip:hover {
+            opacity: 1;
+        }
+        .nuclear-zone .exception-chip {
+            background: rgba(255, 140, 0, 0.08);
+            border-color: rgba(255, 140, 0, 0.2);
+        }
+        .nuclear-exception-list {
+            margin-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -1195,6 +1243,14 @@
                     <label for="breakListEditorCustomSites" style="margin-top: 8px;">Custom sites (one per line)</label>
                     <textarea id="breakListEditorCustomSites" style="min-height: 80px;" placeholder="mysite.com&#10;othersite.com"></textarea>
                 </div>
+                <div class="form-group">
+                    <label>Path exceptions (allowed even when this list is blocking)</label>
+                    <div class="exception-add-row">
+                        <input type="text" id="breakListEditorExceptionInput" placeholder="youtube.com/@Veritasium">
+                        <button type="button" id="btn-add-break-exception" class="btn-secondary">Add</button>
+                    </div>
+                    <div id="breakListEditorExceptions" class="exception-chips"></div>
+                </div>
                 <div id="breakListEditorAppsSection">
                     <div class="form-group">
                         <label>Apps to block</label>
@@ -1214,7 +1270,7 @@
         <div class="section" data-lockable>
             <h2>Allowed Exceptions</h2>
             <div class="section-body">
-            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Specific pages that bypass the block, even if their domain is in a break list.</p>
+            <p style="color: #8a8690; font-size: 13px; margin-bottom: 16px;">Global exceptions that bypass blocking across all break lists. You can also add per-list exceptions when editing a break list above.</p>
             <div class="form-group">
                 <label for="allowedPaths">Allowed pages (one per line)</label>
                 <textarea id="allowedPaths" placeholder="youtube.com/@Veritasium&#10;youtube.com/@3blue1brown&#10;reddit.com/r/learnprogramming"></textarea>
@@ -1238,6 +1294,15 @@
 
                 <div class="form-group" style="margin-bottom: 10px;">
                     <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; margin-bottom: 5px;">Path exceptions (allowed despite nuclear block)</label>
+                    <div class="exception-add-row">
+                        <input type="text" id="nuclearExceptionInput" placeholder="youtube.com/@Veritasium">
+                        <button type="button" id="btn-add-nuclear-exception" class="btn-secondary">Add</button>
+                    </div>
+                    <div id="nuclearExceptionChips" class="exception-chips"></div>
                 </div>
 
                 <div class="nuclear-add-row">

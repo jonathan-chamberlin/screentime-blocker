@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuclear Block</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a0e04 0%, #261408 50%, #1a0a02 100%);
+      color: #ede5d8;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 620px;
+      width: 100%;
+    }
+
+    .icon {
+      font-size: 72px;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 0 20px rgba(255, 160, 0, 0.4));
+    }
+
+    .headline {
+      font-size: 57px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .subtext {
+      font-size: 18px;
+      color: rgba(240, 224, 192, 0.75);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .countdown-box {
+      background: rgba(255, 140, 0, 0.08);
+      border: 1px solid rgba(255, 140, 0, 0.25);
+      border-radius: 12px;
+      padding: 24px 32px;
+      margin-bottom: 32px;
+    }
+
+    .countdown-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(240, 224, 192, 0.5);
+      margin-bottom: 8px;
+    }
+
+    .countdown-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .countdown-value.ready {
+      color: #00ff88;
+      font-size: 22px;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(255, 140, 0, 0.4);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(240, 224, 192, 0.85);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      color: rgba(240, 224, 192, 0.45);
+    }
+
+    .settings-link {
+      display: inline-block;
+      color: rgba(240, 224, 192, 0.4);
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .settings-link:hover {
+      color: rgba(240, 224, 192, 0.7);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.7s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="icon">🌱</div>
+    <h1 class="headline">You are doing better than you think.</h1>
+    <p class="subtext">This site is nuclear blocked.<br>Every day you don't visit it, you win.</p>
+    <div class="countdown-box">
+      <div class="countdown-label">TIME REMAINING</div>
+      <div class="countdown-value" id="countdown">Loading...</div>
+    </div>
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text"></p>
+      <p class="quote-author" id="quote-author"></p>
+    </div>
+    <a class="settings-link" href="/settings.html">Open Settings</a>
+  </div>
+  <script>
+    const MOTIVATIONAL_QUOTES = [
+      { text: 'Discipline is choosing between what you want now and what you want most.', author: 'Abraham Lincoln' },
+      { text: 'The secret of getting ahead is getting started.', author: 'Mark Twain' },
+      { text: 'You do not rise to the level of your goals. You fall to the level of your systems.', author: 'James Clear' },
+      { text: 'Small disciplines repeated with consistency every day lead to great achievements.', author: 'John Maxwell' },
+      { text: 'Motivation gets you started. Habit keeps you going.', author: 'Jim Ryun' },
+      { text: 'The pain of discipline is far less than the pain of regret.', author: 'Sarah Burgess' },
+      { text: 'Every time you resist temptation, you build strength.', author: 'Unknown' },
+      { text: 'Your future self is watching you right now through your memories.', author: 'Aubrey de Grey' },
+      { text: 'You are braver than you believe, stronger than you seem, and smarter than you think.', author: 'A.A. Milne' },
+      { text: 'The only way out is through. Keep going.', author: 'Robert Frost' },
+      { text: 'We suffer more often in imagination than in reality.', author: 'Seneca' },
+      { text: 'The best time to plant a tree was 20 years ago. The second best time is now.', author: 'Chinese Proverb' },
+      { text: 'What we fear doing most is usually what we most need to do.', author: 'Tim Ferriss' },
+      { text: 'A year from now you will wish you had started today.', author: 'Karen Lamb' },
+      { text: 'The only impossible journey is the one you never begin.', author: 'Tony Robbins' },
+      { text: 'Do the hard things. If you only do what is easy, life will be hard.', author: 'Les Brown' },
+      { text: 'Action is the foundational key to all success.', author: 'Pablo Picasso' },
+      { text: "You don't have to be great to start, but you have to start to be great.", author: 'Zig Ziglar' },
+      { text: 'The difference between who you are and who you want to be is what you do.', author: 'Unknown' },
+      { text: "It always seems impossible until it's done.", author: 'Nelson Mandela' },
+      { text: 'Success is the sum of small efforts repeated day in and day out.', author: 'Robert Collier' },
+      { text: "Don't watch the clock; do what it does. Keep going.", author: 'Sam Levenson' },
+      { text: 'Obsessed is a word the lazy use to describe the dedicated.', author: 'Unknown' },
+      { text: "If you want something you've never had, you must be willing to do something you've never done.", author: 'Thomas Jefferson' },
+    ];
+
+    function fuzzyTimeLeft(ms) {
+      const MONTH = 30 * 24 * 60 * 60 * 1000;
+      const DAY = 24 * 60 * 60 * 1000;
+      const HOUR = 60 * 60 * 1000;
+      if (ms <= 0) return null;
+      if (ms >= MONTH) return Math.ceil(ms / MONTH) + ' months';
+      if (ms >= 2 * DAY) return Math.ceil(ms / DAY) + ' days';
+      if (ms >= DAY) return '1 day';
+      if (ms >= 2 * HOUR) return Math.floor(ms / HOUR) + ' hours';
+      if (ms >= HOUR) return '1 hour';
+      return 'Less than 1 hour';
+    }
+
+    function getCountdownMs(site) {
+      const now = Date.now();
+      const stage = site.stage;
+      if (stage === 'locked') return site.cooldown1Ms - (now - site.addedAt);
+      if (stage === 'unblocking') return site.cooldown2Ms - (now - site.unblockClickedAt);
+      return 0;
+    }
+
+    function renderCountdown(site) {
+      const countdownEl = document.getElementById('countdown');
+      const stage = site.stage;
+
+      if (stage === 'ready') {
+        countdownEl.textContent = 'Visit Settings to start the unblock process';
+        countdownEl.className = 'countdown-value ready';
+      } else if (stage === 'unblocking') {
+        const ms = getCountdownMs(site);
+        const fuzzy = fuzzyTimeLeft(ms);
+        countdownEl.textContent = (fuzzy || '1 day') + ' until site is removed';
+        countdownEl.className = 'countdown-value';
+      } else if (stage === 'confirm') {
+        countdownEl.textContent = 'Cooldowns complete \u2014 visit Settings to make your final decision';
+        countdownEl.className = 'countdown-value ready';
+      } else {
+        const ms = getCountdownMs(site);
+        const fuzzy = fuzzyTimeLeft(ms);
+        countdownEl.textContent = (fuzzy || '1 day') + ' until you can request unblock';
+        countdownEl.className = 'countdown-value';
+      }
+    }
+
+    function pickQuote() {
+      const idx = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+      return MOTIVATIONAL_QUOTES[idx];
+    }
+
+    (function init() {
+      const quote = pickQuote();
+      document.getElementById('quote-text').textContent = '\u201c' + quote.text + '\u201d';
+      document.getElementById('quote-author').textContent = '\u2014 ' + quote.author;
+
+      const params = new URLSearchParams(window.location.search);
+      const domain = params.get('domain') || '';
+
+      if (!domain) {
+        document.getElementById('countdown').textContent = 'Permanently blocked';
+        return;
+      }
+
+      fetch('/api/nuclear/site?domain=' + encodeURIComponent(domain))
+        .then(function(res) {
+          if (!res.ok) throw new Error('Not found');
+          return res.json();
+        })
+        .then(function(site) {
+          renderCountdown(site);
+        })
+        .catch(function() {
+          document.getElementById('countdown').textContent = 'Permanently blocked';
+        });
+    })();
+  </script>
+</body>
+</html>

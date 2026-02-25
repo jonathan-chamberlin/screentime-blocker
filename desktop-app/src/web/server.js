@@ -44,7 +44,7 @@ function broadcastMessage(wss, type, data) {
  * @returns {Promise<{ server: import('http').Server, wss: WebSocketServer, stop: () => Promise<void> }>}
  */
 export async function startWebServer(options) {
-  const { port = WEB_PORT, sessionEngine } = options;
+  const { port = WEB_PORT, sessionEngine, onSettingsChanged } = options;
 
   const app = express();
   app.use(express.json());
@@ -59,6 +59,7 @@ export async function startWebServer(options) {
   const apiRouter = createApiRouter({
     sessionEngine,
     broadcast: (type, data) => broadcastMessage(wss, type, data),
+    onSettingsChanged,
   });
   app.use('/api', apiRouter);
 

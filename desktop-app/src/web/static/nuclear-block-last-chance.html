@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One Last Chance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #100e1a 0%, #161224 50%, #12101e 100%);
+      color: #ede9e3;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 620px;
+      width: 100%;
+    }
+
+    .icon {
+      font-size: 72px;
+      margin-bottom: 28px;
+      filter: drop-shadow(0 0 20px rgba(100, 180, 255, 0.3));
+    }
+
+    .headline {
+      font-size: 34px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a0d4ff, #60b0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .message {
+      font-size: 18px;
+      color: rgba(224, 220, 212, 0.8);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .reflection-box {
+      background: rgba(100, 180, 255, 0.06);
+      border: 1px solid rgba(100, 180, 255, 0.15);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .reflection-box .reflection-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(160, 212, 255, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .reflection-box .reflection-prompt {
+      font-size: 16px;
+      color: rgba(224, 220, 212, 0.75);
+      line-height: 1.7;
+      font-style: italic;
+    }
+
+    .quote-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(100, 180, 255, 0.4);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 36px;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(224, 220, 212, 0.85);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      color: rgba(224, 220, 212, 0.45);
+    }
+
+    .actions-box {
+      background: rgba(255, 140, 0, 0.06);
+      border: 1px solid rgba(255, 140, 0, 0.2);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-block-again {
+      background: linear-gradient(135deg, #60b0ff, #4090dd);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-block-again:hover {
+      background: linear-gradient(135deg, #80c0ff, #50a0ee);
+      box-shadow: 0 4px 12px rgba(100, 180, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-unblock-now {
+      background: rgba(255, 140, 0, 0.15);
+      color: #ffaa44;
+      border: 1px solid rgba(255, 140, 0, 0.35);
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-unblock-now:hover {
+      background: rgba(255, 140, 0, 0.25);
+    }
+
+    .block-again-select {
+      background: rgba(255, 255, 255, 0.05);
+      color: #aaa;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .block-again-select option {
+      background: #1a1722;
+      color: #ede9e3;
+    }
+
+    .typing-confirm-area {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 140, 0, 0.15);
+      display: none;
+    }
+
+    .typing-confirm-area.visible {
+      display: block;
+    }
+
+    .typing-label {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 10px;
+      text-align: left;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .typing-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 140, 0, 0.25);
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .typing-input:focus {
+      outline: none;
+      border-color: #ffaa44;
+      box-shadow: 0 0 0 3px rgba(255, 170, 68, 0.15);
+    }
+
+    .btn-confirm-final {
+      margin-top: 10px;
+      background: linear-gradient(135deg, #ff8c00, #e65c00);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .btn-confirm-final.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .btn-confirm-final.enabled:hover {
+      background: linear-gradient(135deg, #ffa020, #ff6600);
+      box-shadow: 0 4px 12px rgba(255, 140, 0, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .settings-link {
+      display: inline-block;
+      color: rgba(224, 220, 212, 0.4);
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .settings-link:hover {
+      color: rgba(224, 220, 212, 0.7);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.7s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="icon">🌅</div>
+    <h1 class="headline">It's not too late to become the person you decided to be.</h1>
+    <p class="message">Both cooldowns have passed. You can unblock this site right now.<br>But before you decide, take a moment.</p>
+
+    <div class="reflection-box">
+      <div class="reflection-title">Before you continue</div>
+      <p class="reflection-prompt">
+        Remember why you blocked this site. Think about the hours it took from you, the things you could have done, the person you were becoming without it. How did it make your life worse? Is going back really what you want, or is this just a moment of weakness?
+      </p>
+    </div>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text"></p>
+      <p class="quote-author" id="quote-author"></p>
+    </div>
+
+    <div class="actions-box">
+      <div class="actions-row">
+        <button class="btn-block-again" id="btn-block-again">Block Again</button>
+        <select class="block-again-select" id="block-again-cooldown">
+          <option value="10000">⚠ 10 seconds (testing)</option>
+          <option value="86400000">24 hours</option>
+          <option value="172800000" selected>48 hours</option>
+          <option value="604800000">1 week</option>
+          <option value="2592000000">1 month</option>
+          <option value="7776000000">3 months</option>
+          <option value="15552000000">6 months</option>
+          <option value="31536000000">1 year</option>
+        </select>
+        <button class="btn-unblock-now" id="btn-unblock-now">Unblock Now</button>
+      </div>
+
+      <div class="typing-confirm-area" id="typing-confirm-area">
+        <div class="typing-label" id="typing-label"></div>
+        <input type="text" class="typing-input" id="typing-input" placeholder="Type the phrase here...">
+        <button class="btn-confirm-final" id="btn-confirm-final">Confirm Unblock</button>
+      </div>
+    </div>
+
+    <a class="settings-link" href="/settings.html">Open Settings</a>
+  </div>
+
+  <script>
+    const LAST_CHANCE_QUOTES = [
+      { text: 'The person you are becoming is worth more than the comfort you are giving up.', author: 'Unknown' },
+      { text: 'You did not come this far to only come this far.', author: 'Unknown' },
+      { text: 'Every moment of resistance is a vote for the person you want to become.', author: 'James Clear' },
+      { text: 'Freedom is not the absence of commitments, but the ability to choose yours.', author: 'Paulo Coelho' },
+      { text: 'The chains of habit are too light to be felt until they are too heavy to be broken.', author: 'Warren Buffett' },
+      { text: 'Almost everything will work again if you unplug it for a few minutes, including you.', author: 'Anne Lamott' },
+      { text: 'What you resist, persists. What you let go of, lets go of you.', author: 'Unknown' },
+      { text: 'You are not a finished product. You are a work in progress, and that is okay.', author: 'Unknown' },
+      { text: 'Between stimulus and response there is a space. In that space is our power to choose.', author: 'Viktor Frankl' },
+      { text: 'The first and greatest victory is to conquer yourself.', author: 'Plato' },
+      { text: 'Nothing worth having comes easy.', author: 'Theodore Roosevelt' },
+      { text: 'He who has a why to live can bear almost any how.', author: 'Friedrich Nietzsche' },
+      { text: 'You are one decision away from a completely different life.', author: 'Unknown' },
+      { text: 'The temptation to quit will be greatest just before you are about to succeed.', author: 'Chinese Proverb' },
+      { text: 'Comfort is the enemy of progress.', author: 'P.T. Barnum' },
+      { text: 'How you do anything is how you do everything.', author: 'Martha Beck' },
+      { text: 'Sacrifice is giving up something good for something better.', author: 'Unknown' },
+      { text: 'When you feel like quitting, remember why you started.', author: 'Unknown' },
+      { text: 'Your brain is a suggestion engine. Not every thought deserves action.', author: 'Unknown' },
+      { text: 'The pain you feel today will be the strength you feel tomorrow.', author: 'Unknown' },
+      { text: 'Temporary discomfort or permanent regret. Your call.', author: 'Unknown' },
+      { text: 'You will never regret choosing the harder right over the easier wrong.', author: 'Unknown' },
+    ];
+
+    const CONFIRM_PHRASE = 'You can change. I love you.';
+
+    (function init() {
+      // Show random quote
+      const quote = LAST_CHANCE_QUOTES[Math.floor(Math.random() * LAST_CHANCE_QUOTES.length)];
+      document.getElementById('quote-text').textContent = '\u201c' + quote.text + '\u201d';
+      document.getElementById('quote-author').textContent = '\u2014 ' + quote.author;
+
+      // Read domain from query params
+      const params = new URLSearchParams(window.location.search);
+      const domain = params.get('domain') || '';
+
+      // Set up typing label
+      const typingLabel = document.getElementById('typing-label');
+      typingLabel.textContent = 'Type "' + CONFIRM_PHRASE + '" to confirm:';
+      typingLabel.addEventListener('copy', e => e.preventDefault());
+      typingLabel.addEventListener('contextmenu', e => e.preventDefault());
+
+      let site = null;
+
+      // Fetch site data
+      fetch('/api/nuclear/site?domain=' + encodeURIComponent(domain))
+        .then(r => r.json())
+        .then(data => {
+          site = data;
+        })
+        .catch(() => {
+          // site remains null; actions will be gracefully no-ops
+        });
+
+      // Unblock Now — reveal typing confirmation
+      document.getElementById('btn-unblock-now').addEventListener('click', () => {
+        document.getElementById('typing-confirm-area').classList.add('visible');
+        document.getElementById('typing-input').focus();
+      });
+
+      // Typing validation
+      const typingInput = document.getElementById('typing-input');
+      const confirmBtn = document.getElementById('btn-confirm-final');
+
+      // Block pasting
+      typingInput.addEventListener('paste', e => e.preventDefault());
+
+      typingInput.addEventListener('input', () => {
+        const match = typingInput.value === CONFIRM_PHRASE;
+        confirmBtn.classList.toggle('enabled', match);
+      });
+
+      // Final confirm — POST confirm-unblock then redirect to choice page
+      confirmBtn.addEventListener('click', () => {
+        if (typingInput.value !== CONFIRM_PHRASE) return;
+        if (!site) return;
+
+        fetch('/api/nuclear/confirm-unblock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: site.id }),
+        })
+          .then(r => r.json())
+          .then(() => {
+            const domains = site.domains || (site.domain ? [site.domain] : [domain]);
+            const qs = new URLSearchParams({ domains: domains.join(',') });
+            window.location.href = '/nuclear-block-choice.html?' + qs;
+          })
+          .catch(err => {
+            console.error('confirm-unblock failed', err);
+          });
+      });
+
+      // Block Again — POST block-again then redirect to stayed-strong page
+      document.getElementById('btn-block-again').addEventListener('click', () => {
+        if (!site) return;
+
+        const cooldownMs = parseInt(document.getElementById('block-again-cooldown').value, 10);
+        fetch('/api/nuclear/block-again', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: site.id, cooldown1Ms: cooldownMs }),
+        })
+          .then(r => r.json())
+          .then(() => {
+            window.location.href = '/nuclear-block-stayed-strong.html';
+          })
+          .catch(err => {
+            console.error('block-again failed', err);
+          });
+      });
+    })();
+  </script>
+</body>
+</html>
