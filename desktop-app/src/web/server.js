@@ -44,7 +44,7 @@ function broadcastMessage(wss, type, data) {
  * @returns {Promise<{ server: import('http').Server, wss: WebSocketServer, stop: () => Promise<void> }>}
  */
 export async function startWebServer(options) {
-  const { port = WEB_PORT, sessionEngine, onSettingsChanged } = options;
+  const { port = WEB_PORT, sessionEngine, onSettingsChanged, getBlockingState } = options;
 
   const app = express();
   app.use(express.json());
@@ -60,6 +60,7 @@ export async function startWebServer(options) {
     sessionEngine,
     broadcast: (type, data) => broadcastMessage(wss, type, data),
     onSettingsChanged,
+    getBlockingState,
   });
   app.use('/api', apiRouter);
 

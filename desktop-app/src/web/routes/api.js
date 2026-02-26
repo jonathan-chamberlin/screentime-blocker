@@ -24,7 +24,7 @@ import { normalizeDomain } from '../../shared/domain-utils.js';
  * @param {ApiRouterDeps} deps
  * @returns {Router}
  */
-export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged }) {
+export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged, getBlockingState }) {
   const router = Router();
 
   /**
@@ -52,6 +52,12 @@ export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged })
   /** POST /api/session/break/start — Start a reward break. */
   router.post('/session/break/start', (req, res) => {
     const state = sessionEngine.startBreak();
+    res.json(state);
+  });
+
+  /** POST /api/session/reset — Reset all session state to zero. */
+  router.post('/session/reset', (req, res) => {
+    const state = sessionEngine.resetState();
     res.json(state);
   });
 
@@ -189,6 +195,60 @@ export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged })
         history: data.sessionHistory || [],
         summaries: data.dailySummaries || {},
         streakData: data.streakData || { currentStreak: 0, longestStreak: 0, lastActiveDate: null },
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /** GET /api/debug/blocking-state — Diagnostic view of what the proxy currently sees. */
+  router.get('/debug/blocking-state', async (req, res) => {
+    try {
+      const state = getBlockingState ? getBlockingState() : null;
+      const { execFile } = await import('node:child_process');
+      const { promisify } = await import('node:util');
+      const execFileAsync = promisify(execFile);
+
+      // Check if system proxy is actually enabled in Windows registry
+      let proxyRegistry = {};
+      try {
+        const { stdout } = await execFileAsync('reg', [
+          'query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
+          '/v', 'ProxyEnable',
+        ]);
+        proxyRegistry.proxyEnabled = stdout.includes('0x1');
+        proxyRegistry.raw = stdout.trim();
+      } catch (err) {
+        proxyRegistry.error = err.message;
+      }
+
+      try {
+        const { stdout } = await execFileAsync('reg', [
+          'query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
+          '/v', 'ProxyServer',
+        ]);
+        proxyRegistry.proxyServer = stdout.match(/ProxyServer\s+REG_SZ\s+(.+)/)?.[1]?.trim();
+      } catch { /* may not exist */ }
+
+      // Check if proxy port is listening
+      let proxyListening = false;
+      try {
+        const net = await import('node:net');
+        proxyListening = await new Promise((resolve) => {
+          const sock = new net.default.Socket();
+          sock.setTimeout(1000);
+          sock.on('connect', () => { sock.destroy(); resolve(true); });
+          sock.on('error', () => resolve(false));
+          sock.on('timeout', () => { sock.destroy(); resolve(false); });
+          sock.connect(8443, 'localhost');
+        });
+      } catch { /* ignore */ }
+
+      res.json({
+        blockingState: state,
+        systemProxy: proxyRegistry,
+        proxyListening,
+        sessionStatus: sessionEngine.getStatus(),
       });
     } catch (err) {
       res.status(500).json({ error: err.message });

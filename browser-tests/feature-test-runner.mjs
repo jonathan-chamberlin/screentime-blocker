@@ -99,6 +99,29 @@ async function run() {
     console.error('App not running on port 3456.'); process.exit(1);
   }
 
+  // === PRE-FLIGHT: Verify proxy infrastructure is operational ===
+  console.log('\n--- Pre-flight: Proxy Infrastructure Check ---');
+  try {
+    const debug = await (await fetch(`${BASE}/api/debug/blocking-state`)).json();
+    console.log(`  System proxy enabled in registry: ${debug.systemProxy?.proxyEnabled ?? 'UNKNOWN'}`);
+    console.log(`  Proxy server (${debug.systemProxy?.proxyServer || 'not set'}): ${debug.proxyListening ? 'LISTENING' : 'NOT LISTENING'}`);
+    console.log(`  Blocking state exists: ${!!debug.blockingState}`);
+    if (debug.blockingState) {
+      console.log(`  Session active: ${debug.blockingState.sessionActive}`);
+      console.log(`  Blocked sites: ${JSON.stringify(debug.blockingState.blockedSites)}`);
+      console.log(`  Blocking mode: ${debug.blockingState.blockingMode}`);
+    }
+    if (!debug.proxyListening) {
+      console.warn('  ⚠ PROXY NOT LISTENING on port 8443 — blocking tests will be unreliable!');
+    }
+    if (!debug.systemProxy?.proxyEnabled) {
+      console.warn('  ⚠ SYSTEM PROXY NOT ENABLED — browsers will not route through the proxy!');
+    }
+  } catch (err) {
+    console.warn(`  ⚠ Could not reach debug endpoint: ${err.message}`);
+  }
+  console.log('--- End Pre-flight ---\n');
+
   await resetState();
 
   const browser = await chromium.launch({ headless: false });
@@ -209,11 +232,28 @@ async function run() {
     const shameContent = await page.textContent('body');
     const isShame = /blocked|shame|back to work|distract/i.test(shameContent);
 
-    // Also check that the engine's rule engine would block reddit.com
-    // by checking status after simulating a visit
+    // PROXY VERIFICATION: Actually send a request through the proxy and verify it blocks
+    let proxyBlocks5 = false;
+    let proxyDetail5 = '';
+    try {
+      const proxyRes = await proxyHttpGet('www.reddit.com');
+      proxyBlocks5 = proxyRes.status === 302 && (proxyRes.headers.location || '').includes('blocked.html');
+      proxyDetail5 = `proxy: status=${proxyRes.status}, location=${proxyRes.headers.location || 'none'}`;
+    } catch (err) {
+      proxyDetail5 = `proxy error: ${err.message}`;
+    }
+
+    // Also verify blocking state via debug endpoint
+    let debugState5 = '';
+    try {
+      const debug5 = await (await fetch(`${BASE}/api/debug/blocking-state`)).json();
+      const hasSite = (debug5.blockingState?.blockedSites || []).some(s => s.includes('reddit'));
+      debugState5 = `blockedSites includes reddit: ${hasSite}, sessionActive: ${debug5.blockingState?.sessionActive}`;
+    } catch { debugState5 = 'debug endpoint unavailable'; }
+
     record(5, 'Break site shows shame screen',
-      isShame ? 'PASS' : 'FAIL',
-      `Shame page content found: ${isShame}`, ss5);
+      (isShame && proxyBlocks5) ? 'PASS' : 'FAIL',
+      `Shame page: ${isShame}, ${proxyDetail5}, ${debugState5}`, ss5);
 
     // Reload to test attempts counter
     await go(`${BASE}/blocked.html?domain=reddit.com`);
@@ -274,9 +314,20 @@ async function run() {
     const ss8 = await screenshot(page, 'test08-nuclear-page');
     const nucContent = await page.textContent('body');
     const isNucPage = /nuclear|permanently|blocked/i.test(nucContent);
+    // PROXY VERIFICATION: Verify proxy actually blocks youtube.com
+    let proxyBlocks8 = false;
+    let proxyDetail8 = '';
+    try {
+      const proxyRes = await proxyHttpGet('www.youtube.com');
+      proxyBlocks8 = proxyRes.status === 302 && (proxyRes.headers.location || '').includes('nuclear-blocked');
+      proxyDetail8 = `proxy: status=${proxyRes.status}, location=${proxyRes.headers.location || 'none'}`;
+    } catch (err) {
+      proxyDetail8 = `proxy error: ${err.message}`;
+    }
+
     record(8, 'Nuclear: blocked page shows for youtube.com',
-      isNucPage ? 'PASS' : 'FAIL',
-      `Nuclear page content: ${isNucPage}`, ss8);
+      (isNucPage && proxyBlocks8) ? 'PASS' : 'FAIL',
+      `Nuclear page: ${isNucPage}, ${proxyDetail8}`, ss8);
 
     // =============== TEST 9 ===============
     console.log('  ⏳ Waiting 12s for first cooldown...');
@@ -321,9 +372,16 @@ async function run() {
     await delay(1000);
     const ss11 = await screenshot(page, 'test11');
     const nuc11 = await page.textContent('body');
+    // PROXY VERIFICATION: Verify proxy still blocks youtube
+    let proxyBlocks11 = false;
+    try {
+      const proxyRes = await proxyHttpGet('www.youtube.com');
+      proxyBlocks11 = proxyRes.status === 302 && (proxyRes.headers.location || '').includes('nuclear-blocked');
+    } catch {}
+
     record(11, 'Nuclear: youtube still blocked after block-again',
-      /nuclear|permanently|blocked/i.test(nuc11) ? 'PASS' : 'FAIL',
-      'Nuclear blocked page still renders for youtube', ss11);
+      (/nuclear|permanently|blocked/i.test(nuc11) && proxyBlocks11) ? 'PASS' : 'FAIL',
+      `Nuclear page: ${/nuclear|permanently|blocked/i.test(nuc11)}, proxy blocks: ${proxyBlocks11}`, ss11);
 
     // =============== TEST 12 ===============
     // Exception path — verify rule engine allows it (we check settings for the exception)
@@ -421,9 +479,19 @@ async function run() {
     const ytStill18 = nucSites18.some(s =>
       (s.domain || '').includes('youtube') || (s.domains || []).some(d => d.includes('youtube'))
     );
+    // PROXY VERIFICATION: After unblock, proxy should NOT redirect youtube
+    let proxyAllows18 = false;
+    try {
+      const proxyRes = await proxyHttpGet('www.youtube.com');
+      // Should NOT be a 302 to nuclear-blocked
+      proxyAllows18 = proxyRes.status !== 302 || !(proxyRes.headers.location || '').includes('nuclear-blocked');
+    } catch {
+      proxyAllows18 = true; // connection error is acceptable (no MITM for non-blocked)
+    }
+
     record(18, 'Nuclear: youtube accessible after unblock',
-      !ytStill18 ? 'PASS' : 'FAIL',
-      `YouTube still in nuclear list: ${ytStill18}`, null);
+      (!ytStill18 && proxyAllows18) ? 'PASS' : 'FAIL',
+      `YouTube in nuclear list: ${ytStill18}, proxy allows: ${proxyAllows18}`, null);
 
     // =============== TEST 19 ===============
     await go(`${BASE}/settings.html`);
@@ -549,9 +617,20 @@ async function run() {
     await delay(1000);
     const ss28 = await screenshot(page, 'test28');
     const shame28 = await page.textContent('body');
+    // PROXY VERIFICATION: Verify proxy actually blocks draftkings.com
+    let proxyBlocks28 = false;
+    let proxyDetail28 = '';
+    try {
+      const proxyRes = await proxyHttpGet('www.draftkings.com');
+      proxyBlocks28 = proxyRes.status === 302 && (proxyRes.headers.location || '').includes('blocked.html');
+      proxyDetail28 = `proxy: status=${proxyRes.status}, location=${proxyRes.headers.location || 'none'}`;
+    } catch (err) {
+      proxyDetail28 = `proxy error: ${err.message}`;
+    }
+
     record(28, 'Break site blocked before taking break',
-      /blocked|shame|distract/i.test(shame28) ? 'PASS' : 'FAIL',
-      'Blocked page rendered for draftkings.com', ss28);
+      (/blocked|shame|distract/i.test(shame28) && proxyBlocks28) ? 'PASS' : 'FAIL',
+      `Shame page: ${/blocked|shame|distract/i.test(shame28)}, ${proxyDetail28}`, ss28);
 
     // =============== TEST 29 ===============
     await go(`${BASE}/`);
@@ -713,9 +792,9 @@ function generateReport() {
   md += `| Reward/Break system (25-32) | Playwright UI + API state + proxy hits |\n`;
   md += `| Test 13 | Skipped per instructions |\n\n`;
   md += `### Notes\n\n`;
-  md += `- The MITM proxy requires a trusted CA certificate for HTTPS interception. `;
-  md += `Since the CA is not installed system-wide (requires admin elevation), proxy-dependent `;
-  md += `tests use the redirect pages directly.\n`;
+  md += `- Tests 5, 8, 11, 18, 28 now include HTTP forward-proxy verification (proxyHttpGet) `;
+  md += `to confirm the proxy actually blocks/allows domains, not just that redirect pages render.\n`;
+  md += `- Pre-flight checks verify system proxy is enabled and proxy server is listening before tests run.\n`;
   md += `- Tests 30, 32 (break timer burn) require the proxy to report site visits to the `;
   md += `session engine. Forward HTTP proxy requests may not trigger the MITM \`onRequest\` handler.\n`;
   md += `- Screenshots saved in \`test-screenshots/\` directory.\n`;

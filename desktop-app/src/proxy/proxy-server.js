@@ -67,6 +67,10 @@ export async function startProxy(options) {
     const state = getBlockingState();
     const result = evaluateUrl(fullUrl, state);
 
+    if (result.action !== 'allow') {
+      console.log('[proxy] %s %s → %s (redirect: %s)', result.action.toUpperCase(), domain, result.action, result.redirectUrl);
+    }
+
     if (result.action === 'block' || result.action === 'nuclear-block') {
       // Respond with 302 redirect to our localhost blocked page
       ctx.proxyToClientResponse.writeHead(302, {

@@ -359,6 +359,28 @@ export function createSessionEngine(config) {
     return getStatus();
   }
 
+  /** Reset all session state to zero (used by settings reset). */
+  function resetState() {
+    stopTicking();
+    sessionActive = false;
+    sessionId = null;
+    sessionStartTime = 0;
+    workTimerMs = 0;
+    productiveMs = 0;
+    blockedAttempts = 0;
+    isIdle = false;
+    rewardActive = false;
+    rewardGrantCount = 0;
+    rewardTotalMs = 0;
+    rewardBurnedMs = 0;
+    unusedRewardMs = 0;
+    isOnBreakSite = false;
+    isOnBreakApp = false;
+    emitter.emit('stateChanged', getStatus());
+    emitter.emit('blockingStateChanged');
+    return getStatus();
+  }
+
   /** Clean up timers. */
   function destroy() {
     stopTicking();
@@ -369,6 +391,7 @@ export function createSessionEngine(config) {
     startSession,
     endSession,
     startBreak,
+    resetState,
     getStatus,
     reportSiteVisit,
     reportAppFocus,

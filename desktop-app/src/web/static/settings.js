@@ -704,6 +704,8 @@
     async function resetSettings() {
       if (!confirm('Reset all settings to defaults? Nuclear blocks will be preserved.')) return;
       try {
+        // Reset session state so timers go to zero
+        await fetch('/api/session/reset', { method: 'POST' });
         const nuclearBackup = settings.nuclearBlockData;
         await fetch('/api/settings', {
           method: 'PUT',

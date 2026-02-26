@@ -48,7 +48,7 @@
     const rewardTimerEl = document.getElementById('rewardTimerEl');
     const confettiCanvas = document.getElementById('confettiCanvas');
 
-    let prevRewardGrantCount = 0;
+    let prevRewardGrantCount = -1; // -1 = not yet initialized from server
     let _breakExpiredRedirected = false;
 
     /** Confetti burst animation on canvas */
@@ -196,23 +196,25 @@
       // Break banner — show when in break mode
       breakBanner.className = 'break-banner' + (state.rewardActive ? ' visible' : '');
 
-      // Confetti on new reward grant
-      if (state.rewardGrantCount > prevRewardGrantCount) {
-        triggerConfetti();
+      // Reset tracking when session is inactive
+      if (!state.sessionActive) {
+        _breakExpiredRedirected = false;
+        prevRewardGrantCount = 0;
       }
-      prevRewardGrantCount = state.rewardGrantCount;
+
+      // Confetti on new reward grant — skip on first update (sync from server)
+      if (prevRewardGrantCount === -1) {
+        prevRewardGrantCount = state.rewardGrantCount;
+      } else if (state.sessionActive && state.rewardGrantCount > prevRewardGrantCount) {
+        triggerConfetti();
+        prevRewardGrantCount = state.rewardGrantCount;
+      }
 
       // Break expiry redirect (only during active session)
       if (state.sessionActive && !state.rewardActive && state.rewardBurnedMs > 0 && state.unusedRewardMs <= 0 && !_breakExpiredRedirected) {
         _breakExpiredRedirected = true;
         window.location.href = '/break-time-up.html';
         return;
-      }
-
-      // Reset redirect guard when session ends
-      if (!state.sessionActive) {
-        _breakExpiredRedirected = false;
-        prevRewardGrantCount = 0;
       }
 
       const isProductive = state.isOnProductiveSite || state.isOnProductiveApp;

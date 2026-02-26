@@ -25,6 +25,10 @@ import { getBlockedApps, createListContext } from './shared/list-utils.js';
 import { computeNuclearStage, collectNuclearExceptions, getNuclearSiteDomains } from './shared/nuclear-utils.js';
 import { processMatches } from './shared/domain-utils.js';
 
+// Module-level flag: only restore proxy on shutdown if THIS process successfully enabled it.
+// Prevents a failed second launch from disabling the proxy for an already-running instance.
+let proxyOwned = false;
+
 /**
  * Build the blocking state from storage config and session engine status.
  * Derives flat arrays from the active break list and computes nuclear stages.
@@ -96,6 +100,11 @@ export async function startApp() {
   // Wire: session engine updates blocking state for proxy
   engine.on('blockingStateChanged', () => {
     currentBlockingState = buildBlockingState(config, engine.getStatus());
+    console.log('[main] blockingStateChanged — sessionActive=%s, rewardActive=%s, blockedSites=%j, mode=%s',
+      currentBlockingState.sessionActive,
+      currentBlockingState.rewardActive,
+      currentBlockingState.blockedSites,
+      currentBlockingState.blockingMode);
   });
 
   // Wire: break expired — kill all blocked apps when break ends
@@ -134,6 +143,7 @@ export async function startApp() {
   const originalProxy = await getProxySettings();
   await saveProxyBackup(originalProxy);
   await enableSystemProxy(PROXY_PORT);
+  proxyOwned = true; // Track that we own the proxy — only restore on OUR shutdown
   console.log('[main] System proxy enabled (localhost:' + PROXY_PORT + ')');
 
   // 5. Start web server
@@ -141,6 +151,7 @@ export async function startApp() {
     port: WEB_PORT,
     sessionEngine: engine,
     onSettingsChanged,
+    getBlockingState: () => currentBlockingState,
   });
   console.log('[main] Web server ready');
 
@@ -192,15 +203,15 @@ export async function startApp() {
     process.exit(0);
   });
 
-  // Crash safety — try to restore proxy on unexpected errors
+  // Crash safety — try to restore proxy on unexpected errors (only if we own it)
   process.on('uncaughtException', async (err) => {
     console.error('[main] Uncaught exception:', err);
-    try { await restoreProxyBackup(); } catch { /* best effort */ }
+    if (proxyOwned) { try { await restoreProxyBackup(); } catch { /* best effort */ } }
     process.exit(1);
   });
   process.on('unhandledRejection', async (err) => {
     console.error('[main] Unhandled rejection:', err);
-    try { await restoreProxyBackup(); } catch { /* best effort */ }
+    if (proxyOwned) { try { await restoreProxyBackup(); } catch { /* best effort */ } }
     process.exit(1);
   });
 
@@ -212,7 +223,9 @@ const isDirectRun = process.argv[1]?.endsWith('main.js');
 if (isDirectRun) {
   startApp().catch(async (err) => {
     console.error('[main] Failed to start:', err);
-    try { await restoreProxyBackup(); } catch { /* best effort */ }
+    // Only restore proxy if we successfully enabled it — a failed second launch
+    // must not disable the proxy for an already-running instance
+    if (proxyOwned) { try { await restoreProxyBackup(); } catch { /* best effort */ } }
     process.exit(1);
   });
 }

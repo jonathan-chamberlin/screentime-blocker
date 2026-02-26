@@ -30,3 +30,4 @@
 30. then switch to a break site like draftkings.com. Wait 10 seconds. Go back to the homepage and the reward should have counted down by about 10 seconds and paused (since you are no longer on a break site).
 31. try opening a blocked application like steam. when focused on it, the timer should be counting down.
 32. Go back to draftkings.com and wait 55 seconds. Once the break time is up, the page should redirect to a 'break time up' screen without the page even having to reload. And steam should be closed automatically too.
+33. With a session running (timers accumulated), go to settings and click 'Reset All Settings' > 'Reset'. Go back to the homepage — the work timer and productive timer should both show 00:00 and the session should be inactive.
