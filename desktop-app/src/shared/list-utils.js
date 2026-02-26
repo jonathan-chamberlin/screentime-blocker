@@ -108,6 +108,28 @@ export function getProductiveApps(lists, activeId) {
 }
 
 /**
+ * Create a context object with all derived values from the active list.
+ * Callers that need multiple fields can call this once instead of
+ * calling individual getters repeatedly.
+ *
+ * @param {UnifiedList[]} lists
+ * @param {string} activeId
+ * @returns {Object}
+ */
+export function createListContext(lists, activeId) {
+  const list = getActiveList(lists, activeId);
+  return {
+    blockedSites: list?.blocked?.sites || [],
+    blockedApps: list?.blocked?.apps || [],
+    allowedPaths: list?.blocked?.allowedPaths || [],
+    blockingMode: list?.mode || BLOCKING_MODES.MANUAL,
+    productiveMode: list?.productive?.mode || DEFAULT_PRODUCTIVE_MODE,
+    productiveSites: list?.productive?.sites || [],
+    productiveApps: list?.productive?.apps || [],
+  };
+}
+
+/**
  * Create a new empty unified list.
  *
  * @param {string} name

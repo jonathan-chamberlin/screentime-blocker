@@ -21,11 +21,9 @@ import { killApp } from './monitor/app-killer.js';
 import { startWebServer } from './web/server.js';
 import { getAll } from './storage.js';
 import { PROXY_PORT, WEB_PORT } from './shared/constants.js';
-import {
-  getBlockedSites, getBlockedApps, getAllowedPaths, getBlockingMode,
-  getProductiveMode, getProductiveSites, getProductiveApps,
-} from './shared/list-utils.js';
+import { getBlockedApps, createListContext } from './shared/list-utils.js';
 import { computeNuclearStage, collectNuclearExceptions, getNuclearSiteDomains } from './shared/nuclear-utils.js';
+import { processMatches } from './shared/domain-utils.js';
 
 /**
  * Build the blocking state from storage config and session engine status.
@@ -37,18 +35,19 @@ import { computeNuclearStage, collectNuclearExceptions, getNuclearSiteDomains } 
  */
 function buildBlockingState(config, sessionStatus) {
   const nuclearRawSites = config.nuclearBlockData?.sites || [];
+  const listCtx = createListContext(config.lists, config.activeListId);
   return {
     sessionActive: sessionStatus.sessionActive,
     rewardActive: sessionStatus.rewardActive || false,
-    blockedSites: getBlockedSites(config.lists, config.activeListId),
-    allowedPaths: getAllowedPaths(config.lists, config.activeListId),
+    blockedSites: listCtx.blockedSites,
+    allowedPaths: listCtx.allowedPaths,
     nuclearSites: nuclearRawSites.map(site => ({
       ...site,
       domains: getNuclearSiteDomains(site),
       stage: computeNuclearStage(site),
     })),
     nuclearExceptions: collectNuclearExceptions(nuclearRawSites),
-    blockingMode: getBlockingMode(config.lists, config.activeListId),
+    blockingMode: listCtx.blockingMode,
   };
 }
 
@@ -79,11 +78,12 @@ export async function startApp() {
   }
 
   // 2. Create session engine — derive flat arrays from active list
+  const listCtx = createListContext(config.lists, config.activeListId);
   const engine = createSessionEngine({
-    productiveSites: getProductiveSites(config.lists, config.activeListId),
-    productiveApps: getProductiveApps(config.lists, config.activeListId),
-    blockedSites: getBlockedSites(config.lists, config.activeListId),
-    productiveMode: getProductiveMode(config.lists, config.activeListId),
+    productiveSites: listCtx.productiveSites,
+    productiveApps: listCtx.productiveApps,
+    blockedSites: listCtx.blockedSites,
+    productiveMode: listCtx.productiveMode,
     workMinutes: config.workMinutes,
     rewardMinutes: config.rewardMinutes,
     strictMode: config.strictMode,
@@ -96,6 +96,14 @@ export async function startApp() {
   // Wire: session engine updates blocking state for proxy
   engine.on('blockingStateChanged', () => {
     currentBlockingState = buildBlockingState(config, engine.getStatus());
+  });
+
+  // Wire: break expired — kill all blocked apps when break ends
+  engine.on('breakExpired', () => {
+    const blockedAppsList = getBlockedApps(config.lists, config.activeListId);
+    for (const app of blockedAppsList) {
+      killApp(app);
+    }
   });
 
   // Wire: session engine handles blocked app killing
@@ -141,12 +149,12 @@ export async function startApp() {
   appMonitor.emitter.on('app-changed', (focus) => {
     engine.reportAppFocus(focus);
 
-    // Kill blocked apps during session
-    if (engine.getStatus().sessionActive) {
+    // Kill blocked apps during session (but not during break)
+    const status = engine.getStatus();
+    if (status.sessionActive && !status.rewardActive) {
       const blockedAppsList = getBlockedApps(config.lists, config.activeListId);
       const isBlocked = blockedAppsList.some(
-        (app) => app.toLowerCase().replace('.exe', '') ===
-          focus.processName.toLowerCase()
+        (app) => processMatches(focus.processName, app)
       );
       if (isBlocked) {
         killApp(focus.processName);

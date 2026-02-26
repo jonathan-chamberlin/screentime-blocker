@@ -65,19 +65,19 @@ export const CA_KEY_FILE = 'root-ca.key';
 export const CA_COMMON_NAME = 'Brainrot Blocker Local CA';
 export const CA_VALIDITY_YEARS = 10;
 
-// --- Preset Blocked Sites (tracer bullet subset) ---
+// --- Preset Blocked Sites ---
 export const DEFAULT_BLOCKED_SITES = [
   'youtube.com',
   'reddit.com',
   'instagram.com',
 ];
 
-// --- Preset Allowed Paths (tracer bullet subset) ---
+// --- Preset Allowed Paths ---
 export const DEFAULT_ALLOWED_PATHS = [
   'youtube.com/veritasium',
 ];
 
-// --- Preset Productive Sites (tracer bullet subset) ---
+// --- Preset Productive Sites ---
 export const DEFAULT_PRODUCTIVE_SITES = [
   'github.com',
   'docs.google.com',

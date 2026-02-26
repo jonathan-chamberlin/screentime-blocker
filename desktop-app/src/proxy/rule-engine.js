@@ -25,6 +25,7 @@
  */
 
 import { WEB_PORT } from '../shared/constants.js';
+import { normalizeDomain } from '../shared/domain-utils.js';
 
 /**
  * Extract domain from a URL string.
@@ -36,9 +37,9 @@ export function extractDomain(url) {
     // Handle bare domains (no protocol)
     const withProto = url.includes('://') ? url : `https://${url}`;
     const parsed = new URL(withProto);
-    return parsed.hostname.replace(/^www\./, '').toLowerCase();
+    return normalizeDomain(parsed.hostname);
   } catch {
-    return url.toLowerCase().replace(/^www\./, '');
+    return normalizeDomain(url);
   }
 }
 
@@ -101,9 +102,9 @@ export function matchesAllowedPath(url, allowedPaths) {
  * @returns {boolean}
  */
 export function isDomainBlocked(domain, blockedSites) {
-  const normalized = domain.replace(/^www\./, '').toLowerCase();
+  const normalized = normalizeDomain(domain);
   return blockedSites.some(
-    (site) => normalized === site.replace(/^www\./, '').toLowerCase()
+    (site) => normalized === normalizeDomain(site)
   );
 }
 
@@ -116,11 +117,11 @@ export function isDomainBlocked(domain, blockedSites) {
  * @returns {{ isNuclear: boolean, stage?: string }}
  */
 export function isNuclearBlocked(domain, nuclearSites) {
-  const normalized = domain.replace(/^www\./, '').toLowerCase();
+  const normalized = normalizeDomain(domain);
   const entry = nuclearSites.find((s) => {
     // Check domains array first, fall back to single domain
     const domains = s.domains || (s.domain ? [s.domain] : []);
-    return domains.some(d => normalized === d.replace(/^www\./, '').toLowerCase());
+    return domains.some(d => normalized === normalizeDomain(d));
   });
   if (!entry) return { isNuclear: false };
 

@@ -27,40 +27,36 @@ function getBackupPath() {
 }
 
 /**
+ * Read a single registry value from the proxy settings key.
+ * @param {string} valueName - Registry value name (e.g., 'ProxyEnable')
+ * @param {'REG_DWORD'|'REG_SZ'} regType - Registry type
+ * @param {*} defaultValue - Value to return if key doesn't exist
+ * @returns {Promise<*>}
+ */
+async function readRegValue(valueName, regType, defaultValue) {
+  try {
+    const { stdout } = await execFileAsync('reg', ['query', REG_KEY, '/v', valueName]);
+    const pattern = regType === 'REG_DWORD'
+      ? new RegExp(`${valueName}\\s+REG_DWORD\\s+0x([0-9a-fA-F]+)`)
+      : new RegExp(`${valueName}\\s+REG_SZ\\s+(.+)`);
+    const match = stdout.match(pattern);
+    if (!match) return defaultValue;
+    return regType === 'REG_DWORD' ? parseInt(match[1], 16) : match[1].trim();
+  } catch {
+    return defaultValue;
+  }
+}
+
+/**
  * Read current Windows proxy settings from registry.
  * @returns {Promise<{ proxyEnable: number, proxyServer: string, proxyOverride: string }>}
  */
 export async function getProxySettings() {
-  const settings = { proxyEnable: 0, proxyServer: '', proxyOverride: '' };
-
-  try {
-    const { stdout } = await execFileAsync('reg', [
-      'query', REG_KEY,
-      '/v', 'ProxyEnable',
-    ]);
-    const match = stdout.match(/ProxyEnable\s+REG_DWORD\s+0x([0-9a-fA-F]+)/);
-    if (match) settings.proxyEnable = parseInt(match[1], 16);
-  } catch { /* key doesn't exist = disabled */ }
-
-  try {
-    const { stdout } = await execFileAsync('reg', [
-      'query', REG_KEY,
-      '/v', 'ProxyServer',
-    ]);
-    const match = stdout.match(/ProxyServer\s+REG_SZ\s+(.+)/);
-    if (match) settings.proxyServer = match[1].trim();
-  } catch { /* key doesn't exist */ }
-
-  try {
-    const { stdout } = await execFileAsync('reg', [
-      'query', REG_KEY,
-      '/v', 'ProxyOverride',
-    ]);
-    const match = stdout.match(/ProxyOverride\s+REG_SZ\s+(.+)/);
-    if (match) settings.proxyOverride = match[1].trim();
-  } catch { /* key doesn't exist */ }
-
-  return settings;
+  return {
+    proxyEnable: await readRegValue('ProxyEnable', 'REG_DWORD', 0),
+    proxyServer: await readRegValue('ProxyServer', 'REG_SZ', ''),
+    proxyOverride: await readRegValue('ProxyOverride', 'REG_SZ', ''),
+  };
 }
 
 /**
@@ -132,25 +128,11 @@ async function applyProxySettings(settings) {
  * @param {number} port - Proxy port (e.g., 8443)
  */
 export async function enableSystemProxy(port) {
-  await execFileAsync('reg', [
-    'add', REG_KEY,
-    '/v', 'ProxyEnable', '/t', 'REG_DWORD',
-    '/d', '1', '/f',
-  ]);
-
-  await execFileAsync('reg', [
-    'add', REG_KEY,
-    '/v', 'ProxyServer', '/t', 'REG_SZ',
-    '/d', `localhost:${port}`, '/f',
-  ]);
-
-  await execFileAsync('reg', [
-    'add', REG_KEY,
-    '/v', 'ProxyOverride', '/t', 'REG_SZ',
-    '/d', 'localhost;127.0.0.1;*.local;<local>', '/f',
-  ]);
-
-  await notifyProxyChange();
+  await applyProxySettings({
+    proxyEnable: 1,
+    proxyServer: `localhost:${port}`,
+    proxyOverride: 'localhost;127.0.0.1;*.local;<local>',
+  });
 }
 
 /**

@@ -15,6 +15,7 @@
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { extractDomain } from '../proxy/rule-engine.js';
+import { normalizeDomain, domainMatches, processMatches } from '../shared/domain-utils.js';
 
 /**
  * @typedef {Object} SessionState
@@ -45,6 +46,7 @@ import { extractDomain } from '../proxy/rule-engine.js';
  * @property {string[]} productiveSites
  * @property {string[]} productiveApps - process names (with .exe)
  * @property {string[]} blockedSites
+ * @property {string[]} blockedApps - process names (with .exe)
  * @property {string} productiveMode - 'all-except-blocked' | 'whitelist'
  * @property {number} workMinutes
  * @property {number} rewardMinutes
@@ -83,9 +85,19 @@ export function createSessionEngine(config) {
   let isIdle = false;
   let blockedAttempts = 0;
 
+  // Reward / break state
+  let rewardActive = false;
+  let rewardGrantCount = 0;
+  let rewardTotalMs = 0;
+  let rewardBurnedMs = 0;
+  let unusedRewardMs = 0;
+  let isOnBreakSite = false;
+  let isOnBreakApp = false;
+
   // Config values (can be updated via updateConfig)
   let { productiveSites, productiveApps, blockedSites, productiveMode,
     workMinutes, rewardMinutes, strictMode, blockTaskManager } = config;
+  let blockedApps = config.blockedApps || [];
 
   let tickInterval = null;
 
@@ -118,6 +130,34 @@ export function createSessionEngine(config) {
     if (isCurrentlyProductive()) {
       productiveMs += elapsed;
     }
+
+    // Reward granting — earn a chunk of break time for each workMinutes of productive work
+    const thresholdMs = workMinutes * 60000;
+    if (thresholdMs > 0) {
+      const earnedGrants = Math.floor(productiveMs / thresholdMs);
+      if (earnedGrants > rewardGrantCount) {
+        const newGrants = earnedGrants - rewardGrantCount;
+        const grantMs = newGrants * rewardMinutes * 60000;
+        rewardGrantCount = earnedGrants;
+        rewardTotalMs += grantMs;
+        unusedRewardMs += grantMs;
+        emitter.emit('rewardGranted', getStatus());
+        emitter.emit('stateChanged', getStatus());
+      }
+    }
+
+    // Break burn — decrement unusedRewardMs when on a break site/app
+    if (rewardActive && (isOnBreakSite || isOnBreakApp)) {
+      unusedRewardMs -= elapsed;
+      rewardBurnedMs += elapsed;
+      if (unusedRewardMs <= 0) {
+        unusedRewardMs = 0;
+        rewardActive = false;
+        emitter.emit('breakExpired', getStatus());
+        emitter.emit('stateChanged', getStatus());
+        emitter.emit('blockingStateChanged');
+      }
+    }
   }
 
   /** Start the internal tick timer. */
@@ -141,11 +181,13 @@ export function createSessionEngine(config) {
       sessionId,
       workTimerMs,
       productiveMs,
-      rewardActive: false, // Tracer bullet: rewards not yet implemented
-      rewardGrantCount: 0,
-      rewardTotalMs: 0,
-      rewardBurnedMs: 0,
-      unusedRewardMs: 0,
+      rewardActive,
+      rewardGrantCount,
+      rewardTotalMs,
+      rewardBurnedMs,
+      unusedRewardMs,
+      isOnBreakSite,
+      isOnBreakApp,
       currentSite,
       currentApp,
       currentWindowTitle,
@@ -176,6 +218,13 @@ export function createSessionEngine(config) {
     productiveMs = 0;
     blockedAttempts = 0;
     isIdle = false;
+    rewardActive = false;
+    rewardGrantCount = 0;
+    rewardTotalMs = 0;
+    rewardBurnedMs = 0;
+    unusedRewardMs = 0;
+    isOnBreakSite = false;
+    isOnBreakApp = false;
 
     if (customWorkMinutes !== undefined) {
       workMinutes = customWorkMinutes;
@@ -221,8 +270,11 @@ export function createSessionEngine(config) {
     isOnProductiveSite = isProductiveSite(domain);
     // Check if this site is blocked
     isOnBlockedSite = blockedSites.some(
-      (s) => domain === s.replace(/^www\./, '').toLowerCase()
+      (s) => normalizeDomain(domain) === normalizeDomain(s)
     );
+
+    // Break sites = blocked sites
+    isOnBreakSite = isOnBlockedSite;
 
     if (isOnBlockedSite && sessionActive) {
       blockedAttempts++;
@@ -243,8 +295,12 @@ export function createSessionEngine(config) {
 
     // Check if this app is productive
     isOnProductiveApp = productiveApps.some(
-      (app) => app.toLowerCase().replace('.exe', '') ===
-        appFocus.processName.toLowerCase().replace('.exe', '')
+      (app) => processMatches(appFocus.processName, app)
+    );
+
+    // Break apps = blocked apps
+    isOnBreakApp = blockedApps.some(
+      (app) => processMatches(appFocus.processName, app)
     );
 
     emitter.emit('stateChanged', getStatus());
@@ -272,11 +328,7 @@ export function createSessionEngine(config) {
    * @returns {boolean}
    */
   function isProductiveSite(domain) {
-    const normalized = domain.replace(/^www\./, '').toLowerCase();
-    return productiveSites.some(
-      (s) => normalized === s.replace(/^www\./, '').toLowerCase() ||
-        normalized.endsWith('.' + s.replace(/^www\./, '').toLowerCase())
-    );
+    return productiveSites.some((s) => domainMatches(domain, s));
   }
 
   /**
@@ -284,14 +336,27 @@ export function createSessionEngine(config) {
    * @param {Partial<SessionEngineConfig>} updates
    */
   function updateConfig(updates) {
-    if (updates.productiveSites) productiveSites = updates.productiveSites;
-    if (updates.productiveApps) productiveApps = updates.productiveApps;
-    if (updates.blockedSites) blockedSites = updates.blockedSites;
-    if (updates.productiveMode) productiveMode = updates.productiveMode;
+    if (updates.productiveSites !== undefined) productiveSites = updates.productiveSites;
+    if (updates.productiveApps !== undefined) productiveApps = updates.productiveApps;
+    if (updates.blockedSites !== undefined) blockedSites = updates.blockedSites;
+    if (updates.blockedApps !== undefined) blockedApps = updates.blockedApps;
+    if (updates.productiveMode !== undefined) productiveMode = updates.productiveMode;
     if (updates.workMinutes !== undefined) workMinutes = updates.workMinutes;
     if (updates.rewardMinutes !== undefined) rewardMinutes = updates.rewardMinutes;
     if (updates.strictMode !== undefined) strictMode = updates.strictMode;
     if (updates.blockTaskManager !== undefined) blockTaskManager = updates.blockTaskManager;
+  }
+
+  /**
+   * Start a break — allows blocked sites/apps while unusedRewardMs > 0.
+   * @returns {SessionState}
+   */
+  function startBreak() {
+    if (!sessionActive || rewardActive || unusedRewardMs <= 0) return getStatus();
+    rewardActive = true;
+    emitter.emit('stateChanged', getStatus());
+    emitter.emit('blockingStateChanged');
+    return getStatus();
   }
 
   /** Clean up timers. */
@@ -303,6 +368,7 @@ export function createSessionEngine(config) {
   return {
     startSession,
     endSession,
+    startBreak,
     getStatus,
     reportSiteVisit,
     reportAppFocus,

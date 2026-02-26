@@ -7,11 +7,9 @@
 
 import { Router } from 'express';
 import { getAll, set } from '../../storage.js';
-import {
-  getBlockedSites, getAllowedPaths,
-  getProductiveMode, getProductiveSites, getProductiveApps,
-} from '../../shared/list-utils.js';
+import { createListContext } from '../../shared/list-utils.js';
 import { computeNuclearStage, getNuclearSiteDomains } from '../../shared/nuclear-utils.js';
+import { normalizeDomain } from '../../shared/domain-utils.js';
 
 /**
  * @typedef {Object} ApiRouterDeps
@@ -48,6 +46,12 @@ export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged })
   /** POST /api/session/end — End the current session. */
   router.post('/session/end', (req, res) => {
     const state = sessionEngine.endSession();
+    res.json(state);
+  });
+
+  /** POST /api/session/break/start — Start a reward break. */
+  router.post('/session/break/start', (req, res) => {
+    const state = sessionEngine.startBreak();
     res.json(state);
   });
 
@@ -89,21 +93,39 @@ export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged })
 
   // --- Nuclear Block API ---
 
+  /**
+   * Helper: load nuclear sites, apply a mutator, save, notify, and respond.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {(sites: Array, data: Object) => { sites: Array, response: Object }} mutator
+   */
+  async function withNuclearSites(req, res, mutator) {
+    try {
+      const data = await getAll();
+      const sites = data.nuclearBlockData?.sites || [];
+      const { sites: updatedSites, response } = mutator(sites, data);
+      const merged = await set({ nuclearBlockData: { ...data.nuclearBlockData, sites: updatedSites } });
+      notifySettingsChanged(merged);
+      res.json(response);
+    } catch (err) {
+      res.status(err.status || 500).json({ error: err.message });
+    }
+  }
+
   /** GET /api/nuclear/site?domain=X — Get nuclear site data for a domain (used by blocked pages). */
   router.get('/nuclear/site', async (req, res) => {
     try {
-      const domain = (req.query.domain || '').toLowerCase().replace(/^www\./, '');
+      const domain = normalizeDomain(req.query.domain || '');
       if (!domain) return res.status(400).json({ error: 'domain query param required' });
 
       const data = await getAll();
       const sites = data.nuclearBlockData?.sites || [];
       const site = sites.find(s => {
         const domains = getNuclearSiteDomains(s);
-        return domains.some(d => d.replace(/^www\./, '').toLowerCase() === domain);
+        return domains.some(d => normalizeDomain(d) === domain);
       });
 
       if (!site) return res.status(404).json({ error: 'Site not found in nuclear block list' });
-
       res.json({ ...site, stage: computeNuclearStage(site) });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -112,82 +134,51 @@ export function createApiRouter({ sessionEngine, broadcast, onSettingsChanged })
 
   /** POST /api/nuclear/click-unblock — Start cooldown2 for a nuclear site. */
   router.post('/nuclear/click-unblock', async (req, res) => {
-    try {
-      const { id } = req.body;
-      if (!id) return res.status(400).json({ error: 'id required' });
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'id required' });
 
-      const data = await getAll();
-      const sites = data.nuclearBlockData?.sites || [];
+    await withNuclearSites(req, res, (sites) => {
       const site = sites.find(s => s.id === id);
-      if (!site) return res.status(404).json({ error: 'Site not found' });
-
+      if (!site) throw Object.assign(new Error('Site not found'), { status: 404 });
       site.unblockClickedAt = Date.now();
-      const merged = await set({ nuclearBlockData: { ...data.nuclearBlockData, sites } });
-      notifySettingsChanged(merged);
-
-      res.json({ ok: true, stage: computeNuclearStage(site) });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+      return { sites, response: { ok: true, stage: computeNuclearStage(site) } };
+    });
   });
 
   /** POST /api/nuclear/confirm-unblock — Remove a nuclear site (final unblock). */
   router.post('/nuclear/confirm-unblock', async (req, res) => {
-    try {
-      const { id } = req.body;
-      if (!id) return res.status(400).json({ error: 'id required' });
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'id required' });
 
-      const data = await getAll();
-      const sites = (data.nuclearBlockData?.sites || []).filter(s => s.id !== id);
-      const merged = await set({ nuclearBlockData: { ...data.nuclearBlockData, sites } });
-      notifySettingsChanged(merged);
-
-      res.json({ ok: true });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+    await withNuclearSites(req, res, (sites) => {
+      return { sites: sites.filter(s => s.id !== id), response: { ok: true } };
+    });
   });
 
   /** POST /api/nuclear/block-again — Re-block a nuclear site with new cooldown. */
   router.post('/nuclear/block-again', async (req, res) => {
-    try {
-      const { id, cooldown1Ms } = req.body;
-      if (!id || !cooldown1Ms) return res.status(400).json({ error: 'id and cooldown1Ms required' });
+    const { id, cooldown1Ms } = req.body;
+    if (!id || !cooldown1Ms) return res.status(400).json({ error: 'id and cooldown1Ms required' });
 
-      const data = await getAll();
-      const sites = data.nuclearBlockData?.sites || [];
+    await withNuclearSites(req, res, (sites) => {
       const site = sites.find(s => s.id === id);
-      if (!site) return res.status(404).json({ error: 'Site not found' });
-
+      if (!site) throw Object.assign(new Error('Site not found'), { status: 404 });
       site.addedAt = Date.now();
       site.cooldown1Ms = cooldown1Ms;
       site.unblockClickedAt = null;
-
-      const merged = await set({ nuclearBlockData: { ...data.nuclearBlockData, sites } });
-      notifySettingsChanged(merged);
-
-      res.json({ ok: true, stage: computeNuclearStage(site) });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+      return { sites, response: { ok: true, stage: computeNuclearStage(site) } };
+    });
   });
 
   /** POST /api/nuclear/add — Add a new nuclear site (used by choice page re-block). */
   router.post('/nuclear/add', async (req, res) => {
-    try {
-      const { entry } = req.body;
-      if (!entry) return res.status(400).json({ error: 'entry required' });
+    const { entry } = req.body;
+    if (!entry) return res.status(400).json({ error: 'entry required' });
 
-      const data = await getAll();
-      const sites = data.nuclearBlockData?.sites || [];
+    await withNuclearSites(req, res, (sites) => {
       sites.push(entry);
-      const merged = await set({ nuclearBlockData: { ...data.nuclearBlockData, sites } });
-      notifySettingsChanged(merged);
-
-      res.json({ ok: true });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+      return { sites, response: { ok: true } };
+    });
   });
 
   /** GET /api/usage — Get session history, daily summaries, and streak data for analytics. */
@@ -237,10 +228,7 @@ function extractSettings(data) {
  */
 function applySettingsToEngine(engine, data) {
   engine.updateConfig({
-    productiveSites: getProductiveSites(data.lists, data.activeListId),
-    productiveApps: getProductiveApps(data.lists, data.activeListId),
-    blockedSites: getBlockedSites(data.lists, data.activeListId),
-    productiveMode: getProductiveMode(data.lists, data.activeListId),
+    ...createListContext(data.lists, data.activeListId),
     workMinutes: data.workMinutes,
     rewardMinutes: data.rewardMinutes,
     strictMode: data.strictMode,

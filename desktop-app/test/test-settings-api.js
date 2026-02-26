@@ -136,8 +136,10 @@ describe('settings API: PUT /api/settings', () => {
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toContain('Settings');
-    expect(text).toContain('What to Block');
-    expect(text).toContain('What Counts as Productive');
+    // "What to Block" and "What Counts as Productive" are now rendered
+    // dynamically by settings.js — verify JS/CSS are linked instead
+    expect(text).toContain('settings.js');
+    expect(text).toContain('settings.css');
     expect(text).toContain('New List');
   });
 });
