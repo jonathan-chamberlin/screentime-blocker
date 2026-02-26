@@ -18,7 +18,7 @@
     "url": "https://github.com/jonathan-chamberlin/screentime-blocker/issues"
   },
   "homepage": "https://github.com/jonathan-chamberlin/screentime-blocker#readme",
-  "dependencies": {
+  "devDependencies": {
     "playwright": "^1.58.2"
   }
 }

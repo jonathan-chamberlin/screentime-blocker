@@ -202,8 +202,8 @@
       }
       prevRewardGrantCount = state.rewardGrantCount;
 
-      // Break expiry redirect
-      if (!state.rewardActive && state.rewardBurnedMs > 0 && state.unusedRewardMs <= 0 && !_breakExpiredRedirected) {
+      // Break expiry redirect (only during active session)
+      if (state.sessionActive && !state.rewardActive && state.rewardBurnedMs > 0 && state.unusedRewardMs <= 0 && !_breakExpiredRedirected) {
         _breakExpiredRedirected = true;
         window.location.href = '/break-time-up.html';
         return;
