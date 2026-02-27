@@ -165,6 +165,167 @@ function lockSiteSections(locked) {
 // --- Nuclear Block ---
 
 let nuclearTransitionTimer = null;
+let pendingNuclearExceptions = [];
+
+function normalizeNuclearDomainInput(input) {
+  if (typeof input !== 'string') return '';
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  const prefixed = /^(https?:)?\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(prefixed);
+    return url.hostname.replace(/^www\./i, '').toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function normalizeNuclearExceptionInput(input) {
+  if (typeof input !== 'string') return '';
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  const prefixed = /^(https?:)?\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(prefixed);
+    const host = url.hostname.replace(/^www\./i, '').toLowerCase();
+    return `${host}${url.pathname || '/'}${url.search || ''}`;
+  } catch {
+    return '';
+  }
+}
+
+function getNuclearSiteDomains(site) {
+  const raw = site && site.domains ? site.domains : (site && site.domain ? [site.domain] : []);
+  return Array.from(new Set(raw.map(normalizeNuclearDomainInput).filter(Boolean)));
+}
+
+function nuclearExceptionMatchesSite(normalizedException, site) {
+  const slashIdx = normalizedException.indexOf('/');
+  const host = slashIdx === -1 ? normalizedException : normalizedException.slice(0, slashIdx);
+  const domains = getNuclearSiteDomains(site);
+  return domains.some(domain => host === domain || host.endsWith('.' + domain));
+}
+
+function renderPendingNuclearExceptions() {
+  const list = document.getElementById('nuclearPendingExceptions');
+  if (!list) return;
+  list.innerHTML = '';
+  if (pendingNuclearExceptions.length === 0) return;
+
+  pendingNuclearExceptions.forEach(exception => {
+    const chip = document.createElement('span');
+    chip.className = 'nuclear-exception-chip';
+    chip.textContent = exception;
+    list.appendChild(chip);
+  });
+}
+
+function tryAddPendingNuclearException() {
+  const input = document.getElementById('nuclearExceptionInput');
+  const customDomainInput = document.getElementById('nuclearCustomDomain');
+  if (!input || !customDomainInput) return;
+
+  const normalized = normalizeNuclearExceptionInput(input.value);
+  if (!normalized) {
+    alert('Enter a valid exception URL.');
+    return;
+  }
+
+  const customDomain = normalizeNuclearDomainInput(customDomainInput.value);
+  if (!customDomain) {
+    alert('Enter a custom nuclear domain first so exceptions can be validated.');
+    return;
+  }
+
+  const host = normalized.split('/')[0];
+  if (!(host === customDomain || host.endsWith('.' + customDomain))) {
+    alert('Exception URL must be on the same domain/subdomain as the custom nuclear domain.');
+    return;
+  }
+
+  if (!pendingNuclearExceptions.includes(normalized)) {
+    pendingNuclearExceptions.push(normalized);
+    renderPendingNuclearExceptions();
+  }
+  input.value = '';
+}
+
+function renderNuclearEntryExceptions(site, parentEl) {
+  const wrap = document.createElement('div');
+  wrap.className = 'nuclear-card-exceptions';
+
+  const label = document.createElement('div');
+  label.className = 'nuclear-card-exceptions-label';
+  label.textContent = 'Allowed exceptions';
+
+  const list = document.createElement('div');
+  list.className = 'nuclear-exception-list';
+  const existing = Array.isArray(site.exceptions) ? site.exceptions : [];
+  if (existing.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'nuclear-exception-chip';
+    empty.textContent = 'None';
+    list.appendChild(empty);
+  } else {
+    existing.forEach(exception => {
+      const chip = document.createElement('span');
+      chip.className = 'nuclear-exception-chip';
+      chip.textContent = exception;
+      list.appendChild(chip);
+    });
+  }
+
+  const addRow = document.createElement('div');
+  addRow.className = 'nuclear-card-exception-row';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'nuclear-card-exception-input';
+  input.placeholder = 'https://example.com/allowed-path';
+
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'btn-nuclear-card-exception-add';
+  addBtn.textContent = 'Add';
+
+  const submit = () => {
+    const normalized = normalizeNuclearExceptionInput(input.value);
+    if (!normalized) {
+      alert('Enter a valid exception URL.');
+      return;
+    }
+    if (!nuclearExceptionMatchesSite(normalized, site)) {
+      alert('Exception URL must be on the same domain/subdomain as this nuclear entry.');
+      return;
+    }
+
+    chrome.runtime.sendMessage({ action: 'addNuclearException', id: site.id, exception: normalized }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        alert((response && response.error) || 'Could not add nuclear exception.');
+        return;
+      }
+      input.value = '';
+      loadNuclearBlock();
+      showSavedIndicator();
+    });
+  };
+
+  addBtn.addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submit();
+    }
+  });
+
+  addRow.appendChild(input);
+  addRow.appendChild(addBtn);
+
+  wrap.appendChild(label);
+  wrap.appendChild(list);
+  wrap.appendChild(addRow);
+  parentEl.appendChild(wrap);
+}
 
 function scheduleNuclearTransition(sites) {
   if (nuclearTransitionTimer) {
@@ -316,6 +477,7 @@ async function loadNuclearBlock() {
 
         info.appendChild(nameEl);
         info.appendChild(countdownEl);
+        renderNuclearEntryExceptions(site, info);
         card.appendChild(info);
 
         if (stage === 'ready' || stage === 'confirm') {
@@ -507,12 +669,13 @@ function addNuclearSiteFromUI() {
 
   // Collect custom domain
   const customInput = document.getElementById('nuclearCustomDomain');
-  const customDomain = customInput.value.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '');
+  const customDomain = normalizeNuclearDomainInput(customInput.value);
   if (customDomain.length > 0) {
     entries.push({
       id: 'nuclear-' + Date.now() + '-' + Math.random().toString(36).slice(2),
       name: customDomain,
       domain: customDomain,
+      exceptions: [...pendingNuclearExceptions],
       addedAt: Date.now(),
       cooldown1Ms,
       cooldown2Ms: enabled ? cooldown2Ms : 0,
@@ -531,6 +694,8 @@ function addNuclearSiteFromUI() {
       pending--;
       if (pending === 0) {
         customInput.value = '';
+        pendingNuclearExceptions = [];
+        renderPendingNuclearExceptions();
         loadNuclearBlock();
         showSavedIndicator();
       }
@@ -1556,6 +1721,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('nuclearSecondCooldown').addEventListener('change', () => saveNuclearSettings());
 
   document.getElementById('btn-add-nuclear').addEventListener('click', addNuclearSiteFromUI);
+  document.getElementById('btn-add-nuclear-exception').addEventListener('click', tryAddPendingNuclearException);
+  document.getElementById('nuclearExceptionInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      tryAddPendingNuclearException();
+    }
+  });
+  document.getElementById('nuclearCustomDomain').addEventListener('input', () => {
+    pendingNuclearExceptions = [];
+    renderPendingNuclearExceptions();
+  });
+  renderPendingNuclearExceptions();
 
   const cooldownSelect = document.getElementById('nuclearCooldown');
   const secondCooldownSelect = document.getElementById('nuclearSecondCooldown');

@@ -9,9 +9,100 @@ const NUCLEAR_DEFAULT_DATA = {
   secondCooldownMs: 18 * 60 * 60 * 1000, // 18 hours
 };
 
+function normalizeDomain(input) {
+  if (typeof input !== 'string') return '';
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  const prefixed = /^(https?:)?\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(prefixed);
+    return url.hostname.replace(/^www\./i, '').toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function normalizeException(input) {
+  if (typeof input !== 'string') return '';
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  const prefixed = /^(https?:)?\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(prefixed);
+    const host = url.hostname.replace(/^www\./i, '').toLowerCase();
+    const path = url.pathname || '/';
+    const search = url.search || '';
+    return `${host}${path}${search}`;
+  } catch {
+    return '';
+  }
+}
+
+function getExceptionHost(normalizedException) {
+  if (!normalizedException || typeof normalizedException !== 'string') return '';
+  const slashIdx = normalizedException.indexOf('/');
+  return slashIdx === -1 ? normalizedException : normalizedException.slice(0, slashIdx);
+}
+
+function getEntryDomains(site) {
+  const rawDomains = site && site.domains
+    ? site.domains
+    : (site && site.domain ? [site.domain] : []);
+  const normalized = rawDomains
+    .map(normalizeDomain)
+    .filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+
+function exceptionBelongsToEntry(normalizedException, site) {
+  const exceptionHost = getExceptionHost(normalizedException);
+  if (!exceptionHost) return false;
+  const domains = getEntryDomains(site);
+  if (domains.length === 0) return false;
+  return domains.some(domain => exceptionHost === domain || exceptionHost.endsWith(`.${domain}`));
+}
+
+function normalizeSiteEntry(entry) {
+  const domains = getEntryDomains(entry);
+  const normalizedExceptions = Array.isArray(entry.exceptions) ? entry.exceptions : [];
+  const keptExceptions = [];
+  const seen = new Set();
+  for (const value of normalizedExceptions) {
+    const normalized = normalizeException(value);
+    if (!normalized) continue;
+    if (!domains.some(domain => {
+      const host = getExceptionHost(normalized);
+      return host === domain || host.endsWith(`.${domain}`);
+    })) continue;
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    keptExceptions.push(normalized);
+  }
+
+  const base = { ...entry, exceptions: keptExceptions };
+  if (domains.length === 0) {
+    delete base.domain;
+    delete base.domains;
+    return base;
+  }
+  if (domains.length === 1) {
+    base.domain = domains[0];
+    delete base.domains;
+  } else {
+    base.domains = domains;
+    delete base.domain;
+  }
+  return base;
+}
+
 async function getNuclearData() {
   const result = await getStorage(['nbData']);
-  return result.nbData || { ...NUCLEAR_DEFAULT_DATA };
+  const data = result.nbData || { ...NUCLEAR_DEFAULT_DATA };
+  return {
+    ...NUCLEAR_DEFAULT_DATA,
+    ...data,
+    sites: (data.sites || []).map(site => normalizeSiteEntry(site)),
+  };
 }
 
 async function saveNuclearData(data) {
@@ -22,11 +113,7 @@ async function saveNuclearData(data) {
 function getNuclearDomains(data) {
   const domains = [];
   for (const site of data.sites) {
-    if (site.domains) {
-      domains.push(...site.domains);
-    } else if (site.domain) {
-      domains.push(site.domain);
-    }
+    domains.push(...getEntryDomains(site));
   }
   return domains;
 }
@@ -55,15 +142,25 @@ async function applyNuclearRules() {
   for (const site of data.sites) {
     const stage = getNuclearSiteStage(site);
     const page = stage === 'confirm' ? '/nuclear-block-last-chance.html' : '/nuclear-blocked.html';
-    const domains = site.domains || (site.domain ? [site.domain] : []);
+    const domains = getEntryDomains(site);
     for (const d of domains) {
-      const clean = d.trim().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '');
-      if (!clean) continue;
       addRules.push({
         id: NUCLEAR_RULE_ID_OFFSET + ruleIndex++,
         priority: 3,
         action: { type: 'redirect', redirect: { extensionPath: page } },
-        condition: { requestDomains: [clean], resourceTypes: ['main_frame'] },
+        condition: { requestDomains: [d], resourceTypes: ['main_frame'] },
+      });
+    }
+
+    const exceptions = Array.isArray(site.exceptions) ? site.exceptions : [];
+    for (const exception of exceptions) {
+      const normalized = normalizeException(exception);
+      if (!normalized || !exceptionBelongsToEntry(normalized, site)) continue;
+      addRules.push({
+        id: NUCLEAR_RULE_ID_OFFSET + ruleIndex++,
+        priority: 4,
+        action: { type: 'allow' },
+        condition: { urlFilter: `||${normalized}`, resourceTypes: ['main_frame'] },
       });
     }
   }
@@ -76,15 +173,37 @@ async function applyNuclearRules() {
 
 async function addNuclearSite(entry) {
   const data = await getNuclearData();
+  const normalizedEntry = normalizeSiteEntry(entry);
+
   // Prevent duplicate domains
   const existingDomains = new Set(getNuclearDomains(data));
-  const newDomains = entry.domains || (entry.domain ? [entry.domain] : []);
+  const newDomains = getEntryDomains(normalizedEntry);
+  if (newDomains.length === 0) return;
   if (newDomains.every(d => existingDomains.has(d))) return; // all already blocked
-  data.sites.push(entry);
+  data.sites.push(normalizedEntry);
   await saveNuclearData(data);
   await applyNuclearRules();
   // Schedule rule refresh for when cooldown1 expires (stage changes to ready)
-  if (entry.cooldown1Ms > 0) scheduleNuclearRuleRefresh(entry.cooldown1Ms);
+  if (normalizedEntry.cooldown1Ms > 0) scheduleNuclearRuleRefresh(normalizedEntry.cooldown1Ms);
+}
+
+async function addNuclearException(id, exception) {
+  const data = await getNuclearData();
+  const site = data.sites.find(s => s.id === id);
+  if (!site) throw new Error('Nuclear entry not found.');
+
+  const normalized = normalizeException(exception);
+  if (!normalized) throw new Error('Invalid exception URL.');
+  if (!exceptionBelongsToEntry(normalized, site)) {
+    throw new Error('Exception must be on the same domain/subdomain as this nuclear entry.');
+  }
+
+  const existing = Array.isArray(site.exceptions) ? site.exceptions.map(normalizeException).filter(Boolean) : [];
+  if (existing.includes(normalized)) return;
+
+  site.exceptions = [...existing, normalized];
+  await saveNuclearData(data);
+  await applyNuclearRules();
 }
 
 async function clickUnblockNuclear(id) {

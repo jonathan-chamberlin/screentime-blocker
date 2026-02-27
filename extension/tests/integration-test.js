@@ -109,6 +109,10 @@ global.chrome = {
     WINDOW_ID_NONE: -1,
     onFocusChanged: { addListener() {} },
   },
+  idle: {
+    setDetectionInterval() {},
+    onStateChanged: { addListener() {} },
+  },
   alarms: {
     create(name, opts) { alarms[name] = opts; },
     clear(name) { delete alarms[name]; return Promise.resolve(true); },
@@ -139,8 +143,8 @@ global.crypto = { randomUUID: () => 'test-uuid-' + Math.random().toString(36).sl
 // ═══════════════════════════════════════════════════
 const extDir = path.join(__dirname, '..');
 const loadOrder = [
-  'constants.js', 'storage.js', 'timer.js', 'site-utils.js',
-  'session-state.js', 'blocking.js', 'native-host.js', 'backend-api.js',
+  'constants.js', 'storage.js', 'timer.js', 'site-utils.js', 'list-utils.js',
+  'session-state.js', 'blocking.js', 'scheduler.js', 'nuclear-block.js', 'native-host.js', 'backend-api.js',
   'tab-monitor.js', 'reward.js', 'session.js',
 ];
 
@@ -384,6 +388,112 @@ async function runTests() {
     await redirectBlockedTabs();
     assertEqual(tabsList[0].url, 'https://youtube.com/feed/subscriptions', 'allowed path not redirected');
     assert(tabsList[1].url.includes('blocked.html'), 'blocked tab redirected');
+  });
+
+  console.log('\n=== Nuclear Block Exception Tests ===');
+
+  await test('normalizeDomain strips protocol/www/path', () => {
+    assertEqual(normalizeDomain('https://www.Wikipedia.org/wiki/Test'), 'wikipedia.org', 'normalized domain');
+  });
+
+  await test('normalizeException keeps host/path/query', () => {
+    assertEqual(
+      normalizeException('https://en.wikipedia.org/wiki/Fort_Southerland?x=1'),
+      'en.wikipedia.org/wiki/Fort_Southerland?x=1',
+      'normalized exception'
+    );
+  });
+
+  await test('addNuclearSite persists normalized exceptions', async () => {
+    await addNuclearSite({
+      id: 'n1',
+      name: 'Wikipedia',
+      domain: 'wikipedia.org',
+      exceptions: ['https://en.wikipedia.org/wiki/Fort_Southerland'],
+      addedAt: Date.now(),
+      cooldown1Ms: 86400000,
+      cooldown2Ms: 0,
+      unblockClickedAt: null,
+    });
+
+    assert(storageData.nbData, 'nbData saved');
+    assertEqual(storageData.nbData.sites.length, 1, 'one nuclear site');
+    assertEqual(storageData.nbData.sites[0].exceptions[0], 'en.wikipedia.org/wiki/Fort_Southerland', 'exception normalized and saved');
+  });
+
+  await test('applyNuclearRules creates redirect and allow rules with allow higher priority', async () => {
+    storageData.nbData = {
+      sites: [{
+        id: 'n2',
+        name: 'Wikipedia',
+        domain: 'wikipedia.org',
+        exceptions: ['en.wikipedia.org/wiki/Fort_Southerland'],
+        addedAt: Date.now(),
+        cooldown1Ms: 86400000,
+        cooldown2Ms: 0,
+        unblockClickedAt: null,
+      }],
+      secondCooldownEnabled: true,
+      secondCooldownMs: 18 * 60 * 60 * 1000,
+    };
+
+    await applyNuclearRules();
+
+    const redirectRule = dynamicRules.find(r => r.priority === 3 && r.action.type === 'redirect');
+    const allowRule = dynamicRules.find(r => r.priority === 4 && r.action.type === 'allow');
+
+    assert(redirectRule, 'has redirect rule');
+    assert(allowRule, 'has allow exception rule');
+    assert(redirectRule.condition.requestDomains.includes('wikipedia.org'), 'redirect domain');
+    assertEqual(allowRule.condition.urlFilter, '||en.wikipedia.org/wiki/Fort_Southerland', 'allow url filter');
+    assert(allowRule.priority > redirectRule.priority, 'allow is higher priority');
+  });
+
+  await test('addNuclearException appends and dedupes', async () => {
+    storageData.nbData = {
+      sites: [{
+        id: 'n3',
+        name: 'Wikipedia',
+        domain: 'wikipedia.org',
+        exceptions: [],
+        addedAt: Date.now(),
+        cooldown1Ms: 86400000,
+        cooldown2Ms: 0,
+        unblockClickedAt: null,
+      }],
+      secondCooldownEnabled: true,
+      secondCooldownMs: 18 * 60 * 60 * 1000,
+    };
+
+    await addNuclearException('n3', 'https://en.wikipedia.org/wiki/Fort_Southerland');
+    await addNuclearException('n3', 'https://en.wikipedia.org/wiki/Fort_Southerland');
+
+    assertEqual(storageData.nbData.sites[0].exceptions.length, 1, 'deduped');
+  });
+
+  await test('addNuclearException rejects non-matching host', async () => {
+    storageData.nbData = {
+      sites: [{
+        id: 'n4',
+        name: 'Wikipedia',
+        domain: 'wikipedia.org',
+        exceptions: [],
+        addedAt: Date.now(),
+        cooldown1Ms: 86400000,
+        cooldown2Ms: 0,
+        unblockClickedAt: null,
+      }],
+      secondCooldownEnabled: true,
+      secondCooldownMs: 18 * 60 * 60 * 1000,
+    };
+
+    let threw = false;
+    try {
+      await addNuclearException('n4', 'https://youtube.com/watch?v=123');
+    } catch (err) {
+      threw = true;
+    }
+    assert(threw, 'should reject mismatched exception host');
   });
 
   console.log('\n=== Session Lifecycle Tests ===');

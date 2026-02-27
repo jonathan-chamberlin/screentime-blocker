@@ -610,6 +610,75 @@
             color: #ffaa44;
         }
 
+        .nuclear-card-exceptions {
+            margin-top: 10px;
+        }
+
+        .nuclear-card-exceptions-label {
+            font-size: 11px;
+            color: #8a8690;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .nuclear-exception-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .nuclear-exception-chip {
+            font-size: 11px;
+            color: #ffd9b0;
+            border: 1px solid rgba(255, 170, 68, 0.25);
+            background: rgba(255, 170, 68, 0.12);
+            border-radius: 999px;
+            padding: 2px 8px;
+            max-width: 100%;
+            word-break: break-all;
+        }
+
+        .nuclear-card-exception-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .nuclear-card-exception-row input[type="text"] {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 10px;
+            background-color: #211e2b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: #ede9e3;
+            font-size: 12px;
+        }
+
+        .nuclear-card-exception-row input[type="text"]:focus {
+            outline: none;
+            border-color: #ffaa44;
+            box-shadow: 0 0 0 2px rgba(255, 170, 68, 0.15);
+        }
+
+        .btn-nuclear-card-exception-add {
+            background: rgba(255, 170, 68, 0.12);
+            color: #ffaa44;
+            border: 1px solid rgba(255, 170, 68, 0.28);
+            padding: 8px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .btn-nuclear-card-exception-add:hover {
+            background: rgba(255, 170, 68, 0.2);
+            box-shadow: none;
+            transform: none;
+        }
+
         .btn-unblock {
             background: rgba(255, 140, 0, 0.1);
             color: #ffaa44;
@@ -715,6 +784,37 @@
             align-items: flex-end;
             flex-wrap: wrap;
             margin-top: 12px;
+        }
+
+        .nuclear-inline-add {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nuclear-inline-add input[type="text"] {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .nuclear-inline-add button {
+            background: rgba(255, 170, 68, 0.12);
+            color: #ffaa44;
+            border: 1px solid rgba(255, 170, 68, 0.28);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .nuclear-inline-add button:hover {
+            background: rgba(255, 170, 68, 0.2);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .nuclear-pending-exceptions {
+            margin-top: 8px;
+            min-height: 18px;
         }
 
         .nuclear-add-row .form-group {
@@ -1238,6 +1338,15 @@
 
                 <div class="form-group" style="margin-bottom: 10px;">
                     <input type="text" id="nuclearCustomDomain" placeholder="or type a domain (e.g., example.com)">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; margin-bottom: 5px;">Any allowed exceptions</label>
+                    <div class="nuclear-inline-add">
+                        <input type="text" id="nuclearExceptionInput" placeholder="https://example.com/allowed-path">
+                        <button type="button" id="btn-add-nuclear-exception">Add</button>
+                    </div>
+                    <div id="nuclearPendingExceptions" class="nuclear-pending-exceptions"></div>
                 </div>
 
                 <div class="nuclear-add-row">

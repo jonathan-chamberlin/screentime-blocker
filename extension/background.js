@@ -297,6 +297,10 @@ const messageHandlers = {
     addNuclearSite(msg.entry).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   },
+  addNuclearException: (msg, sender, sendResponse) => {
+    addNuclearException(msg.id, msg.exception).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  },
   clickUnblockNuclear: (msg, sender, sendResponse) => {
     clickUnblockNuclear(msg.id).then(() => sendResponse({ success: true })).catch(err => sendResponse({ success: false, error: err.message }));
     return true;
