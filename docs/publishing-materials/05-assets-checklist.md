@@ -30,13 +30,13 @@ Use this checklist before final submission.
 - optional leaderboard view
 
 2. Suggested local screenshot sources
-- `screenshots_for_readme/default_screenshot.png`
-- `screenshots_for_readme/work_mode_screenshot.png`
-- `screenshots_for_readme/reward_earned_screenshot.png`
-- `screenshots_for_readme/reward_burn_screenshot.png`
-- `screenshots_for_readme/shame_level_4_screenshot.png`
-- `screenshots_for_readme/nuclear_block_screenshot.png`
-- `screenshots_for_readme/settings_overview_screenshot.png`
+- `docs/screenshots_for_readme/default_screenshot.png`
+- `docs/screenshots_for_readme/work_mode_screenshot.png`
+- `docs/screenshots_for_readme/reward_earned_screenshot.png`
+- `docs/screenshots_for_readme/reward_burn_screenshot.png`
+- `docs/screenshots_for_readme/shame_level_4_screenshot.png`
+- `docs/screenshots_for_readme/nuclear_block_screenshot.png`
+- `docs/screenshots_for_readme/settings_overview_screenshot.png`
 
 ## Final Validation
 

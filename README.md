@@ -10,7 +10,7 @@ https://chromewebstore.google.com/detail/brainrot-blocker/cijlhepnapgbpnfjgbbepi
 
 Built for students, founders, and anyone who swears they'll work but doomscrolls instead.
 
-![Default state](screenshots_for_readme/default_screenshot.png)
+![Default state](docs/screenshots_for_readme/default_screenshot.png)
 
 ---
 
@@ -28,21 +28,21 @@ Most site blockers are passive. They show a polite message you dismiss in second
 
 Click Lock In to start a work session. Every site on your blocked list is instantly locked. The work timer only counts when you're on a productive tab. Navigate away and it pauses.
 
-![Work mode](screenshots_for_readme/work_mode_screenshot.png)
+![Work mode](docs/screenshots_for_readme/work_mode_screenshot.png)
 
 ### Earn and Burn Reward Time
 
 Every completed work cycle (default: 50 minutes) earns break time (default: 10 minutes). Hit Use Break Time to unlock reward sites for exactly that long. The countdown only ticks while you're on those sites, and you can pause it and save what's left.
 
-![Reward earned](screenshots_for_readme/reward_earned_screenshot.png)
+![Reward earned](docs/screenshots_for_readme/reward_earned_screenshot.png)
 
-![Reward burn mode](screenshots_for_readme/reward_burn_screenshot.png)
+![Reward burn mode](docs/screenshots_for_readme/reward_burn_screenshot.png)
 
 ### Escalating Shame System
 
 Try to visit a blocked site and the extension escalates through 4 levels of shame, from a gentle nudge to total meltdown.
 
-| ![Shame Level 1](screenshots_for_readme/shame_level_1_screenshot.png) | ![Shame Level 2](screenshots_for_readme/shame_level_2_screenshot.png) | ![Shame Level 3](screenshots_for_readme/shame_level_3_screenshot.png) | ![Shame Level 4](screenshots_for_readme/shame_level_4_screenshot.png) |
+| ![Shame Level 1](docs/screenshots_for_readme/shame_level_1_screenshot.png) | ![Shame Level 2](docs/screenshots_for_readme/shame_level_2_screenshot.png) | ![Shame Level 3](docs/screenshots_for_readme/shame_level_3_screenshot.png) | ![Shame Level 4](docs/screenshots_for_readme/shame_level_4_screenshot.png) |
 |:---:|:---:|:---:|:---:|
 | Level 1: "Hey. Focus." | Level 2: Getting dramatic | Level 3: Full meme mode | Level 4: DEFCON 1 |
 
@@ -66,7 +66,7 @@ These sites remain blocked if you use **Delete All Data** in Settings (Nuclear B
 
 Preset nuclear sites included: OnlyFans, Adult Websites (35+ domains), Gambling Sites (26+ domains), Steam, Epic Games, League of Legends, World of Warcraft, Valorant.
 
-![Nuclear Block](screenshots_for_readme/nuclear_block_screenshot.png)
+![Nuclear Block](docs/screenshots_for_readme/nuclear_block_screenshot.png)
 
 ---
 
@@ -105,7 +105,7 @@ Enable Companion App mode (requires native host installation) to extend blocking
 
 All settings are organized into collapsible sections. Click any heading to expand it.
 
-![Settings overview](screenshots_for_readme/settings_overview_screenshot.png)
+![Settings overview](docs/screenshots_for_readme/settings_overview_screenshot.png)
 
 Sessions
 - Work duration (1 to 180 min, default 50)
@@ -117,14 +117,14 @@ What is Distracting?
 - Custom blocked domains and allowed path exceptions
 - Nuclear Block: permanent blocking with staged cooldown removal
 
-![Break Only Sites](screenshots_for_readme/break_only_sites_screenshot.png)
+![Break Only Sites](docs/screenshots_for_readme/break_only_sites_screenshot.png)
 
 What is Productive?
 - Productive Sites: whitelist mode or "everything except blocked" mode
 - Custom productive domains
 - Skip Productivity Check: approved sites that never trigger the popup
 
-![Productive Sites](screenshots_for_readme/productive_sites_screenshot.png)
+![Productive Sites](docs/screenshots_for_readme/productive_sites_screenshot.png)
 
 Desktop App Tracking (Companion App mode)
 - Productive Applications: desktop apps that count as work time
@@ -208,4 +208,4 @@ server/
 
 ---
 
-*Built solo at HackBeanpot (Northeastern University) in 36 hours. Significantly expanded since.*
+*Initially built solo at HackBeanpot (Northeastern University) in 36 hours. Significantly expanded since.*

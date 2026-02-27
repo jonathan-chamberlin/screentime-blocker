@@ -52,7 +52,7 @@ Open: `https://chrome.google.com/webstore/devconsole`
    - App name: `Brainrot Blocker`
    - Short description: site blocking + timed focus sessions + reward minutes
    - Detailed description: explain blocking behavior, productivity checks, optional leaderboard sign-in
-   - Icons/screenshots: use assets from `extension/` and `screenshots_for_readme/`
+   - Icons/screenshots: use assets from `extension/` and `docs/screenshots_for_readme/`
 
 ## 4) Complete privacy section (important)
 
