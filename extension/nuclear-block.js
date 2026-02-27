@@ -148,7 +148,8 @@ async function applyNuclearRules() {
         id: NUCLEAR_RULE_ID_OFFSET + ruleIndex++,
         priority: 3,
         action: { type: 'redirect', redirect: { extensionPath: page } },
-        condition: { requestDomains: [d], resourceTypes: ['main_frame'] },
+        // urlFilter blocks the base domain and all subdomains (e.g. www., m., music.)
+        condition: { urlFilter: `||${d}`, resourceTypes: ['main_frame'] },
       });
     }
 

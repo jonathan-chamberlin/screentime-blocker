@@ -444,7 +444,7 @@ async function runTests() {
 
     assert(redirectRule, 'has redirect rule');
     assert(allowRule, 'has allow exception rule');
-    assert(redirectRule.condition.requestDomains.includes('wikipedia.org'), 'redirect domain');
+    assertEqual(redirectRule.condition.urlFilter, '||wikipedia.org', 'redirect domain filter');
     assertEqual(allowRule.condition.urlFilter, '||en.wikipedia.org/wiki/Fort_Southerland', 'allow url filter');
     assert(allowRule.priority > redirectRule.priority, 'allow is higher priority');
   });
