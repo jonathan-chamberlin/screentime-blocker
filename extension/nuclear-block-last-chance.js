@@ -32,22 +32,6 @@ function pickQuote() {
   return LAST_CHANCE_QUOTES[Math.floor(Math.random() * LAST_CHANCE_QUOTES.length)];
 }
 
-function getNuclearSiteStage(site) {
-  const now = Date.now();
-  if (now - site.addedAt < site.cooldown1Ms) return 'locked';
-  if (!site.unblockClickedAt) return 'ready';
-  if (now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
-  return 'confirm';
-}
-
-function findMatchingSite(sites, hostname) {
-  const host = hostname.replace(/^www\./, '');
-  return sites.find(site => {
-    const domains = site.domains || (site.domain ? [site.domain] : []);
-    return domains.some(d => d.replace(/^www\./, '') === host);
-  });
-}
-
 function findConfirmSite(sites) {
   // Fallback: find first site in confirm stage
   return sites.find(site => getNuclearSiteStage(site) === 'confirm');
@@ -58,12 +42,11 @@ function findConfirmSite(sites) {
   document.getElementById('quote-text').textContent = '"' + quote.text + '"';
   document.getElementById('quote-author').textContent = '— ' + quote.author;
 
-  const hostname = window.location.hostname;
-
   chrome.storage.local.get(['nbData'], (result) => {
-    const data = result.nbData || { sites: [] };
+    const rawData = result.nbData || { sites: [] };
+    const sites = (rawData.sites || []).map(site => normalizeSiteEntry(site));
     // Try to match by hostname first, fall back to first confirm-stage site
-    const site = findMatchingSite(data.sites, hostname) || findConfirmSite(data.sites);
+    const site = resolveNuclearSiteFromPage(sites, window.location.href, null) || findConfirmSite(sites);
 
     if (!site) return;
 

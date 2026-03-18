@@ -143,7 +143,7 @@ global.crypto = { randomUUID: () => 'test-uuid-' + Math.random().toString(36).sl
 // ═══════════════════════════════════════════════════
 const extDir = path.join(__dirname, '..');
 const loadOrder = [
-  'constants.js', 'storage.js', 'timer.js', 'site-utils.js', 'list-utils.js',
+  'constants.js', 'storage.js', 'timer.js', 'site-utils.js', 'nuclear-url-utils.js', 'list-utils.js',
   'session-state.js', 'blocking.js', 'scheduler.js', 'nuclear-block.js', 'native-host.js', 'backend-api.js',
   'tab-monitor.js', 'reward.js', 'session.js',
 ];
@@ -404,6 +404,56 @@ async function runTests() {
     );
   });
 
+  await test('urlMatchesNuclearException allows same video with extra params', () => {
+    assert(
+      urlMatchesNuclearException(
+        'https://www.youtube.com/watch?v=abc123&t=30s',
+        'youtube.com/watch?v=abc123'
+      ),
+      'same video with extra params should match'
+    );
+  });
+
+  await test('urlMatchesNuclearException allows reordered required params', () => {
+    assert(
+      urlMatchesNuclearException(
+        'https://youtube.com/watch?list=PL123&v=abc123&index=2',
+        'youtube.com/watch?v=abc123&list=PL123'
+      ),
+      'reordered params should match'
+    );
+  });
+
+  await test('urlMatchesNuclearException rejects changed required params', () => {
+    assert(
+      !urlMatchesNuclearException(
+        'https://youtube.com/watch?v=other-video',
+        'youtube.com/watch?v=abc123'
+      ),
+      'different video should not match'
+    );
+  });
+
+  await test('urlMatchesNuclearException rejects different path', () => {
+    assert(
+      !urlMatchesNuclearException(
+        'https://youtube.com/feed/subscriptions?v=abc123',
+        'youtube.com/watch?v=abc123'
+      ),
+      'different path should not match'
+    );
+  });
+
+  await test('urlMatchesNuclearException ignores fragment-only changes', () => {
+    assert(
+      urlMatchesNuclearException(
+        'https://youtube.com/watch?v=abc123#t=30',
+        'youtube.com/watch?v=abc123'
+      ),
+      'hash-only changes should match'
+    );
+  });
+
   await test('addNuclearSite persists normalized exceptions', async () => {
     await addNuclearSite({
       id: 'n1',
@@ -425,9 +475,9 @@ async function runTests() {
     storageData.nbData = {
       sites: [{
         id: 'n2',
-        name: 'Wikipedia',
-        domain: 'wikipedia.org',
-        exceptions: ['en.wikipedia.org/wiki/Fort_Southerland'],
+        name: 'YouTube',
+        domain: 'youtube.com',
+        exceptions: ['youtube.com/watch?v=abc123'],
         addedAt: Date.now(),
         cooldown1Ms: 86400000,
         cooldown2Ms: 0,
@@ -444,8 +494,13 @@ async function runTests() {
 
     assert(redirectRule, 'has redirect rule');
     assert(allowRule, 'has allow exception rule');
-    assertEqual(redirectRule.condition.urlFilter, '||wikipedia.org', 'redirect domain filter');
-    assertEqual(allowRule.condition.urlFilter, '||en.wikipedia.org/wiki/Fort_Southerland', 'allow url filter');
+    assertEqual(redirectRule.condition.urlFilter, '||youtube.com', 'redirect domain filter');
+    assert(redirectRule.action.redirect.url.includes('nuclear-blocked.html?siteId=n2'), 'redirect includes site id');
+    assert(allowRule.condition.regexFilter, 'allow rule uses regexFilter');
+    const allowRegex = new RegExp(allowRule.condition.regexFilter);
+    assert(allowRegex.test('https://youtube.com/watch?v=abc123&t=30'), 'allow regex matches valid variant');
+    assert(allowRegex.test('https://www.youtube.com/watch?feature=share&v=abc123'), 'allow regex matches reordered params');
+    assert(!allowRegex.test('https://youtube.com/watch?v=different'), 'allow regex rejects different video');
     assert(allowRule.priority > redirectRule.priority, 'allow is higher priority');
   });
 
@@ -494,6 +549,69 @@ async function runTests() {
       threw = true;
     }
     assert(threw, 'should reject mismatched exception host');
+  });
+
+  await test('getNuclearNavigationDecision blocks navigation outside allowed exception', () => {
+    const sites = [{
+      id: 'n5',
+      name: 'YouTube',
+      domain: 'youtube.com',
+      exceptions: ['youtube.com/watch?v=abc123'],
+      addedAt: Date.now(),
+      cooldown1Ms: 86400000,
+      cooldown2Ms: 0,
+      unblockClickedAt: null,
+    }].map(site => normalizeSiteEntry(site));
+
+    const decision = getNuclearNavigationDecision('https://youtube.com/watch?v=different', sites);
+    assert(decision.shouldRedirect, 'different video should redirect');
+    assert(decision.redirectUrl.includes('nuclear-blocked.html?siteId=n5'), 'redirect points to site-specific block page');
+  });
+
+  await test('redirectOpenNuclearTabs redirects blocked tabs but keeps allowed variants', async () => {
+    const data = {
+      sites: [{
+        id: 'n6',
+        name: 'YouTube',
+        domain: 'youtube.com',
+        exceptions: ['youtube.com/watch?v=abc123'],
+        addedAt: Date.now(),
+        cooldown1Ms: 86400000,
+        cooldown2Ms: 0,
+        unblockClickedAt: null,
+      }].map(site => normalizeSiteEntry(site)),
+      secondCooldownEnabled: true,
+      secondCooldownMs: 18 * 60 * 60 * 1000,
+    };
+
+    tabsList = [
+      { id: 1, url: 'https://youtube.com/watch?v=abc123&t=30', active: false },
+      { id: 2, url: 'https://youtube.com/feed/subscriptions', active: false },
+      { id: 3, url: 'https://google.com/', active: false },
+    ];
+
+    await redirectOpenNuclearTabs(data);
+
+    assertEqual(tabsList[0].url, 'https://youtube.com/watch?v=abc123&t=30', 'allowed variant left alone');
+    assert(tabsList[1].url.includes('nuclear-blocked.html?siteId=n6'), 'blocked tab redirected to nuclear page');
+    assertEqual(tabsList[2].url, 'https://google.com/', 'non-nuclear tab unchanged');
+  });
+
+  await test('getNuclearNavigationDecision routes confirm-stage sites to last chance page', () => {
+    const sites = [{
+      id: 'n7',
+      name: 'YouTube',
+      domain: 'youtube.com',
+      exceptions: [],
+      addedAt: Date.now() - 86400000,
+      cooldown1Ms: 1000,
+      cooldown2Ms: 1000,
+      unblockClickedAt: Date.now() - 5000,
+    }].map(site => normalizeSiteEntry(site));
+
+    const decision = getNuclearNavigationDecision('https://youtube.com/', sites);
+    assert(decision.shouldRedirect, 'confirm-stage site should redirect');
+    assert(decision.redirectUrl.includes('nuclear-block-last-chance.html?siteId=n7'), 'confirm-stage redirect uses last chance page');
   });
 
   console.log('\n=== Session Lifecycle Tests ===');

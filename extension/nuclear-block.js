@@ -1,99 +1,13 @@
 // Nuclear Block — permanent site blocking with staged cooldown unblocking
 // Storage key: nbData (intentionally generic)
 // Rule IDs: NUCLEAR_RULE_ID_OFFSET (2000) and above
-// Depends on: constants.js (NUCLEAR_RULE_ID_OFFSET), storage.js
+// Depends on: constants.js (NUCLEAR_RULE_ID_OFFSET), storage.js, nuclear-url-utils.js
 
 const NUCLEAR_DEFAULT_DATA = {
   sites: [],
   secondCooldownEnabled: true,
   secondCooldownMs: 18 * 60 * 60 * 1000, // 18 hours
 };
-
-function normalizeDomain(input) {
-  if (typeof input !== 'string') return '';
-  const trimmed = input.trim();
-  if (!trimmed) return '';
-  const prefixed = /^(https?:)?\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  try {
-    const url = new URL(prefixed);
-    return url.hostname.replace(/^www\./i, '').toLowerCase();
-  } catch {
-    return '';
-  }
-}
-
-function normalizeException(input) {
-  if (typeof input !== 'string') return '';
-  const trimmed = input.trim();
-  if (!trimmed) return '';
-  const prefixed = /^(https?:)?\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  try {
-    const url = new URL(prefixed);
-    const host = url.hostname.replace(/^www\./i, '').toLowerCase();
-    const path = url.pathname || '/';
-    const search = url.search || '';
-    return `${host}${path}${search}`;
-  } catch {
-    return '';
-  }
-}
-
-function getExceptionHost(normalizedException) {
-  if (!normalizedException || typeof normalizedException !== 'string') return '';
-  const slashIdx = normalizedException.indexOf('/');
-  return slashIdx === -1 ? normalizedException : normalizedException.slice(0, slashIdx);
-}
-
-function getEntryDomains(site) {
-  const rawDomains = site && site.domains
-    ? site.domains
-    : (site && site.domain ? [site.domain] : []);
-  const normalized = rawDomains
-    .map(normalizeDomain)
-    .filter(Boolean);
-  return Array.from(new Set(normalized));
-}
-
-function exceptionBelongsToEntry(normalizedException, site) {
-  const exceptionHost = getExceptionHost(normalizedException);
-  if (!exceptionHost) return false;
-  const domains = getEntryDomains(site);
-  if (domains.length === 0) return false;
-  return domains.some(domain => exceptionHost === domain || exceptionHost.endsWith(`.${domain}`));
-}
-
-function normalizeSiteEntry(entry) {
-  const domains = getEntryDomains(entry);
-  const normalizedExceptions = Array.isArray(entry.exceptions) ? entry.exceptions : [];
-  const keptExceptions = [];
-  const seen = new Set();
-  for (const value of normalizedExceptions) {
-    const normalized = normalizeException(value);
-    if (!normalized) continue;
-    if (!domains.some(domain => {
-      const host = getExceptionHost(normalized);
-      return host === domain || host.endsWith(`.${domain}`);
-    })) continue;
-    if (seen.has(normalized)) continue;
-    seen.add(normalized);
-    keptExceptions.push(normalized);
-  }
-
-  const base = { ...entry, exceptions: keptExceptions };
-  if (domains.length === 0) {
-    delete base.domain;
-    delete base.domains;
-    return base;
-  }
-  if (domains.length === 1) {
-    base.domain = domains[0];
-    delete base.domains;
-  } else {
-    base.domains = domains;
-    delete base.domain;
-  }
-  return base;
-}
 
 async function getNuclearData() {
   const result = await getStorage(['nbData']);
@@ -118,17 +32,23 @@ function getNuclearDomains(data) {
   return domains;
 }
 
-// Derive stage from site data
-function getNuclearSiteStage(site) {
-  const now = Date.now();
-  if (now - site.addedAt < site.cooldown1Ms) return 'locked';
-  if (!site.unblockClickedAt) return 'ready';
-  if (now - site.unblockClickedAt < site.cooldown2Ms) return 'unblocking';
-  return 'confirm';
+async function redirectOpenNuclearTabs(data) {
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (!tab || !tab.id || !tab.url) continue;
+      const decision = getNuclearNavigationDecision(tab.url, data.sites);
+      if (!decision.shouldRedirect || !decision.redirectUrl) continue;
+      if (tab.url === decision.redirectUrl) continue;
+      await chrome.tabs.update(tab.id, { url: decision.redirectUrl });
+    }
+  } catch (err) {
+    console.log('[BrainrotBlocker] Error redirecting nuclear tabs:', err.message);
+  }
 }
 
-async function applyNuclearRules() {
-  const data = await getNuclearData();
+async function applyNuclearRules(options = {}) {
+  const data = options.data || await getNuclearData();
 
   // Remove existing nuclear rules, add new ones
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -140,14 +60,13 @@ async function applyNuclearRules() {
   const addRules = [];
   let ruleIndex = 0;
   for (const site of data.sites) {
-    const stage = getNuclearSiteStage(site);
-    const page = stage === 'confirm' ? '/nuclear-block-last-chance.html' : '/nuclear-blocked.html';
     const domains = getEntryDomains(site);
+    const redirectUrl = getNuclearRedirectUrl(site);
     for (const d of domains) {
       addRules.push({
         id: NUCLEAR_RULE_ID_OFFSET + ruleIndex++,
         priority: 3,
-        action: { type: 'redirect', redirect: { extensionPath: page } },
+        action: { type: 'redirect', redirect: { url: redirectUrl } },
         // urlFilter blocks the base domain and all subdomains (e.g. www., m., music.)
         condition: { urlFilter: `||${d}`, resourceTypes: ['main_frame'] },
       });
@@ -157,11 +76,13 @@ async function applyNuclearRules() {
     for (const exception of exceptions) {
       const normalized = normalizeException(exception);
       if (!normalized || !exceptionBelongsToEntry(normalized, site)) continue;
+      const regexFilter = buildNuclearExceptionRegex(normalized);
+      if (!regexFilter) continue;
       addRules.push({
         id: NUCLEAR_RULE_ID_OFFSET + ruleIndex++,
         priority: 4,
         action: { type: 'allow' },
-        condition: { urlFilter: `||${normalized}`, resourceTypes: ['main_frame'] },
+        condition: { regexFilter, resourceTypes: ['main_frame'] },
       });
     }
   }
@@ -170,6 +91,10 @@ async function applyNuclearRules() {
     removeRuleIds: nuclearIds,
     addRules,
   });
+
+  if (options.sweepOpenTabs) {
+    await redirectOpenNuclearTabs(data);
+  }
 }
 
 async function addNuclearSite(entry) {
@@ -183,7 +108,7 @@ async function addNuclearSite(entry) {
   if (newDomains.every(d => existingDomains.has(d))) return; // all already blocked
   data.sites.push(normalizedEntry);
   await saveNuclearData(data);
-  await applyNuclearRules();
+  await applyNuclearRules({ data, sweepOpenTabs: true });
   // Schedule rule refresh for when cooldown1 expires (stage changes to ready)
   if (normalizedEntry.cooldown1Ms > 0) scheduleNuclearRuleRefresh(normalizedEntry.cooldown1Ms);
 }
@@ -204,7 +129,7 @@ async function addNuclearException(id, exception) {
 
   site.exceptions = [...existing, normalized];
   await saveNuclearData(data);
-  await applyNuclearRules();
+  await applyNuclearRules({ data, sweepOpenTabs: true });
 }
 
 async function clickUnblockNuclear(id) {
@@ -221,7 +146,7 @@ async function clickUnblockNuclear(id) {
     scheduleNuclearRuleRefresh(site.cooldown2Ms);
   }
   await saveNuclearData(data);
-  await applyNuclearRules();
+  await applyNuclearRules({ data, sweepOpenTabs: true });
 }
 
 // Schedule a one-shot alarm to refresh nuclear rules at a precise time
@@ -238,7 +163,7 @@ async function blockAgainNuclear(id, cooldown1Ms) {
   site.cooldown1Ms = cooldown1Ms;
   site.unblockClickedAt = null;
   await saveNuclearData(data);
-  await applyNuclearRules();
+  await applyNuclearRules({ data, sweepOpenTabs: true });
   // Schedule rule refresh for when cooldown1 expires
   if (cooldown1Ms > 0) scheduleNuclearRuleRefresh(cooldown1Ms);
 }
@@ -247,12 +172,12 @@ async function confirmUnblockNuclear(id) {
   const data = await getNuclearData();
   data.sites = data.sites.filter(s => s.id !== id);
   await saveNuclearData(data);
-  await applyNuclearRules();
+  await applyNuclearRules({ data, sweepOpenTabs: true });
 }
 
 async function removeNuclearSite(id) {
   const data = await getNuclearData();
   data.sites = data.sites.filter(s => s.id !== id);
   await saveNuclearData(data);
-  await applyNuclearRules();
+  await applyNuclearRules({ data, sweepOpenTabs: true });
 }

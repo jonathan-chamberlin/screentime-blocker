@@ -6,6 +6,7 @@ importScripts(
   'storage.js',
   'timer.js',
   'site-utils.js',
+  'nuclear-url-utils.js',
   'session-state.js',
   'blocking.js',
   'scheduler.js',
@@ -55,7 +56,7 @@ importScripts(
   setCompanionModeEnabled(companionMode === 'on');
 
   // Always apply nuclear block rules on startup
-  await applyNuclearRules();
+  await applyNuclearRules({ sweepOpenTabs: true });
 
   // Periodic alarms
   chrome.alarms.create('checkNuclear', { periodInMinutes: 1 });
@@ -252,7 +253,7 @@ const messageHandlers = {
         // Restore nuclear block data and re-apply rules
         if (savedNbData && savedNbData.sites && savedNbData.sites.length > 0) {
           await setStorage({ nbData: savedNbData });
-          await applyNuclearRules();
+          await applyNuclearRules({ sweepOpenTabs: true });
         }
 
         // Restore break lists and productive lists

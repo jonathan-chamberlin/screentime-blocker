@@ -136,6 +136,7 @@
   <script src="../constants.js"></script>
   <script src="../timer.js"></script>
   <script src="../site-utils.js"></script>
+  <script src="../nuclear-url-utils.js"></script>
   <script src="../list-utils.js"></script>
   <script src="../shame-data.js"></script>
 
@@ -194,6 +195,7 @@
       const groups = {
         'timer.js': [],
         'site-utils.js': [],
+        'nuclear-url-utils.js': [],
         'list-utils.js': [],
         'shame-data.js': []
       };
@@ -203,6 +205,8 @@
           groups['timer.js'].push(result);
         } else if (result.name.includes('urlMatches') || result.name.includes('isBlockedUrl')) {
           groups['site-utils.js'].push(result);
+        } else if (result.name.includes('Nuclear')) {
+          groups['nuclear-url-utils.js'].push(result);
         } else if (result.name.includes('migrateBreakList') || result.name.includes('isScheduleActiveNow') || result.name.includes('getListsBlockingNow') || result.name.includes('getBlockingSites')) {
           groups['list-utils.js'].push(result);
         } else if (result.name.includes('getShameLevel')) {
@@ -344,6 +348,45 @@
     test('isBlockedUrl: not blocked returns false', () => {
       const result = isBlockedUrl('https://google.com', ['youtube.com'], []);
       assertEquals(result, false);
+    });
+
+    // ──────────────────────────────────────────────────────────────────────
+    // TESTS: nuclear-url-utils.js
+    // ──────────────────────────────────────────────────────────────────────
+
+    test('Nuclear: same video with extra params is allowed', () => {
+      assertEquals(
+        urlMatchesNuclearException('https://youtube.com/watch?v=abc123&t=30s', 'youtube.com/watch?v=abc123'),
+        true
+      );
+    });
+
+    test('Nuclear: reordered query params are allowed', () => {
+      assertEquals(
+        urlMatchesNuclearException('https://youtube.com/watch?list=PL123&v=abc123', 'youtube.com/watch?v=abc123&list=PL123'),
+        true
+      );
+    });
+
+    test('Nuclear: changed required param is blocked', () => {
+      assertEquals(
+        urlMatchesNuclearException('https://youtube.com/watch?v=other', 'youtube.com/watch?v=abc123'),
+        false
+      );
+    });
+
+    test('Nuclear: different path is blocked', () => {
+      assertEquals(
+        urlMatchesNuclearException('https://youtube.com/feed/subscriptions?v=abc123', 'youtube.com/watch?v=abc123'),
+        false
+      );
+    });
+
+    test('Nuclear: fragment-only changes are allowed', () => {
+      assertEquals(
+        urlMatchesNuclearException('https://youtube.com/watch?v=abc123#t=30', 'youtube.com/watch?v=abc123'),
+        true
+      );
     });
 
     // ──────────────────────────────────────────────────────────────────────
